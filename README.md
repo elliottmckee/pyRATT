@@ -24,6 +24,17 @@ Transient Aero/thermal Analysis across a given rocket trajectory for:
 This is a Python-rework and hopefully expansion of this previous work: https://github.com/elliottmckee/1DThermal-Ablation
 
 
+# Desired Additions from the above software (some of these are STRETCHES)
+- Get out of cringe MatLab
+- Read-in RAS/RockSim/OR files for rocket geometry specification
+- Better Post-Proc/Visualization
+- Visual to show how much of a structure exceeds a threshold (i.e. melting temp) (and for how long?)
+- Add implementation for fins, body-tubes, general lumped-masses
+- Lighter module/version that just plots the stagnation temps, recovery temps throughout flight profile
+- .CSV map for aerotherm loads for external program (idk bout this one)
+- FEM? Axisymmetric (nosecome) or Planar (Fins) for 2D effects
+
+
 
 # Usage
 This leverages a flight trajectory as simulated by your favorite rocket flight simulation software (RASAero, ~~RockSim, or if you're a real masochist, OpenRocket~~). 
