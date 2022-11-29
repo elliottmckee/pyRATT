@@ -10,7 +10,7 @@ Aerothermal analysis, characterization for high-performance amateur rockets.
 
 This aims to be a follow-on analysis to trajectory analysis for high-performance amateur rockets; as in, ones that go fast enough for aerothermal heating to do more than just char the paint off the leading edges...
 
-The scope here is definitely somewhat flexible, but basically, I want this to be somewhat monolithic tool that can perform any/all aerothermal analysis you would want to perform short of full (fem?)+CFD. So things like:
+The scope here is definitely somewhat flexible, but basically, I want this to be singular tool that can perform any/all aerothermal analysis you would want to perform short of full (FEM?)+CFD. So things like:
 
 Transient Aero/thermal Analysis across a given rocket trajectory for:
 - Environment Characterization (Stagnation+Recovery Temps vs. time)
@@ -35,10 +35,15 @@ Using both the .CDX1, ~~.ork, or .rkt~~ file, along with the exported flight sim
 # Coding Emphases 
 
 -**Modularity**
+
 -Ease of Use
+
 -Reccomended values set as Default- User inputs required, or over-writes as desired
+
 -Readability
+
 -Expandability
+
 -Efficiency, hopefully
 
 
