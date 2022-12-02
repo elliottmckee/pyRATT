@@ -13,9 +13,7 @@ containing extra information, and this will hand things off to simulate.py
 '''
 
 
-# import __________ 
-
-
+from materials_standard import SolidMaterial
 
 
 #########################################
@@ -27,6 +25,7 @@ transient_thermal               = 1
 
 environment_characterization    = 0
 lumped_capacitance              = 0
+
 
 
 
