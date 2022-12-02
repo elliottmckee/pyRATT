@@ -15,8 +15,6 @@ def solidMaterialDatabase(material_name):
     ###################    MATERIAL DATABASE      ########################
     #######################################################################
 
-
-
     if material_name == "ALU6061":
         
         rho = 2700;     #[kg/m^3] Density
@@ -27,8 +25,6 @@ def solidMaterialDatabase(material_name):
         rho = -1;     #[kg/m^3] Density
         cp = -1;       #[J/KgC] Specific Heat
         k = -1;        #[W/mK]Thermal Conductivity
-
-
 
     #######################################################################
     ###################    END OF DATABASE         ########################

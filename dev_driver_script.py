@@ -15,10 +15,16 @@ containing extra information, and this will hand things off to simulate.py
 #from materials_standard import SolidMaterial
 
 
+import os
 
-from materials_database.materials_standard import SolidMaterial
+# Standard Atmosphere Model/Package (CANT HANDLE HIGH-ALT)
+# https://ambiance.readthedocs.io/en/latest/index.html
+from ambiance import Atmosphere
 
 
+from src.materials.materials_standard import SolidMaterial
+from src.common.structure_definitions import NoseconeSingleMaterialWall
+from src.tools.RAS_file_parsing_tools import RAS_traj_CSV_Parse
 
 
 
@@ -26,10 +32,22 @@ from materials_database.materials_standard import SolidMaterial
 if __name__ == "__main__":
 
 
-    Wall_Material = SolidMaterial("OTHER EXAMPLE MATERIAL")
+    # Wall_Material = SolidMaterial("ALU6061")
+    # print(Wall_Material.rho)
 
 
-    print(Wall_Material.rho)
+    # Test_Wall = NoseconeSingleMaterialWall("ALU6061", 0.1, 20)
+    # print(Test_Wall.thickness)
+
+    # flightDF = RAS_traj_CSV_Parse(os.path.join(os.getcwd(), "example_files", "Meat_Rocket_N5800.CSV"))
+    # print(flightDF)
+
+
+    atmosphere = Atmosphere([0, 1000, 80000])
+
+    print(atmosphere.speed_of_sound)
+
+
 
 
 
