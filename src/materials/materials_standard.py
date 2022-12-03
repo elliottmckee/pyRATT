@@ -26,14 +26,21 @@ def solidMaterialDatabase(material_name):
         cp = -1;       #[J/KgC] Specific Heat
         k = -1;        #[W/mK]Thermal Conductivity
 
-    #######################################################################
-    ###################    END OF DATABASE         ########################
-    #######################################################################
+
+
+
 
 
     #If material isn't found
     else:
         raise Exception("Invalid Material Specification or Material not Found - Material Spelling, or solidMaterialDatabase()")
+
+    #######################################################################
+    ###################    END OF DATABASE         ########################
+    #######################################################################
+
+
+    
 
 
     # Return Material Properties
