@@ -5,8 +5,7 @@
 
 import numpy
 
-from ..materials.materials_standard import SolidMaterial
-from ..materials.materials_standard import solidMaterialDatabase
+from ..materials.materials_standard import SolidMaterial, solidMaterialDatabase
 
 
 
@@ -29,6 +28,14 @@ class NoseconeSingleMaterialWall:
         # Derived Values
         #self.wall_coords = linspace(0, Wall.delta, Sim.N)
 
+
+
+# class Fin:
+#     __init__(self):
+
+
+# class BodyTube:
+#     __init__(self):
 
 
 
