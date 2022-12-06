@@ -61,7 +61,7 @@ if __name__ == "__main__":
     MySimulation.run()
 
 
-
+    #atmosphere = Atmosphere([81020])
 
 
 

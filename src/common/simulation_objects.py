@@ -6,6 +6,12 @@ import pathlib
 import numpy as np
 import scipy
 
+
+# Standard Atmosphere Model/Package (CANT HANDLE HIGH-ALT)
+# https://ambiance.readthedocs.io/en/latest/index.html
+from ambiance import Atmosphere
+
+
 from typing import Optional
 
 from ..materials.materials_standard import SolidMaterial, solidMaterialDatabase
@@ -40,24 +46,25 @@ class Simulation:
 
     def sim_initialize(self):
 
-        
-        # Generate Time Vector (Pull last time value in Flight Data, add one step to it to make it inclusive at the end because im OCD like that)
-        self.t_vec = np.arange(0.0, self.Flight.time[-1] + self.t_step, self.t_step)
+        # Generate Time Vector (Pull last time value in Flight Data)
+        self.t_vec = np.arange(0.0, self.Flight.time_raw[-1], self.t_step)
 
-        
-        ### Pre-Allocate the Things
+        ### Pre-Allocate the Things ###
         #Scalar Quantities vs. Time
         t_vec_size      = np.size(self.t_vec)
-        self.q_hot_wall = np.empty((t_vec_size,), dtype=float)
-        self.h_coeff    = np.empty((t_vec_size,), dtype=float)
-        self.t_recovery = np.empty((t_vec_size,), dtype=float)
-        self.time_vec   = np.empty((t_vec_size,), dtype=float)
+        self.q_hot_wall = np.zeros((t_vec_size,), dtype=float)
+        self.h_coeff    = np.zeros((t_vec_size,), dtype=float)
+        self.t_recovery = np.zeros((t_vec_size,), dtype=float)
 
         #Vector Quantities vs. Time
-        self.wall_temps = np.empty((self.Aerosurface.n_tot,t_vec_size), dtype=float)
+        self.wall_temps = np.zeros((self.Aerosurface.n_tot,t_vec_size), dtype=float)
+
+        # Get/interpolate Sim-time values for Mach, Altitude, and Atmospheric Properties
+        self.mach, self.alt, self.atmos = self.Flight.get_sim_time_properties(self.t_vec)
 
 
-        
+        #Set Initial Values for Wall Temperature at First Step
+        self.wall_temps[:,0] = self.initial_temp
 
 
 
@@ -66,8 +73,26 @@ class Simulation:
 
     def run(self):
 
+
         #Initialize Simulation Values
         self.sim_initialize()
+
+        # For each time step (except for the last)
+        for i, t in enumerate(self.t_vec[:-1]):
+            print("Work In-Progress")
+
+            # Calculate Aerothermal Hot-Wall Flux
+
+
+
+            # Calculate Temperature Rates of Change, and Propagate forward one time step
+
+
+
+
+
+
+
 
 
 
@@ -142,16 +167,18 @@ class FlightData:
 
     #ONLY SUPPORTS RASAERO FILES AS OF RN
 
+    #Not sure if I am doing this most-efficiently- may be better to just use interpolated altitudes and then use Atmosphere as a table lookup
+
     def __init__(self, trajectory_file):
         
         self.trajectory_file = trajectory_file
 
         #Create time, mach, and alt numpy arrays
-        self.time, self.mach, self.alt = self.RAS_traj_CSV_Parse(trajectory_file)
+        self.time_raw, self.mach_raw, self.alt_raw = self.RAS_traj_CSV_Parse(trajectory_file)
 
         #Create interpolation functions for both Mach and Alt, so we don't have to create these every time we want to interpolate (which we do a lot)
-        self.mach_interp = scipy.interpolate.interp1d(self.time, self.mach)
-        self.alt_interp  = scipy.interpolate.interp1d(self.time, self.alt)
+        self.mach_raw_interp = scipy.interpolate.interp1d(self.time_raw, self.mach_raw, kind='linear')
+        self.alt_raw_interp  = scipy.interpolate.interp1d(self.time_raw, self.alt_raw, kind='linear')
 
 
     def RAS_traj_CSV_Parse(self, trajectory_filepath):
@@ -167,10 +194,46 @@ class FlightData:
         return df[:,0], df[:,1], df[:,2]
 
 
+
+    def get_sim_time_properties(self, t_sim_vec):
+        #This Function performs the interpolation and atmospheric property lookup to change the "raw" values, which are currently
+        # in the arbitrary RASAero or Flight Traj. CSV time, and aligns them with the Simulation time step and time vector
+
+        #Interpolate Mach and altitude to Sim-time
+        mach = self.mach_raw_interp(t_sim_vec)
+        alt = self.alt_raw_interp(t_sim_vec)
+
+        # Check if Clipping is needed, then Clip 
+        # Ambience can only handle values from [-5004 81020] m. 
+        if max(alt) > 81020:
+            print("Warning in class FlightData - get_atmospheric_properties(): Max (or Min) Altitude of Atmosphere Model Exceeded- Clipping to -5004 to 81020 m")
+            atmos = Atmosphere(np.clip(alt, -5004, 81020))
+        else:
+            atmos = Atmosphere(alt)
+
+        return mach, alt, atmos
+
+
+        
+
+
+
+       
+        
+        
+
+        
+
+
+
+
+
     def get_current_state(self, curr_time):
         #Interpolate Mach and Alt to whatver the current time is, return this M-Alt state
 
         return self.mach_interp(curr_time), self.alt_interp(curr_time)
+
+    
 
 
 
