@@ -28,12 +28,48 @@ from src.materials.materials_standard import SolidMaterial
 #from src.tools.RAS_file_parsing_tools import RAS_traj_CSV_Parse
 
 
-from src.common.simulation_objects import FlightSim
+from src.common.simulation_objects import WallComponent, AerosurfaceStack, FlightData, Rocket, Simulation
 
 
 
 if __name__ == "__main__":
 
+
+    #Define a Wall Component of Aluminum 6061 with following properties
+    AluminumWall = WallComponent(material = "ALU6061", thickness = 0.02, n_div = 20, emis_override = None)
+
+    #Define an Aerosurface of just the above wall section, since only doing one material (still taking in list format tho for future improvements)
+    MyAerosurf = AerosurfaceStack(wall_components = [AluminumWall], surface_type = "nosecone", interface_resistances = None)
+
+
+    #Define a Rocket geometry
+    MyRocket = Rocket(nosecone_half_angle_deg = 7.0)
+
+    
+    # Define a Flight Profile
+    MyFlight = FlightData( os.path.join(os.getcwd(), "example_files", "Meat_Rocket_N5800.CSV") )
+    #curr_Mach, curr_Time = MyFlight.get_current_state(0.025)
+
+
+    #Define a Simulation Object
+    MySimulation = Simulation(MyAerosurf, MyRocket, MyFlight,
+                                x_locations = [0.02], 
+                                t_step = 0.01,)
+
+    
+    # #Run Simulation
+    MySimulation.run()
+
+
+
+
+
+
+
+
+
+
+    #OLD TESTING SECTION
 
     # Wall_Material = SolidMaterial("ALU6061")
     # print(Wall_Material.rho)
@@ -60,17 +96,6 @@ if __name__ == "__main__":
     #atmosphere = Atmosphere([0, 1000, 80000])
 
     #print(atmosphere.speed_of_sound)
-
-
-    # #Get Current Working Directory
-    # cwd = os.getcwd()
-
-
-    # #Input Files
-    # rocket_file_path        = os.path.join(cwd, 'example_files', 'Meat_Rocket.CDX1')
-    # trajectory_file_path    = os.path.join(cwd, 'example_files', 'Meat_Rocket_N5800.CSV')
-
-
 
 
 

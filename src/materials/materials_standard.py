@@ -1,15 +1,20 @@
+from typing import Optional
 
 
 class SolidMaterial:
     #Initialize, populate material properties - default to Aluminum 6061
-    def __init__(self, material = "ALU6061"):
+    def __init__(self, material = "ALU6061",  emis_override: Optional[float] = None):
         
-        self.rho, self.cp, self.k = solidMaterialDatabase(material)
+        self.rho, self.cp, self.k, self.emis = solidMaterialDatabase(material)
+
+        #Override emissivity value if optional argument passed in
+        if emis_override is not None:
+            self.emis = emis_override
 
 
 
-def solidMaterialDatabase(material_name):
-
+def solidMaterialDatabase(material_name: str):
+    #emis_override optional argument is to override surface emissivity, if desired
 
     #######################################################################
     ###################    MATERIAL DATABASE      ########################
@@ -20,12 +25,17 @@ def solidMaterialDatabase(material_name):
         rho = 2700;     #[kg/m^3] Density
         cp = 896;       #[J/KgC] Specific Heat
         k = 167;        #[W/mK]Thermal Conductivity
+        emis = 0.8      #[] Black Body Emissivity Coefficient 
+                        # Fundamentals of Thermal Fluid Sciences, Cengel 
+                        # Polished 300–900K 0.04–0.06, Commercial sheet 400K 0.09
+                        # Heavily oxidized 400–800K 0.20–0.33, Anodized 300K 0.8
+
 
     elif material_name == "OTHER EXAMPLE MATERIAL":
         rho = -1;     #[kg/m^3] Density
         cp = -1;       #[J/KgC] Specific Heat
         k = -1;        #[W/mK]Thermal Conductivity
-
+        emis = -1      #[] Black Body Emissivity Coefficient 
 
 
 
@@ -40,11 +50,8 @@ def solidMaterialDatabase(material_name):
     #######################################################################
 
 
-    
-
-
     # Return Material Properties
-    return rho, cp, k
+    return rho, cp, k, emis
 
 
 
