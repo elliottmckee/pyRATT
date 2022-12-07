@@ -16,6 +16,7 @@ from typing import Optional
 
 from ..materials.materials_standard import SolidMaterial, solidMaterialDatabase
 from . import conversions
+from ..tools.aerotherm_tools import aerothermal_heatflux
 
 
 
@@ -25,10 +26,12 @@ class Simulation:
         Aerosurface,
         Rocket,
         Flight,
-        x_locations,
+        AirModel,
+        x_location,
         t_step,
         initial_temp = 290.0,
         aerothermal_model = 'flat_plate',
+        boundary_layer_model = 'turbulent',
         shock_type = 'oblique',
         gas_model = 'air_standard'
     ):
@@ -36,10 +39,12 @@ class Simulation:
         self.Aerosurface        = Aerosurface 
         self.Rocket             = Rocket 
         self.Flight             = Flight
-        self.x_locations        = x_locations 
+        self.AirModel           = AirModel
+        self.x_location         = x_location 
         self.t_step             = t_step
         self.initial_temp       = initial_temp
         self.aerothermal_model  = aerothermal_model
+        self.bound_layer_model  = boundary_layer_model
         self.shock_type         = shock_type
         self.gas_model          = gas_model
 
@@ -77,11 +82,25 @@ class Simulation:
         #Initialize Simulation Values
         self.sim_initialize()
 
+        print("Warning in Sim.run(), did a bad workaround for atm_state in aerothermal_heatflux call")
+
         # For each time step (except for the last)
         for i, t in enumerate(self.t_vec[:-1]):
             print("Work In-Progress")
 
-            # Calculate Aerothermal Hot-Wall Flux
+
+            # Calculate Aerothermal Hot-Wall Flux (possibly just pass 'self' into function to make cleaner)
+            q_hw = aerothermal_heatflux(
+                        Rocket              = self.Rocket,
+                        AirModel            = self.AirModel,
+                        T_w                 = self.wall_temps[0,i], 
+                        x_location          = self.x_location, 
+                        m_inf               = self.mach[i], 
+                        atm_state           = Atmosphere([self.alt[i]]), 
+                        shock_type          = self.shock_type,
+                        aerothermal_model   = self.aerothermal_model,
+                        bound_layer_model = self.bound_layer_model
+            )
 
 
 

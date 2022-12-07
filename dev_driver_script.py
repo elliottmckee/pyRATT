@@ -24,6 +24,7 @@ from ambiance import Atmosphere
 
 
 from src.materials.materials_standard import SolidMaterial
+from src.materials.air_model import AirModel
 #from src.common.structure_definitions import NoseconeSingleMaterialWall
 #from src.tools.RAS_file_parsing_tools import RAS_traj_CSV_Parse
 
@@ -41,27 +42,23 @@ if __name__ == "__main__":
     #Define an Aerosurface of just the above wall section, since only doing one material (still taking in list format tho for future improvements)
     MyAerosurf = AerosurfaceStack(wall_components = [AluminumWall], surface_type = "nosecone", interface_resistances = None)
 
-
     #Define a Rocket geometry
     MyRocket = Rocket(nosecone_half_angle_deg = 7.0)
 
-    
     # Define a Flight Profile
     MyFlight = FlightData( os.path.join(os.getcwd(), "example_files", "Meat_Rocket_N5800.CSV") )
     #curr_Mach, curr_Time = MyFlight.get_current_state(0.025)
 
-
     #Define a Simulation Object
-    MySimulation = Simulation(MyAerosurf, MyRocket, MyFlight,
-                                x_locations = [0.02], 
+    MySimulation = Simulation(MyAerosurf, MyRocket, MyFlight, AirModel(),
+                                x_location = 0.02, 
                                 t_step = 0.01,)
 
-    
+
     # #Run Simulation
     MySimulation.run()
 
 
-    #atmosphere = Atmosphere([81020])
 
 
 

@@ -8,9 +8,6 @@
 
 
 
-# Air Specific Gas Constant 
-R_AIR = 287.0 #[J/KgK]
-
 #Stefan-Boltzman Constant 
 SB_CONST = 5.6704e-8; #[W/(m^2*K^4)]
 

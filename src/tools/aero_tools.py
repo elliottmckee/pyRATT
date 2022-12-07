@@ -1,6 +1,13 @@
 import math
 import scipy
 
+
+
+def total_temperature(T, M, gam):
+    #Just Returns the Total Temperature
+    return T * (1 + M**2 * (gam-1)/2) 
+
+
 # NORMAL SHOCK RELATIONS (FROM ASEN 3111)
 def shock_calc( M1, g ):
 
