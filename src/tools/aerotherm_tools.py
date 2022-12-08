@@ -31,7 +31,6 @@ def aerothermal_heatflux(
 
     # Break-out Pre-Shock State
     #WORKAROUND ALERT###########
-    print("Warning: Hilarious Workaround in Aerothermal Hearflux for Overriding m_inf < 1.0 values")
     if m_inf < 1.0:
         m_inf = 1.0
 
@@ -102,15 +101,6 @@ def eckert_ref_temperature(T_e, T_te, T_w, r):
 
     #Eckert Reference Temperature 
     return 0.5*(T_e + T_w) + 0.22*r*(T_te - T_e) # Source: Bertin, Hypersonic Aerothermodynamics
-
-
-    
-
-    
-
-
-
-
 
 
 

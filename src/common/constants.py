@@ -9,7 +9,10 @@
 
 
 #Stefan-Boltzman Constant 
-SB_CONST = 5.6704e-8; #[W/(m^2*K^4)]
+SB_CONST = 5.6704e-8 #[W/(m^2*K^4)]
+
+#Ambient Radiative Temperature
+T_RAD_AMB = 290.0 #[K]
 
 
 

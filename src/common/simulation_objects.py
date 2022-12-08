@@ -14,9 +14,11 @@ from ambiance import Atmosphere
 
 from typing import Optional
 
-from ..materials.materials_standard import SolidMaterial, solidMaterialDatabase
+from ..materials.materials_standard import solidMaterialDatabase
 from . import conversions
+from . import constants
 from ..tools.aerotherm_tools import aerothermal_heatflux
+from ..tools.thermal_conduction_tools import get_new_wall_temps
 
 
 
@@ -54,6 +56,7 @@ class Simulation:
         # Generate Time Vector (Pull last time value in Flight Data)
         self.t_vec = np.arange(0.0, self.Flight.time_raw[-1], self.t_step)
 
+
         ### Pre-Allocate the Things ###
         #Scalar Quantities vs. Time
         t_vec_size      = np.size(self.t_vec)
@@ -61,8 +64,10 @@ class Simulation:
         self.h_coeff    = np.zeros((t_vec_size,), dtype=float)
         self.t_recovery = np.zeros((t_vec_size,), dtype=float)
 
-        #Vector Quantities vs. Time
+
+        # Vector Quantities vs. Time
         self.wall_temps = np.zeros((self.Aerosurface.n_tot,t_vec_size), dtype=float)
+
 
         # Get/interpolate Sim-time values for Mach, Altitude, and Atmospheric Properties
         self.mach, self.alt, self.atmos = self.Flight.get_sim_time_properties(self.t_vec)
@@ -72,22 +77,18 @@ class Simulation:
         self.wall_temps[:,0] = self.initial_temp
 
 
-
-
-
-
     def run(self):
-
 
         #Initialize Simulation Values
         self.sim_initialize()
 
         print("Warning in Sim.run(), did a bad workaround for atm_state in aerothermal_heatflux call")
+        print("Warning: Lots of assumptions in Thermal Conduction Model")
+        print("Warning: Hilarious Workaround in Aerothermal Heatflux for Overriding m_inf < 1.0 values")
+
 
         # For each time step (except for the last)
         for i, t in enumerate(self.t_vec[:-1]):
-            print("Work In-Progress")
-
 
             # Calculate Aerothermal Hot-Wall Flux (possibly just pass 'self' into function to make cleaner)
             q_hw = aerothermal_heatflux(
@@ -103,31 +104,59 @@ class Simulation:
             )
 
 
+            # Net Heat Flux
+            q_net = q_hw - constants.SB_CONST * self.Aerosurface.elements[0].emis * (self.wall_temps[0,i]**4 - constants.T_RAD_AMB**4) 
+
 
             # Calculate Temperature Rates of Change, and Propagate forward one time step
+            self.wall_temps[:,i+1] = get_new_wall_temps( self.wall_temps[:,i], q_hw, self)
 
 
 
 
 
 
+class SolidMaterial:
+    #Initialize, populate material properties - default to Aluminum 6061
+    def __init__(self, material = "ALU6061",  emis_override: Optional[float] = None):
+        
+        self.rho, self.cp, self.k, self.emis = solidMaterialDatabase(material)
 
-
-
-
+        #Override emissivity value if optional argument passed in
+        if emis_override is not None:
+            self.emis = emis_override
 
 
 
 class WallComponent:
-    def __init__(self, material, thickness: float, n_div: int, emis_override: Optional[float] = None):
+    def __init__(self, material, tot_thickness: float, n_div: int, emis_override: Optional[float] = None):
         
         # Properties
-        self.material  = SolidMaterial("ALU6061", emis_override)
-        self.thickness = thickness
+        self.Material  = SolidMaterial(material, emis_override)
+        self.tot_thickness = tot_thickness
         self.n_div = n_div
 
+        #Derived
+        self.el_thickness = tot_thickness / n_div
 
-        
+
+    
+class Element:
+    def __init__(
+        self,
+        WallComponent
+    ):
+
+        self.dy = WallComponent.el_thickness
+        self.rho = WallComponent.Material.rho
+        self.cp = WallComponent.Material.cp
+        self.k = WallComponent.Material.k
+
+        #Leaving this in cuz maybe some materials we won't know the emissivity of, and you only need it for the surface element
+        if hasattr(WallComponent.Material, 'emis'):
+            self.emis = WallComponent.Material.emis
+
+
 
 class AerosurfaceStack: 
     # An Aerosurface Stack is the stack of Materials which makes up the through-wall direction of an Aerosurface. 
@@ -146,19 +175,26 @@ class AerosurfaceStack:
             raise Exception("Only type: 'nosecone' has been implmented")
 
 
+        #Properties
         self.wall_components = wall_components
         self.surface_type = surface_type
 
 
-        #Calculate Total Number of elements in the Stack
-        self.n_tot = 0
-        
+        # Create List of Elements, which represents the entire Wall/Stack/Aerosurface
+        self.elements = []
+        self.n_tot      = 0
+
+
+        #For the wall components
         for i in range(len(self.wall_components)):
+            #For the number of elements in each wall section
+            for j in range(self.wall_components[i].n_div):
+
+                #Append new element as specified by wall_component[i]
+                self.elements.append( Element(self.wall_components[i]) )
+
+            #Count total number of Elements
             self.n_tot += self.wall_components[i].n_div
-
-
-
-
 
 
 
@@ -174,10 +210,9 @@ class Rocket:
         #Automatic-Parsing of CDX1 File example here
         #self.nosecone_angle, etc. = self.parse_RAS(RAS_Filename)
 
+
     def parse_RAS(RAS_Filename):
         print("RAS CDX1 Parsing Functionality not yet implemented")
-
-
 
 
 
@@ -213,7 +248,6 @@ class FlightData:
         return df[:,0], df[:,1], df[:,2]
 
 
-
     def get_sim_time_properties(self, t_sim_vec):
         #This Function performs the interpolation and atmospheric property lookup to change the "raw" values, which are currently
         # in the arbitrary RASAero or Flight Traj. CSV time, and aligns them with the Simulation time step and time vector
@@ -231,20 +265,6 @@ class FlightData:
             atmos = Atmosphere(alt)
 
         return mach, alt, atmos
-
-
-        
-
-
-
-       
-        
-        
-
-        
-
-
-
 
 
     def get_current_state(self, curr_time):

@@ -1,18 +1,6 @@
 from typing import Optional
 
 
-class SolidMaterial:
-    #Initialize, populate material properties - default to Aluminum 6061
-    def __init__(self, material = "ALU6061",  emis_override: Optional[float] = None):
-        
-        self.rho, self.cp, self.k, self.emis = solidMaterialDatabase(material)
-
-        #Override emissivity value if optional argument passed in
-        if emis_override is not None:
-            self.emis = emis_override
-
-
-
 def solidMaterialDatabase(material_name: str):
     #emis_override optional argument is to override surface emissivity, if desired
 
