@@ -80,7 +80,7 @@ def aerothermal_heatflux(
     # Heating Model
     q_w = ulsu_simsek_heat_transfer(x_location, T_w, T_r, k_ref, Re_ref, pr_ref)
 
-    return q_w
+    return q_w, T_r
 
 
 

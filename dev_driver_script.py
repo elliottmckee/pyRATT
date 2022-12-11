@@ -36,8 +36,8 @@ if __name__ == "__main__":
 
 
     #Define a Wall Component of Aluminum 6061 with following properties
-    AluminumWall = WallComponent(material = "ALU6061", tot_thickness = 0.02, n_div = 20, emis_override = None)
-    NotAluWall = WallComponent(material = "OTHER EXAMPLE MATERIAL", tot_thickness = 0.05, n_div = 10, emis_override = None)
+    AluminumWall = WallComponent(material = "ALU6061", tot_thickness = 0.01, n_nodes = 11, emis_override = None)
+    NotAluWall = WallComponent(material = "OTHER EXAMPLE MATERIAL", tot_thickness = 0.05, n_nodes = 11, emis_override = None)
 
     #Define an Aerosurface of just the above wall section, since only doing one material (still taking in list format tho for future improvements)
     MyAerosurf = AerosurfaceStack(wall_components = [AluminumWall], surface_type = "nosecone", interface_resistances = None)
@@ -47,18 +47,26 @@ if __name__ == "__main__":
 
     # Define a Flight Profile
     MyFlight = FlightData( os.path.join(os.getcwd(), "example_files", "Meat_Rocket_N5800_ASCENTONLY.CSV") )
-    #curr_Mach, curr_Time = MyFlight.get_current_state(0.025)
 
     #Define a Simulation Object
     MySimulation = Simulation(MyAerosurf, MyRocket, MyFlight, AirModel(),
                                 x_location = 0.02, 
-                                t_step = 0.005,)
+                                t_step = 0.005)
 
     
-
     # #Run Simulation
     MySimulation.run()
 
+
+
+
+
+    #Export Simulation Data to CSV
+    MySimulation.export_data_to_csv(out_filename = 'export_data.csv')
+
+
+
+    #Plotting
 
 
     plt.plot(MySimulation.t_vec, MySimulation.wall_temps[0,:])   

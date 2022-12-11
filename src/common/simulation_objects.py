@@ -60,9 +60,10 @@ class Simulation:
         ### Pre-Allocate the Things ###
         #Scalar Quantities vs. Time
         t_vec_size      = np.size(self.t_vec)
-        self.q_hot_wall = np.zeros((t_vec_size,), dtype=float)
+        self.q_conv = np.zeros((t_vec_size,), dtype=float)
+        self.q_net = np.zeros((t_vec_size,), dtype=float)
         self.h_coeff    = np.zeros((t_vec_size,), dtype=float)
-        self.t_recovery = np.zeros((t_vec_size,), dtype=float)
+        self.T_recovery = np.zeros((t_vec_size,), dtype=float)
 
 
         # Vector Quantities vs. Time
@@ -91,7 +92,7 @@ class Simulation:
         for i, t in enumerate(self.t_vec[:-1]):
 
             # Calculate Aerothermal Hot-Wall Flux (possibly just pass 'self' into function to make cleaner)
-            q_hw = aerothermal_heatflux(
+            self.q_conv[i], self.T_recovery[i] = aerothermal_heatflux(
                         Rocket              = self.Rocket,
                         AirModel            = self.AirModel,
                         T_w                 = self.wall_temps[0,i], 
@@ -105,11 +106,46 @@ class Simulation:
 
 
             # Net Heat Flux
-            q_net = q_hw - constants.SB_CONST * self.Aerosurface.elements[0].emis * (self.wall_temps[0,i]**4 - constants.T_RAD_AMB**4) 
+            self.q_net[i] = self.q_conv[i] - constants.SB_CONST * self.Aerosurface.elements[0].emis * (self.wall_temps[0,i]**4 - constants.T_RAD_AMB**4) 
 
 
             # Calculate Temperature Rates of Change, and Propagate forward one time step
-            self.wall_temps[:,i+1] = get_new_wall_temps( self.wall_temps[:,i], q_hw, self)
+            self.wall_temps[:,i+1] = get_new_wall_temps( self.wall_temps[:,i], self.q_net[i], self)
+
+    
+    def export_data_to_csv(self, out_filename = None):
+        # Behavior:
+        # Creates CVS of time, and each of the export_variables specified below, using those names as the column headers, 
+        # followed each of the node temperatures vs time, with each node beign a different column, starting from the surface, to the inner wall, 
+
+
+        # List of Variables to export
+        export_variables = ['t_vec','mach','alt','q_conv', 'q_net', 'T_recovery']
+
+        # Create Blank Dataframe
+        out_data = pandas.DataFrame()
+
+        #For each of the export Variables, append 
+        for var in export_variables:
+            out_data[var] =  getattr(self, var)
+
+        # For each element, append the time history of wall temperatures
+        for i in range(self.Aerosurface.n_tot):
+            
+            col_name = f"T_wall:x={self.Aerosurface.x_loc[i]:.4f}"
+            out_data[col_name] =   self.wall_temps[i,:]
+
+    
+        #Export CSV 
+        out_data.to_csv(out_filename, index=False)
+
+
+
+
+
+
+
+
 
 
 
@@ -129,16 +165,15 @@ class SolidMaterial:
 
 
 class WallComponent:
-    def __init__(self, material, tot_thickness: float, n_div: int, emis_override: Optional[float] = None):
+    def __init__(self, material, tot_thickness: float, n_nodes: int, emis_override: Optional[float] = None):
         
         # Properties
         self.Material  = SolidMaterial(material, emis_override)
         self.tot_thickness = tot_thickness
-        self.n_div = n_div
+        self.n_nod = n_nodes
 
         #Derived
-        self.el_thickness = tot_thickness / n_div
-
+        self.el_thickness = tot_thickness / (n_nodes-1)
 
     
 class Element:
@@ -146,7 +181,6 @@ class Element:
         self,
         WallComponent
     ):
-
         self.dy = WallComponent.el_thickness
         self.rho = WallComponent.Material.rho
         self.cp = WallComponent.Material.cp
@@ -184,17 +218,30 @@ class AerosurfaceStack:
         self.elements = []
         self.n_tot      = 0
 
-
         #For the wall components
         for i in range(len(self.wall_components)):
             #For the number of elements in each wall section
-            for j in range(self.wall_components[i].n_div):
+            for j in range(self.wall_components[i].n_nod):
 
                 #Append new element as specified by wall_component[i]
                 self.elements.append( Element(self.wall_components[i]) )
 
             #Count total number of Elements
-            self.n_tot += self.wall_components[i].n_div
+            self.n_tot += self.wall_components[i].n_nod
+
+            
+        #X location values array
+        self.x_loc = []
+
+        #Append new element to x_location vector, by adding an element thickness to the previous value
+        for e in self.elements:
+            if self.x_loc:
+                self.x_loc.append( self.x_loc[-1] + e.dy)
+            else:
+                self.x_loc.append(0.0)
+
+
+
 
 
 
@@ -210,9 +257,10 @@ class Rocket:
         #Automatic-Parsing of CDX1 File example here
         #self.nosecone_angle, etc. = self.parse_RAS(RAS_Filename)
 
-
     def parse_RAS(RAS_Filename):
         print("RAS CDX1 Parsing Functionality not yet implemented")
+
+
 
 
 
