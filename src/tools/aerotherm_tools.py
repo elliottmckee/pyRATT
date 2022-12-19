@@ -29,10 +29,7 @@ def aerothermal_heatflux(
         raise NotImplementedError()
 
 
-    # Break-out Pre-Shock State
-    #WORKAROUND ALERT###########
-    if m_inf < 1.0:
-        m_inf = 1.0
+    # Break-out Pre-Shock/Free-Stream State, 
 
     p_inf   = atm_state.pressure
     T_inf   = atm_state.temperature
@@ -40,16 +37,26 @@ def aerothermal_heatflux(
     mu_inf  = atm_state.dynamic_viscosity
 
 
-    # Shock Calculator - Post-Shock Properties
-    m_e, p2op1, rho2orho1, T2oT1, _, p02op01, _ =  aero_tools.oblique_shock( m_inf, AirModel.gam, Rocket.nosecone_angle_rad)
+    #Determine Edge Properties (behind shock if needed)
+    
+    if m_inf >  1.0:
+        # Yes Shock - Shock Relations for Post-Shock Properties
+        m_e, p2op1, rho2orho1, T2oT1, _, p02op01, _ =  aero_tools.oblique_shock( m_inf, AirModel.gam, Rocket.nosecone_angle_rad)
 
-    p_e = p2op1 * p_inf
-    T_e = T2oT1 * T_inf
+        p_e = p2op1 * p_inf
+        T_e = T2oT1 * T_inf
+        
+    else:
+        #No Shock
+        m_e = m_inf
+        p_e = p_inf
+        T_e = T_inf
+        
+        
+    #Get Aero/Transport Properties at BL Edge
     T_te = aero_tools.total_temperature(T_e, m_e, AirModel.gam) #Total Temperature at Edge
-    
     u_e = sqrt(AirModel.gam * AirModel.R * T_e) * m_e
-    
-    #Get Transport Properties at BL Edge
+
     cp_e = AirModel.specific_heat(T_e)
     k_e  = AirModel.thermal_conductivity(T_e)
     mu_e = AirModel.dynamic_viscosity(T_e)
@@ -159,12 +166,6 @@ def incopera_heating_correlations():
         #This is just a reminder that these are in the Incopera tables referenced, if we want them for body tube heating
         pass
 
-
-
-
-
-
-#Recovery Temperature
 
 
 

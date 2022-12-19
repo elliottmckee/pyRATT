@@ -31,6 +31,7 @@ class Simulation:
         AirModel,
         x_location,
         t_step,
+        t_end = None,
         initial_temp = 290.0,
         aerothermal_model = 'flat_plate',
         boundary_layer_model = 'turbulent',
@@ -44,6 +45,7 @@ class Simulation:
         self.AirModel           = AirModel
         self.x_location         = x_location 
         self.t_step             = t_step
+        self.t_end              = t_end
         self.initial_temp       = initial_temp
         self.aerothermal_model  = aerothermal_model
         self.bound_layer_model  = boundary_layer_model
@@ -54,7 +56,11 @@ class Simulation:
     def sim_initialize(self):
 
         # Generate Time Vector (Pull last time value in Flight Data)
-        self.t_vec = np.arange(0.0, self.Flight.time_raw[-1], self.t_step)
+        #If we are clipping
+        if self.t_end is not None:
+            self.t_vec = np.arange(0.0, self.t_end, self.t_step)
+        else:
+            self.t_vec = np.arange(0.0, self.Flight.time_raw[-1], self.t_step)
 
 
         ### Pre-Allocate the Things ###
@@ -86,19 +92,22 @@ class Simulation:
         print("Warning in Sim.run(), did a bad workaround for atm_state in aerothermal_heatflux call")
         print("Warning: Lots of assumptions in Thermal Conduction Model")
         print("Warning: Hilarious Workaround in Aerothermal Heatflux for Overriding m_inf < 1.0 values")
+        print("Simulation Progress: ")
 
 
         # For each time step (except for the last)
         for i, t in enumerate(self.t_vec[:-1]):
 
             # Calculate Aerothermal Hot-Wall Flux (possibly just pass 'self' into function to make cleaner)
+            atm_curr = Atmosphere([self.alt[i]])
+            
             self.q_conv[i], self.T_recovery[i] = aerothermal_heatflux(
                         Rocket              = self.Rocket,
                         AirModel            = self.AirModel,
                         T_w                 = self.wall_temps[0,i], 
                         x_location          = self.x_location, 
                         m_inf               = self.mach[i], 
-                        atm_state           = Atmosphere([self.alt[i]]), 
+                        atm_state           = atm_curr, 
                         shock_type          = self.shock_type,
                         aerothermal_model   = self.aerothermal_model,
                         bound_layer_model = self.bound_layer_model
@@ -106,11 +115,15 @@ class Simulation:
 
 
             # Net Heat Flux
-            self.q_net[i] = self.q_conv[i] - constants.SB_CONST * self.Aerosurface.elements[0].emis * (self.wall_temps[0,i]**4 - constants.T_RAD_AMB**4) 
+            self.q_net[i] = self.q_conv[i] - constants.SB_CONST * self.Aerosurface.elements[0].emis * (self.wall_temps[0,i]**4 - atm_curr.temperature**4) 
 
 
             # Calculate Temperature Rates of Change, and Propagate forward one time step
             self.wall_temps[:,i+1] = get_new_wall_temps( self.wall_temps[:,i], self.q_net[i], self)
+
+            # Print Time to screen every 5 flight seconds
+            if self.t_vec[i]%5 == 0:
+                print(self.t_vec[i], " seconds")
 
     
     def export_data_to_csv(self, out_filename = None):
@@ -258,7 +271,7 @@ class Rocket:
         #self.nosecone_angle, etc. = self.parse_RAS(RAS_Filename)
 
     def parse_RAS(RAS_Filename):
-        print("RAS CDX1 Parsing Functionality not yet implemented")
+        raise NotImplementedError()
 
 
 
@@ -293,7 +306,7 @@ class FlightData:
         df = df.to_numpy()
 
         #Split array into Time, Mach, and Altitude Vectors and Return
-        return df[:,0], df[:,1], df[:,2]
+        return df[:,0], df[:,1], df[:,2]*conversions.FT2M
 
 
     def get_sim_time_properties(self, t_sim_vec):
