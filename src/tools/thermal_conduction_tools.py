@@ -26,7 +26,7 @@ def wall_temp_change(Tvec_wall, q_net_in, Aerosurface, initial_temp):
 
         # Inner Wall
         elif i == len(Aerosurface.elements)-1:
-            T_internal = Tvec_wall[-1] # ADIABATIC?
+            T_internal = Tvec_wall[-1] # Inner Wall BC
             dT_dt[i] = e.k / (e.rho*e.cp* e.dy**2) * (T_internal - 2*Tvec_wall[i] + Tvec_wall[i-1])
 
         # #Middle Elements
@@ -37,25 +37,28 @@ def wall_temp_change(Tvec_wall, q_net_in, Aerosurface, initial_temp):
 
 
 
-  
-    
+def stability_criterion_check(SurfE, h, dt):
+    # From Ulsu-Simsek 
+    # This is a stability criterion for the numerical stability of the solver
+    # In my past experience this is a pretty good marker of when your timestep is too big. 
 
+    #If No Ablative, Structure is exposed
+    # dy = SurfE.dy
+    # rho_s = SurfE.rho
+    # Cp_s = SurfE.cp
+    # k_s = SurfE.k
 
+    #If Ablative is exposed, more annoying to deal with but yeah
+    # else:
+    #     dy = Abl.deltaVec(i)/(Sim.N - 1);
+    #     rho_s = Abl.rhoVec_tot(1,i);
+    #     Cp_s  = interp1(Abl.cpLUTab.Var1,Abl.cpLUTab.Var2, Abl.TVec(1,i), 'linear', 'extrap');
+    #     k_s = interp1(Abl.kLUTab.Var1,Abl.kLUTab.Var2, Abl.TVec(1,i),'linear', 'extrap');
+        
+    # Perform Stability Check 
+    F_0 = (SurfE.k * dt) / (SurfE.rho * SurfE.cp * SurfE.dy**2)
+    Bi = (h * SurfE.dy) / SurfE.k
 
-
-
-
-
-
-
-
-    
-
-
-
-
-
-def stability_criterion_check():
-    pass 
-
+    if ( F_0*(1+Bi) > .5):
+        print('Warning: Stability Criterion not met. Consider increasing time resolution (smaller time step) or \n decreasing the spatial wall resolution (decrease the number of wall nodes, Sim.N)')
 

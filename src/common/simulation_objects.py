@@ -7,6 +7,7 @@ import numpy as np
 import scipy
 
 
+
 # Standard Atmosphere Model/Package (CANT HANDLE HIGH-ALT)
 # https://ambiance.readthedocs.io/en/latest/index.html
 from ambiance import Atmosphere
@@ -18,7 +19,7 @@ from ..materials.materials_standard import solidMaterialDatabase
 from . import conversions
 from . import constants
 from ..tools.aerotherm_tools import aerothermal_heatflux
-from ..tools.thermal_conduction_tools import get_new_wall_temps
+from ..tools.thermal_conduction_tools import get_new_wall_temps, stability_criterion_check
 
 
 
@@ -39,6 +40,7 @@ class Simulation:
         gas_model = 'air_standard'
     ):
         
+        #Really Gross Block of Assigning Variables
         self.Aerosurface        = Aerosurface 
         self.Rocket             = Rocket 
         self.Flight             = Flight
@@ -56,18 +58,20 @@ class Simulation:
     def sim_initialize(self):
 
         # Generate Time Vector (Pull last time value in Flight Data)
-        #If we are clipping
         if self.t_end is not None:
+            #If a end value is specified
             self.t_vec = np.arange(0.0, self.t_end, self.t_step)
         else:
             self.t_vec = np.arange(0.0, self.Flight.time_raw[-1], self.t_step)
 
 
         ### Pre-Allocate the Things ###
+        
         #Scalar Quantities vs. Time
         t_vec_size      = np.size(self.t_vec)
-        self.q_conv = np.zeros((t_vec_size,), dtype=float)
-        self.q_net = np.zeros((t_vec_size,), dtype=float)
+        self.q_conv     = np.zeros((t_vec_size,), dtype=float)
+        self.q_rad      = np.zeros((t_vec_size,), dtype=float)
+        self.q_net      = np.zeros((t_vec_size,), dtype=float)
         self.h_coeff    = np.zeros((t_vec_size,), dtype=float)
         self.T_recovery = np.zeros((t_vec_size,), dtype=float)
 
@@ -89,19 +93,19 @@ class Simulation:
         #Initialize Simulation Values
         self.sim_initialize()
 
-        print("Warning in Sim.run(), did a bad workaround for atm_state in aerothermal_heatflux call")
-        print("Warning: Lots of assumptions in Thermal Conduction Model")
-        print("Warning: Hilarious Workaround in Aerothermal Heatflux for Overriding m_inf < 1.0 values")
+        print("Warning: Modifications to Stability Criterion Check Needed when Ablative is added")
+
         print("Simulation Progress: ")
 
 
         # For each time step (except for the last)
         for i, t in enumerate(self.t_vec[:-1]):
 
-            # Calculate Aerothermal Hot-Wall Flux (possibly just pass 'self' into function to make cleaner)
+            #Get Current Atmosphere State      
             atm_curr = Atmosphere([self.alt[i]])
-            
-            self.q_conv[i], self.T_recovery[i] = aerothermal_heatflux(
+
+            # Calculate Aerothermal Hot-Wall Flux (possibly just pass 'self' into function to make cleaner)
+            self.q_conv[i], self.h_coeff[i], self.T_recovery[i] = aerothermal_heatflux(
                         Rocket              = self.Rocket,
                         AirModel            = self.AirModel,
                         T_w                 = self.wall_temps[0,i], 
@@ -113,17 +117,22 @@ class Simulation:
                         bound_layer_model = self.bound_layer_model
             )
 
+            # Radiative Heat Flux
+            self.q_rad[i] = -constants.SB_CONST * self.Aerosurface.elements[0].emis * (self.wall_temps[0,i]**4 - atm_curr.temperature**4)
 
             # Net Heat Flux
-            self.q_net[i] = self.q_conv[i] - constants.SB_CONST * self.Aerosurface.elements[0].emis * (self.wall_temps[0,i]**4 - atm_curr.temperature**4) 
+            self.q_net[i] = self.q_conv[i] + self.q_rad[i]
 
+            # Perform Stability Criterion Check
+            stability_criterion_check(self.Aerosurface.elements[0], self.h_coeff[i], self.t_step)
 
             # Calculate Temperature Rates of Change, and Propagate forward one time step
             self.wall_temps[:,i+1] = get_new_wall_temps( self.wall_temps[:,i], self.q_net[i], self)
 
             # Print Time to screen every 5 flight seconds
-            if self.t_vec[i]%5 == 0:
-                print(self.t_vec[i], " seconds")
+            if self.t_vec[i]%5 == 0:  print(self.t_vec[i], " seconds") 
+                
+
 
     
     def export_data_to_csv(self, out_filename = None):
@@ -131,9 +140,8 @@ class Simulation:
         # Creates CVS of time, and each of the export_variables specified below, using those names as the column headers, 
         # followed each of the node temperatures vs time, with each node beign a different column, starting from the surface, to the inner wall, 
 
-
-        # List of Variables to export
-        export_variables = ['t_vec','mach','alt','q_conv', 'q_net', 'T_recovery']
+        # List of Simulation Variables to export
+        export_variables = ['t_vec', 'mach', 'alt', 'q_conv', 'q_rad', 'q_net', 'h_coeff', 'T_recovery']
 
         # Create Blank Dataframe
         out_data = pandas.DataFrame()

@@ -2,13 +2,10 @@
 
 import numpy as np
 
-from math import pow, sqrt
+from math import pow, sqrt, log10
 
 from ..common import constants
-
 from . import aero_tools
-
-
 
 
 def aerothermal_heatflux(
@@ -23,14 +20,12 @@ def aerothermal_heatflux(
                     bound_layer_model = 'turbulent',
 ):
 
-
     # Shock Calc
     if shock_type != "oblique":
         raise NotImplementedError()
 
 
     # Break-out Pre-Shock/Free-Stream State, 
-
     p_inf   = atm_state.pressure
     T_inf   = atm_state.temperature
     rho_inf = atm_state.density
@@ -38,7 +33,6 @@ def aerothermal_heatflux(
 
 
     #Determine Edge Properties (behind shock if needed)
-    
     if m_inf >  1.0:
         # Yes Shock - Shock Relations for Post-Shock Properties
         m_e, p2op1, rho2orho1, T2oT1, _, p02op01, _ =  aero_tools.oblique_shock( m_inf, AirModel.gam, Rocket.nosecone_angle_rad)
@@ -53,24 +47,46 @@ def aerothermal_heatflux(
         T_e = T_inf
         
         
-    #Get Aero/Transport Properties at BL Edge
+    #Get Aero Properties at BL Edge
+    rho_e = p_e / (AirModel.R*T_e)
     T_te = aero_tools.total_temperature(T_e, m_e, AirModel.gam) #Total Temperature at Edge
     u_e = sqrt(AirModel.gam * AirModel.R * T_e) * m_e
 
+    #Get Transport Properties at BL Edge
     cp_e = AirModel.specific_heat(T_e)
     k_e  = AirModel.thermal_conductivity(T_e)
     mu_e = AirModel.dynamic_viscosity(T_e)
-    
     pr_e = cp_e * mu_e / k_e  #Prandtl at Edge
 
+    Re_e = (rho_e*u_e*x_location)/mu_e #Reynolds eval'd at Edge
+
     
-    # Calculate Recovery, Reference Temperature
+    # Get Recovery Factor Based on BL State
+    isTurbulent = True #Flag - Defaults to Turbulent
+
     if bound_layer_model == 'turbulent':
         r = pow(pr_e, 1.0/3.0)
-        T_r     = recovery_temperature(T_e, T_te, T_w, r)
-        T_ref   = eckert_ref_temperature(T_e, T_te, T_w, r)
+    
+    elif bound_layer_model == 'laminar':
+        isTurbulent = False
+        r = pow(pr_e, 1.0/2.0)
+    
+    elif bound_layer_model == 'transition':
+        #Reynolds Number Criterion for Transition from Ulsu
+        if (log10(Re_e) <= 5.5 + constants.C_M*m_e):
+            #If Laminar
+            isTurbulent = False
+            r = pow(pr_e, 1.0/2.0)
+        else:
+            #Turbulent
+            r = pow(pr_e, 1.0/3.0)
     else:
-        raise NotImplementedError('Turbulent only plox')
+        raise Exception("Invalid Boundary Layer Model Specification")
+
+    r = pow(pr_e, 1.0/3.0)
+    T_r     = recovery_temperature(T_e, T_te, T_w, r)
+    T_ref   = eckert_ref_temperature(T_e, T_te, T_w, r)
+
     
     # Calculate Transport Properties at Reference Temperature
     cp_ref = AirModel.specific_heat(T_ref)
@@ -83,11 +99,10 @@ def aerothermal_heatflux(
     Re_ref = (rho_ref*u_e*x_location)/mu_ref #Reynolds eval'd at RefTemp
     pr_ref = cp_ref * mu_ref / k_ref  #Prandtl eval'd at RefTemp
 
-
     # Heating Model
-    q_w = ulsu_simsek_heat_transfer(x_location, T_w, T_r, k_ref, Re_ref, pr_ref)
+    q_conv, h = ulsu_simsek_heat_transfer(x_location, T_w, T_r, k_ref, Re_ref, pr_ref, isTurbulent)
 
-    return q_w, T_r
+    return q_conv, h, T_r
 
 
 
@@ -124,23 +139,25 @@ def tauber_cone_heating():
 
 
 
-def ulsu_simsek_heat_transfer(x, T_w, T_r, k_ref, Re_ref, pr_ref):
-
-    # CAN ONLY HANDLE TURBULENT AS OF RN
+def ulsu_simsek_heat_transfer(x, T_w, T_r, k_ref, Re_ref, pr_ref, isTurbulent):
 
     # #Laminar to Turbulent Transition as given in Quinn and Gong
-    # if (log10(Re_star) <= 5.5 + Sim.C_m*M_L)
-    #     #Laminar Heat Transfer Coeff (USLU)
-    #     h = (k_star/Sim.x) * 0.33206 * Re_star ^ (1/2) * Pr_star ^ (1/3);
-    #     lam = .5;
-    # else
-    
-    #Turbulent Heat Transfer Coeff
-    h =  (k_ref/x) * 0.02914 * pow(Re_ref, 4.0/5.0) * pow(pr_ref, 1.0/3.0)
-    #lam = .4;
+    if isTurbulent:
+        #Turbulent Heat Transfer Coeff
+        h =  (k_ref/x) * 0.02914 * pow(Re_ref, 4.0/5.0) * pow(pr_ref, 1.0/3.0)
+        #lam = .4;
+    else:
+        #Laminar Heat Transfer Coeff
+        h = (k_ref/x) * 0.33206 * pow(Re_ref, 1.0/2.0) * pow(pr_ref, 1.0/3.0)
+        #lam = .5;
+        
+
+    # Heat Flux
+    q_conv = h*(T_r - T_w)
+
 
     #Heat Flux
-    return h*(T_r - T_w)
+    return q_conv, h 
 
 
 
