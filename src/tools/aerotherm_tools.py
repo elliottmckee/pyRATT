@@ -19,6 +19,18 @@ def aerothermal_heatflux(
                     aerothermal_model,
                     bound_layer_model = 'turbulent',
 ):
+    '''
+    Returns material properties for a solid, nonablating wall material from the database (if-else chain) below 
+
+            Parameters:
+                    material_name (str): string corresponding to the material to be used,
+                                            must match an item in the if-else chain below
+
+            Returns:
+                    rho,    material density [kg/m^3]
+ 
+    '''
+
 
     # Shock Calc
     if shock_type != "oblique":
@@ -30,6 +42,7 @@ def aerothermal_heatflux(
     T_inf   = atm_state.temperature
     rho_inf = atm_state.density
     mu_inf  = atm_state.dynamic_viscosity
+
 
 
     #Determine Edge Properties (behind shock if needed)
@@ -102,7 +115,7 @@ def aerothermal_heatflux(
     # Heating Model
     q_conv, h = ulsu_simsek_heat_transfer(x_location, T_w, T_r, k_ref, Re_ref, pr_ref, isTurbulent)
 
-    return q_conv, h, T_r
+    return q_conv, h, T_te, T_r
 
 
 

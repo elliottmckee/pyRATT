@@ -1,11 +1,10 @@
-# This is for any Constants we are likely to use throughout
+"""
+For the definition of any hard-coded constants to be used througout a Simulation
 
-#To use,
-# from ..common import constants
-# constants.R_AIR
+For usage, see simulation_objects.py
 
-#ADD SOURCES TO THESE WHEN POSSIBLE
-
+Where it makes sense, make sure constants have sources. 
+"""
 
 
 #Stefan-Boltzman Constant 
