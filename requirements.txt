@@ -2,3 +2,4 @@ numpy
 scipy
 ambiance
 pandas
+matplotlib
