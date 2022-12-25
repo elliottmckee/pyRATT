@@ -2,23 +2,28 @@
 
 import numpy as np
 
+# Standard Atmosphere Model/Package (CANT HANDLE HIGH-ALT)
+# https://ambiance.readthedocs.io/en/latest/index.html
+from ambiance import Atmosphere
+
 from math import pow, sqrt, log10
 
 from ..common import constants
 from . import aero_tools
 
 
-def aerothermal_heatflux(
-                    Rocket,
-                    AirModel,
-                    T_w, 
-                    x_location, 
-                    m_inf, 
-                    atm_state, 
-                    shock_type, 
-                    aerothermal_model,
-                    bound_layer_model = 'turbulent',
-):
+# def aerothermal_heatflux(
+#                     Rocket,
+#                     AirModel,
+#                     T_w, 
+#                     x_location, 
+#                     m_inf, 
+#                     atm_state, 
+#                     shock_type, 
+#                     aerothermal_model,
+#                     bound_layer_model = 'turbulent',
+# ):
+def aerothermal_heatflux(Sim, i):
     '''
     Returns material properties for a solid, nonablating wall material from the database (if-else chain) below 
 
@@ -30,25 +35,56 @@ def aerothermal_heatflux(
                     rho,    material density [kg/m^3]
  
     '''
+    
+    #Break out Exposed Surface Wall Temp
+    T_w = Sim.wall_temps[0,i]
+
+    # calculate boundary layer edge properties
+    p_e, rho_e, T_e, T_te, m_e, u_e, cp_e, k_e, mu_e, pr_e, Re_e = get_edge_properties(Sim, i)
+
+    # determine boundary layer state
+    isTurbulent = get_bl_state(Sim, Re_e, m_e)
+    
+    # calculate recovery factor, temperature
+    r   = recovery_factor(isTurbulent, pr_e)
+    T_r = recovery_temperature(T_e, T_te, T_w, r)
+
+    # calculate Eckert reference temperature
+    T_ref = eckert_ref_temperature(T_e, T_te, T_w, r)
+
+    # Get fluid properties evaluated at reference temperature
+    rho_ref, cp_ref, k_ref, mu_ref, pr_ref, Re_ref = complete_aero_state(Sim.AirModel, Sim.x_location, p_e, T_ref, u_e)
+
+    # Heating Model
+    q_conv, h = ulsu_simsek_heat_transfer(Sim.x_location, T_w, T_r, k_ref, Re_ref, pr_ref, isTurbulent)
+
+    return q_conv, h, T_te, T_r
 
 
-    # Shock Calc
-    if shock_type != "oblique":
-        raise NotImplementedError()
 
+def get_edge_properties(Sim, i):
+
+    #Pulling the Air model out because it gets used a lot
+    AirModel = Sim.AirModel
+
+    #Get Current Free-stream props
+    atm_inf = Atmosphere([Sim.alt[i]])
+    m_inf = Sim.mach[i]
 
     # Break-out Pre-Shock/Free-Stream State, 
-    p_inf   = atm_state.pressure
-    T_inf   = atm_state.temperature
-    rho_inf = atm_state.density
-    mu_inf  = atm_state.dynamic_viscosity
+    p_inf   = atm_inf.pressure
+    T_inf   = atm_inf.temperature
+    rho_inf = atm_inf.density
+    mu_inf  = atm_inf.dynamic_viscosity
 
-
+    # Shock Calc
+    if Sim.shock_type != "oblique":
+        raise NotImplementedError()
 
     #Determine Edge Properties (behind shock if needed)
     if m_inf >  1.0:
         # Yes Shock - Shock Relations for Post-Shock Properties
-        m_e, p2op1, rho2orho1, T2oT1, _, p02op01, _ =  aero_tools.oblique_shock( m_inf, AirModel.gam, Rocket.nosecone_angle_rad)
+        m_e, p2op1, _, T2oT1, _, _, _ =  aero_tools.oblique_shock( m_inf, AirModel.gam, Sim.Rocket.nosecone_angle_rad)
 
         p_e = p2op1 * p_inf
         T_e = T2oT1 * T_inf
@@ -60,63 +96,62 @@ def aerothermal_heatflux(
         T_e = T_inf
         
         
-    #Get Aero Properties at BL Edge
-    rho_e = p_e / (AirModel.R*T_e)
-    T_te = aero_tools.total_temperature(T_e, m_e, AirModel.gam) #Total Temperature at Edge
+    # Total Temperature at Edge
+    T_te = aero_tools.total_temperature(T_e, m_e, AirModel.gam) 
+
+    # Edge Velocity
     u_e = sqrt(AirModel.gam * AirModel.R * T_e) * m_e
-
-    #Get Transport Properties at BL Edge
-    cp_e = AirModel.specific_heat(T_e)
-    k_e  = AirModel.thermal_conductivity(T_e)
-    mu_e = AirModel.dynamic_viscosity(T_e)
-    pr_e = cp_e * mu_e / k_e  #Prandtl at Edge
-
-    Re_e = (rho_e*u_e*x_location)/mu_e #Reynolds eval'd at Edge
-
     
-    # Get Recovery Factor Based on BL State
-    isTurbulent = True #Flag - Defaults to Turbulent
+    #Complete Aero State at Edge conditions
+    rho_e, cp_e, k_e, mu_e, pr_e, Re_e = complete_aero_state(AirModel, Sim.x_location, p_e, T_e, u_e)
 
-    if bound_layer_model == 'turbulent':
-        r = pow(pr_e, 1.0/3.0)
+    return p_e, rho_e, T_e, T_te, m_e, u_e, cp_e, k_e, mu_e, pr_e, Re_e
+
+
+
+def complete_aero_state(AirModel, x_location, p, T, u):
+
+    #Get Aero Properties
+    rho = p / (AirModel.R*T)
     
-    elif bound_layer_model == 'laminar':
-        isTurbulent = False
-        r = pow(pr_e, 1.0/2.0)
+    #Get Transport Properties
+    cp = AirModel.specific_heat(T)
+    k  = AirModel.thermal_conductivity(T)
+    mu = AirModel.dynamic_viscosity(T)
+    pr = cp * mu / k 
+
+    #Reynolds No
+    Re = (rho*u*x_location)/mu 
+
+    return rho, cp, k, mu, pr, Re 
+
+
+def get_bl_state(Sim, Re_e, m_e):
+
+    if Sim.bound_layer_model == 'turbulent':
+        return True
     
-    elif bound_layer_model == 'transition':
+    elif Sim.bound_layer_model == 'laminar':
+        return False
+    
+    elif Sim.bound_layer_model == 'transition':
         #Reynolds Number Criterion for Transition from Ulsu
         if (log10(Re_e) <= 5.5 + constants.C_M*m_e):
             #If Laminar
-            isTurbulent = False
-            r = pow(pr_e, 1.0/2.0)
+            return False
         else:
             #Turbulent
-            r = pow(pr_e, 1.0/3.0)
+            return True
     else:
         raise Exception("Invalid Boundary Layer Model Specification")
 
-    r = pow(pr_e, 1.0/3.0)
-    T_r     = recovery_temperature(T_e, T_te, T_w, r)
-    T_ref   = eckert_ref_temperature(T_e, T_te, T_w, r)
 
-    
-    # Calculate Transport Properties at Reference Temperature
-    cp_ref = AirModel.specific_heat(T_ref)
-    k_ref  = AirModel.thermal_conductivity(T_ref)
-    mu_ref = AirModel.dynamic_viscosity(T_ref)
 
-    rho_ref = p_e / (AirModel.R*T_ref)
-
-    #SHOULD VELOCITY BE ALTERED AT ALL FROM REFERENCE TEMP?
-    Re_ref = (rho_ref*u_e*x_location)/mu_ref #Reynolds eval'd at RefTemp
-    pr_ref = cp_ref * mu_ref / k_ref  #Prandtl eval'd at RefTemp
-
-    # Heating Model
-    q_conv, h = ulsu_simsek_heat_transfer(x_location, T_w, T_r, k_ref, Re_ref, pr_ref, isTurbulent)
-
-    return q_conv, h, T_te, T_r
-
+def recovery_factor(isTurbulent, pr_e):
+    if isTurbulent:
+        return pow(pr_e, 1.0/3.0)
+    else:
+        return pow(pr_e, 1.0/2.0)
 
 
 
@@ -124,7 +159,6 @@ def recovery_temperature(T_e, T_te, T_w, r):
     # Source: Bertin Hypersonic Aerothermodynamics
     return r * (T_te - T_e) + T_e
     
-
 
 
 def eckert_ref_temperature(T_e, T_te, T_w, r):
@@ -136,19 +170,6 @@ def eckert_ref_temperature(T_e, T_te, T_w, r):
 
     #Eckert Reference Temperature 
     return 0.5*(T_e + T_w) + 0.22*r*(T_te - T_e) # Source: Bertin, Hypersonic Aerothermodynamics
-
-
-
-#Fay-Riddell Stagnation Point Heating
-def fay_riddell_stagnation_point_heating():
-    pass
-
-#Flat-Plate Heating Correlations
-def tauber_flat_plate_heating():
-    pass
-
-def tauber_cone_heating():
-    pass
 
 
 
@@ -171,6 +192,20 @@ def ulsu_simsek_heat_transfer(x, T_w, T_r, k_ref, Re_ref, pr_ref, isTurbulent):
 
     #Heat Flux
     return q_conv, h 
+
+
+
+#Fay-Riddell Stagnation Point Heating
+def fay_riddell_stagnation_point_heating():
+    pass
+
+#Flat-Plate Heating Correlations
+def tauber_flat_plate_heating():
+    pass
+
+def tauber_cone_heating():
+    pass
+
 
 
 

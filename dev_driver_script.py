@@ -18,6 +18,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import sys
 import filecmp
+import time
 
 # # Standard Atmosphere Model/Package (CANT HANDLE HIGH-ALT)
 # # https://ambiance.readthedocs.io/en/latest/index.html
@@ -63,11 +64,17 @@ if __name__ == "__main__":
 
 
 
+    # print(filecmp.cmp('hifire_5_out_data.csv', 'hifire_5_out_data_new.csv'))
+    # quit()
+
+
+
     ### Mini MeatRocket Section ###
-    
+    #start = time.time()
+
     #convert_AVA_traj_to_RAS(os.path.join(os.getcwd(), "example_files", "mini_meat", "2022-12-17-serial-5939-flight-0003.csv"), os.path.join(os.getcwd(), "example_files", "mini_meat", "2022-12-17-serial-5939-flight-0003_RAS_FORMAT.CSV"))
     #flight_data = pd.read_csv(os.path.join(os.getcwd(), "example_files", "mini_meat", "2022-12-17-serial-5939-flight-0003_RAS_FORMAT.CSV"), usecols=['Time (sec)', 'Mach Number', 'Altitude (ft)'])
-
+    
     AluminumWall = SolidWallComponent(material = "ALU6061", tot_thickness = 0.0025, n_nodes = 9, emis_override = None)
     MyAerosurf = AerosurfaceStack(wall_components = [AluminumWall], surface_type = "nosecone", interface_resistances = None)
     MyRocket = Rocket(nosecone_half_angle_deg = 12.0)
@@ -85,13 +92,15 @@ if __name__ == "__main__":
     
     # #Run Simulation
     MySimulation.run()
-
+    # end = time.time()
+    # print("Elapsed Time: ", end - start)
 
     print("Add Emissivity Override as a Sim Variable")
     print("Deleting the SolidMaterial object")
     print("Nodes or elements? Resolve confusion in var names, etc.")
     print("Plot Cp table points and interpolation to see if linear interpolation is enough")
     print("Find better way to index from Atmos?")
+    print("My new way of making aerotherm_tools less complicated is slower")
 
 
 

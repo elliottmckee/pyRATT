@@ -6,7 +6,7 @@ import numpy as np
 
 #from . import conversions
 from . import constants
-from ..tools.aerotherm_tools import aerothermal_heatflux
+from ..tools.aerotherm_tools_copy import aerothermal_heatflux
 from ..tools.thermal_conduction_tools import get_new_wall_temps, stability_criterion_check
 
 # Standard Atmosphere Model/Package (CANT HANDLE HIGH-ALT)
@@ -21,53 +21,57 @@ class Simulation:
 
     Attributes
     ----------
-    Aerosurface : AeroSurface object
-        object representing the aerosurface being simulated
-    Rocket : Rocket object
-        object representing the rocket geometry
-    Flight : FlightData object
-        object containing the flight data for the desired flight trajectory
-    AirModel : AirModel object
-        object representing the free-stream/atmospheric air model
-    x_location: float
-        downstream x location to be simulated
-    t_step: float
-        simulation timestep
-    t_end : float
-        simulation end time
-    t_vec : numpy float array
-        array containing simulation time values
-    initial_temp : float
-        initial temperature for all of the wall surface elements
-    aerothermal_model : string
-        used to specify which aerothermal heating equations/models are utilized
-    bound_layer_model : string
-        used to specify the boundary layer behavior (laminar, turbulent, transition)
-    shock_type : string
-        used for specifying normal, oblique, or conical shock for the upstream shock modelling
-    gas_model : ???
-        ??????????????????????????????????
-    q_conv : numpy float 1D array  
-        convective heat flux at each time step 
-    q_rad : numpy float 1D array  
-        radiative heat flux at each time step   
-    q_net : numpy float 1D array 
-        net heat flux at each time step     
-    h_coeff : numpy float 1D array 
-        heat transfer coefficient at each time step   
-    T_stag : numpy float 1D array
-        free stream stagnation or total temperature  at each time step    
-    T_recovery : numpy float 1D array 
-        flow recovery temperature at each time step 
-    wall_temps : numpy float 2D array
-        2D array, wall_temps[k,i], where k is the element number (0 is exposed/hot wall, 1 is interior wall for nosecone), and i is the simulation timestep
-    mach : numpy float array
-        mach at each timestep
-    alt : numpy float array
-        altitude (clipped to atmosphere model if needed) at each timestep
-    atmos : Ambience Atmosphere object
-        can be used to re-create other free stream atmosphere variables, like pressure, temp, etc. 
-
+    REQUIRED OBJECTS
+        Aerosurface : AeroSurface object
+            object representing the aerosurface being simulated
+        Rocket : Rocket object
+            object representing the rocket geometry
+        Flight : FlightData object
+            object containing the flight data for the desired flight trajectory
+        AirModel : AirModel object
+            object representing the free-stream/atmospheric air model
+    PARAMETERS/OPTIONS
+        x_location: float
+            downstream x location to be simulated
+        t_step: float
+            simulation timestep
+        t_end : float
+            simulation end time
+        t_vec : numpy float array
+            array containing simulation time values
+        initial_temp : float
+            initial temperature for all of the wall surface elements
+        aerothermal_model : string
+            used to specify which aerothermal heating equations/models are utilized
+        bound_layer_model : string
+            used to specify the boundary layer behavior (laminar, turbulent, transition)
+        shock_type : string
+            used for specifying normal, oblique, or conical shock for the upstream shock modelling
+        gas_model : ???
+            ??????????????????????????????????
+    RESULTS/DATA
+        mach : numpy float array
+            mach at each timestep
+        alt : numpy float array
+            altitude (clipped to atmosphere model if needed) at each timestep
+        atmos : Ambience Atmosphere object
+            can be used to re-create other free stream atmosphere variables, like pressure, temp, etc. 
+        q_conv : numpy float 1D array  
+            convective heat flux at each time step 
+        q_rad : numpy float 1D array  
+            radiative heat flux at each time step   
+        q_net : numpy float 1D array 
+            net heat flux at each time step     
+        h_coeff : numpy float 1D array 
+            heat transfer coefficient at each time step   
+        T_stag : numpy float 1D array
+            free stream stagnation or total temperature  at each time step    
+        T_recovery : numpy float 1D array 
+            flow recovery temperature at each time step 
+        wall_temps : numpy float 2D array
+            2D array, wall_temps[k,i], where k is the element number (0 is exposed/hot wall, -1 is interior wall for nosecone), and i is the simulation timestep
+        
+        
 
     Methods
     -------
@@ -101,7 +105,7 @@ class Simulation:
         gas_model = 'air_standard'
     ):
         
-        #Really Gross Block of Assigning Variables
+        #really gross block of passing-through variables
         self.Aerosurface        = Aerosurface 
         self.Rocket             = Rocket 
         self.Flight             = Flight
@@ -118,7 +122,7 @@ class Simulation:
 
     def sim_initialize(self):
 
-        # Generate Time Vector (Pull last time value in Flight Data)
+        # Generate Time Vector (Either ends at t_end if specified, or the last time value in the flight data)
         if self.t_end is not None:
             #If a end value is specified
             self.t_vec = np.arange(0.0, self.t_end, self.t_step)
@@ -126,9 +130,8 @@ class Simulation:
             self.t_vec = np.arange(0.0, self.Flight.time_raw[-1], self.t_step)
 
 
-        ### Pre-Allocate the Things ###
-        
-        #Scalar Quantities vs. Time
+        # ~Pre-Allocation~
+        # Scalar Quantities vs. Time
         t_vec_size      = np.size(self.t_vec)
         self.q_conv     = np.zeros((t_vec_size,), dtype=float)
         self.q_rad      = np.zeros((t_vec_size,), dtype=float)
@@ -136,15 +139,12 @@ class Simulation:
         self.h_coeff    = np.zeros((t_vec_size,), dtype=float)
         self.T_stag     = np.zeros((t_vec_size,), dtype=float)
         self.T_recovery = np.zeros((t_vec_size,), dtype=float)
-
-
         # Vector Quantities vs. Time
         self.wall_temps = np.zeros((self.Aerosurface.n_tot,t_vec_size), dtype=float)
 
 
         # Get/interpolate Sim-time values for Mach, Altitude, and Atmospheric Properties
         self.mach, self.alt, self.atmos = self.Flight.get_sim_time_properties(self.t_vec)
-
 
         #Set Initial Values for Wall Temperature at First Step
         self.wall_temps[:,0] = self.initial_temp
@@ -164,7 +164,7 @@ class Simulation:
         # For each time step (except for the last)
         for i, t in enumerate(self.t_vec[:-1]):
 
-            #Get Current Atmosphere State (this still feels kinda like a workaround)  
+            #Get Current Atmosphere State (this still feels kinda like a workaround, possibly optimize?)  
             atm_curr = Atmosphere([self.alt[i]])
 
             # Calculate Aerothermal Hot-Wall Flux (possibly just pass 'self' into function to make cleaner)
@@ -179,6 +179,7 @@ class Simulation:
                         aerothermal_model   = self.aerothermal_model,
                         bound_layer_model = self.bound_layer_model
             )
+            #self.q_conv[i], self.h_coeff[i], self.T_stag[i], self.T_recovery[i] = aerothermal_heatflux(self, i)
 
             # Radiative Heat Flux
             self.q_rad[i] = -constants.SB_CONST * self.Aerosurface.elements[0].emis * (self.wall_temps[0,i]**4 - (atm_curr.temperature)**4)

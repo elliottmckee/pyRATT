@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import sys
+import time
 
 # # Standard Atmosphere Model/Package (CANT HANDLE HIGH-ALT)
 # # https://ambiance.readthedocs.io/en/latest/index.html
@@ -31,7 +32,7 @@ from src.materials.air_model import AirModel
 
 if __name__ == "__main__":
 
-
+    start = time.time()
 
     # HiFire 5 Verification Case Setup
     AluWall     = SolidWallComponent(material = "ALU6061", tot_thickness = 0.02, n_nodes = 26, emis_override = None)
@@ -48,9 +49,11 @@ if __name__ == "__main__":
 
     #Run Simulation
     MySimulation.run()
+    end = time.time()
+    print("Elapsed Time: ", end - start)
 
     #Export
-    MySimulation.export_data_to_csv(out_filename = 'hifire_5_out_data.csv')
+    MySimulation.export_data_to_csv(out_filename = 'hifire_5_out_data_new.csv')
 
 
 
