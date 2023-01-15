@@ -27,6 +27,7 @@ def wall_temp_change(Tvec_wall, q_net_in, Aerosurface, initial_temp):
         # Inner Wall
         elif i == len(Aerosurface.elements)-1:
             T_internal = Tvec_wall[-1] # Inner Wall BC
+            #T_internal = initial_temp
             dT_dt[i] = e.k / (e.rho*e.cp* e.dy**2) * (T_internal - 2*Tvec_wall[i] + Tvec_wall[i-1])
 
         # #Middle Elements
