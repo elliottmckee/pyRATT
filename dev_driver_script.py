@@ -24,10 +24,10 @@ import time
 # # https://ambiance.readthedocs.io/en/latest/index.html
 # from ambiance import Atmosphere
 
-from src.common.obj_simulation import Simulation
-from src.common.obj_flight_rocket import Rocket, FlightData
-from src.common.obj_wall_components import SolidWallComponent, AerosurfaceStack
-from src.materials.air_model import AirModel
+from src.obj_simulation import FlightSimulation
+from src.obj_flight_rocket import Rocket, FlightData
+from src.obj_wall_components import SolidWallComponent, AerosurfaceStack
+from src.materials_fluid import AirModel
 
 
 
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     MyFlight = FlightData( os.path.join(os.getcwd(), "example_files", "mini_meat", "2022-12-17-serial-5939-flight-0003_RAS_FORMAT.CSV") )
 
     #Define a Simulation Object
-    MySimulation = Simulation(MyAerosurf, MyRocket, MyFlight, AirModel(),
+    MySimulation = FlightSimulation(MyAerosurf, MyRocket, MyFlight, AirModel(),
                                 x_location = 0.0508, 
                                 t_step = 0.0004,
                                 t_end = 20.0,

@@ -23,10 +23,10 @@ import time
 # # https://ambiance.readthedocs.io/en/latest/index.html
 # from ambiance import Atmosphere
 
-from src.common.obj_simulation import Simulation
-from src.common.obj_flight_rocket import Rocket, FlightData
-from src.common.obj_wall_components import SolidWallComponent, AerosurfaceStack
-from src.materials.air_model import AirModel
+from src.obj_simulation import FlightSimulation
+from src.obj_flight_rocket import Rocket, FlightData
+from src.obj_wall_components import SolidWallComponent, AerosurfaceStack
+from src.materials_fluid import AirModel
 
 
 
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     AeroSurf    = AerosurfaceStack(wall_components = [AluWall], surface_type = "nosecone", interface_resistances = None)
     MyRocket    = Rocket(nosecone_half_angle_deg = 7.0)
     MyFlight    = FlightData( os.path.join(os.getcwd(), "example_files", "hifire_5", "hifire5_traj_interp.csv") )
-    MySimulation= Simulation(AeroSurf, MyRocket, MyFlight, AirModel(),
+    MySimulation= FlightSimulation(AeroSurf, MyRocket, MyFlight, AirModel(),
                                 x_location = 0.2, 
                                 t_step = 0.0040,
                                 t_end = 215.0,
