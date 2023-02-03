@@ -82,7 +82,7 @@ if __name__ == "__main__":
     # Define a Flight Profile
     MyFlight = FlightData( os.path.join(os.getcwd(), "example_files", "mini_meat", "2022-12-17-serial-5939-flight-0003_RAS_FORMAT.CSV") )
 
-    #Define a Simulation Object
+    #Define a Flight Simulation Object
     MySimulation = FlightSimulation(MyAerosurf, MyRocket, MyFlight, AirModel(),
                                 x_location = 0.0508, 
                                 t_step = 0.0004,

@@ -97,6 +97,7 @@ class FlightSimulation:
         AirModel,
         x_location,
         t_step,
+        t_start = 0.0,
         t_end = None,
         initial_temp = 290.0,
         aerothermal_model = 'flat_plate',
@@ -112,6 +113,7 @@ class FlightSimulation:
         self.AirModel           = AirModel
         self.x_location         = x_location 
         self.t_step             = t_step
+        self.t_start            = t_start
         self.t_end              = t_end
         self.initial_temp       = initial_temp
         self.aerothermal_model  = aerothermal_model
@@ -125,9 +127,9 @@ class FlightSimulation:
         # Generate Time Vector (Either ends at t_end if specified, or the last time value in the flight data)
         if self.t_end is not None:
             #If a end value is specified
-            self.t_vec = np.arange(0.0, self.t_end, self.t_step)
+            self.t_vec = np.arange(self.t_start, self.t_end, self.t_step)
         else:
-            self.t_vec = np.arange(0.0, self.Flight.time_raw[-1], self.t_step)
+            self.t_vec = np.arange(self.t_start, self.Flight.time_raw[-1], self.t_step)
 
 
         # ~Pre-Allocation~
@@ -160,25 +162,13 @@ class FlightSimulation:
 
         print("Simulation Progress: ")
 
-
         # For each time step (except for the last)
         for i, t in enumerate(self.t_vec[:-1]):
 
             #Get Current Atmosphere State (this still feels kinda like a workaround, possibly optimize?)  
             atm_curr = Atmosphere([self.alt[i]])
 
-            # Calculate Aerothermal Hot-Wall Flux (possibly just pass 'self' into function to make cleaner)
-            # self.q_conv[i], self.h_coeff[i], self.T_stag[i], self.T_recovery[i] = aerothermal_heatflux(
-            #             Rocket              = self.Rocket,
-            #             AirModel            = self.AirModel,
-            #             T_w                 = self.wall_temps[0,i], 
-            #             x_location          = self.x_location, 
-            #             m_inf               = self.mach[i], 
-            #             atm_state           = atm_curr, 
-            #             shock_type          = self.shock_type,
-            #             aerothermal_model   = self.aerothermal_model,
-            #             bound_layer_model = self.bound_layer_model
-            # )
+            # Calculate Aerothermal Hot-Wall Heat Flux
             self.q_conv[i], self.h_coeff[i], self.T_stag[i], self.T_recovery[i] = aerothermal_heatflux(self, i)
 
             # Radiative Heat Flux
@@ -187,21 +177,22 @@ class FlightSimulation:
             # Net Heat Flux
             self.q_net[i] = self.q_conv[i] + self.q_rad[i]
 
-            # Perform Stability Criterion Check
+            # Check Stability Criterion
             stability_criterion_check(self.Aerosurface.elements[0], self.h_coeff[i], self.t_step)
 
             # Calculate Temperature Rates of Change, and Propagate forward one time step
             self.wall_temps[:,i+1] = get_new_wall_temps( self.wall_temps[:,i], self.q_net[i], self)
 
             # Print Time to screen every 5 flight seconds
-            if self.t_vec[i]%5 == 0:  print(self.t_vec[i], " seconds") 
+            if self.t_vec[i]%5 == 0:  print(self.t_vec[i], " seconds...") 
                 
 
     
     def export_data_to_csv(self, out_filename):
-        # Behavior:
-        # Creates CVS of time, and each of the export_variables specified below, using those names as the column headers, 
-        # followed each of the node temperatures vs time, with each node beign a different column, starting from the surface, to the inner wall, 
+        """
+        Creates CVS of time, and each of the export_variables specified, using those names as the column headers, 
+        followed each of the node temperatures vs time, with each node being a different column, starting from the surface, to the inner wall, 
+        """
 
         # List of Simulation Variables to export
         export_variables = ['t_vec', 'mach', 'alt', 'q_conv', 'q_rad', 'q_net', 'h_coeff', 'T_stag', 'T_recovery']
@@ -218,7 +209,6 @@ class FlightSimulation:
             
             col_name = f"T_wall:x={self.Aerosurface.y_loc[i]:.4f}"
             out_data[col_name] =   self.wall_temps[i,:]
-
     
         #Export CSV 
         out_data.to_csv(out_filename, index=False)
