@@ -78,37 +78,40 @@ class SolidElement:
     -
     """
 
-    def __init__(self, SolidWallComponent):
+    def __init__(self, material, dy):
 
-        self.dy = SolidWallComponent.el_thickness
-        self.rho = SolidWallComponent.rho
-        self.cp = SolidWallComponent.cp
-        self.k = SolidWallComponent.k
+
+        # Pull material properties from Solid Material Database
+        self.rho, self.cp, self.k, self.emis = solidMaterialDatabase(material)
+
+        # Element Thickness
+        self.dy = dy
+
+        
+
 
         #Leaving this in cuz maybe some materials we won't know the emissivity of, and you only need it for the surface element
-        if hasattr(SolidWallComponent, 'emis'):
-            self.emis = SolidWallComponent.emis
-        else:
-            raise Exception("Wall Component does not have a Emissivity value")
+        # if hasattr(SolidWallComponent, 'emis'):
+        #     self.emis = SolidWallComponent.emis
+        # else:
+        #     raise Exception("Wall Component does not have a Emissivity value")
 
 
 
-class AerosurfaceStack: 
+class WallStack: 
     """
-    Class to represent an "Aerosurface Stack," which is the combined stack of all wall materials that makes up the 
+    Class to create the computational representation of a wall stack, which is the combined stack of all wall materials that makes up the 
     through-wall direction of an Aerosurface. 
     # EX: Cork->RTV->Alu
     
     Example
     ----------
-    SingleComponentSolidAerosurf = AerosurfaceStack(wall_components = [AluminumSolidWallComponent], surface_type = "nosecone", interface_resistances = None)
+    
 
     Attributes
     ----------
-    wall_components : list of Wall Component Objects  
-        list of each of the wall material components that make up the aerosurface
-    surface_type : str   
-        defines what type of aerosurface this is (nosecone, fins, leading edge, etc)
+    wall_components : str list of Wall Component Objects  
+        list of each of the wall material names that make up the wall
     elements : float  
         ordered list containing wall element objects (different than components) that form the numerical representation of the 1D wall/aerosurface
     n_tot : int    
@@ -124,41 +127,45 @@ class AerosurfaceStack:
     -
     """
 
-    def __init__(self, wall_components, surface_type, interface_resistances: Optional[float] = None):
+    def __init__(self, materials, thicknesses, node_counts, interface_resistances: Optional[float] = None):
 
+        # Future Notes
         if interface_resistances is not None:
             raise NotImplementedError("I have not implemented this yet")
 
-        if surface_type != "nosecone":
-            raise NotImplementedError("Only type: 'nosecone' has been implmented")
 
 
-        self.wall_components = wall_components
-        self.surface_type = surface_type
-
-        # Create List of Elements, which represents the entire Wall/Stack/Aerosurface
-        self.elements = []
-        
-        #For the wall components
-        for i in range(len(self.wall_components)):
-            #For the number of elements in each wall section
-            for j in range(self.wall_components[i].n_nod):
-
-                #Append new element as specified by wall_component[i]
-                self.elements.append( SolidElement(self.wall_components[i]) )
+        #Maintain the User Specified inputs
+        self.materials = materials
+        self.thicknesses = thicknesses
+        self.node_counts = node_counts
+        self.interface_resistances = interface_resistances
 
         #Get total number of elements
-        self.n_tot = len(self.elements)
-            
-        #y node/element coordinate (through-wall) values array
-        self.y_loc = []
+        self.n_tot = sum(node_counts)
 
-        #Append new element to y_location vector, by adding an element thickness to the previous value
-        for e in self.elements:
-            if self.y_loc:
-                self.y_loc.append( self.y_loc[-1] + e.dy)
-            else:
-                self.y_loc.append(0.0)
+
+        # Initializing Lists to Append to 
+        self.elements = [] # List of Elements, which represents the entire Wall/Stack/Aerosurface
+        self.y_loc = [] # y, or through-wall coordinates
+        
+
+        #For each of the wall components
+        for i in range(len(materials)):
+
+            #Create a computational element corresponding to that material
+            dy_e = thicknesses[i]/(node_counts[i]-1)
+            element = SolidElement(materials[i], dy_e)
+
+            #Replicate for however many elements specified
+            for j in range(node_counts[i]):
+                self.elements.append(element)
+
+                #Append new element to y_location vector, by adding an element thickness to the previous value
+                if self.y_loc: #If y_loc isn't empty, increase previous value
+                    self.y_loc.append( self.y_loc[-1] + dy_e)
+                else: #If it is, its the first value (setting as 0.0)
+                    self.y_loc.append(0.0)
 
 
 
