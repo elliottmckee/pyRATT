@@ -8,95 +8,6 @@ from .materials_solid import solidMaterialDatabase
 #from . import constants
 
 
-class SolidWallComponent:
-    """
-    Class to represent a Solid, non-ablating wall component or layer.
-
-    
-    Example
-    ----------
-    AluminumWall = SolidWallComponent(material = "ALU6061", tot_thickness = 0.0025, n_nodes = 9, emis_override = None)
-    
-    Attributes
-    ----------
-    rho : float   
-        material density [kg/m^3]
-    cp : float  
-        material specific heat at constant pressure [J/KgC]
-    k : float     
-        material thermal conductivity [W/mK]
-    emis: float   
-        material Black Body Emissivity Coefficient 
-    tot_thickness : float
-        total component or layer thickness
-    el_thickness : float
-        thickness of each individual element
-    n_nod : int
-        number of discrete computational elements that a wall component is split into
-
-    Methods
-    -------
-
-    Notes
-    -------
-    -
-    """
-
-    def __init__(self, material, tot_thickness: float, n_nodes: int, emis_override: Optional[float] = None):
-        
-        #Get, assign material properties
-        self.rho, self.cp, self.k, self.emis = solidMaterialDatabase(material)
-
-        self.tot_thickness = tot_thickness
-        self.n_nod = n_nodes
-
-        self.el_thickness = tot_thickness / (n_nodes-1)
-
-    
-class SolidElement:
-    """
-    Class to represent a Solid, non-ablating wall element, for use in thermal conduction finite difference calculations
-
-    Attributes
-    ----------
-    dy : float   
-        element thickness (in the through-wall direction) [m]
-    rho : float   
-        material density [kg/m^3]
-    cp : float  
-        material specific heat at constant pressure [J/KgC]
-    k : float     
-        material thermal conductivity [W/mK]
-    emis: float   
-        material Black Body Emissivity Coefficient 
-    
-    Methods
-    -------
-
-    Notes
-    -------
-    -
-    """
-
-    def __init__(self, material, dy):
-
-
-        # Pull material properties from Solid Material Database
-        self.rho, self.cp, self.k, self.emis = solidMaterialDatabase(material)
-
-        # Element Thickness
-        self.dy = dy
-
-        
-
-
-        #Leaving this in cuz maybe some materials we won't know the emissivity of, and you only need it for the surface element
-        # if hasattr(SolidWallComponent, 'emis'):
-        #     self.emis = SolidWallComponent.emis
-        # else:
-        #     raise Exception("Wall Component does not have a Emissivity value")
-
-
 
 class WallStack: 
     """
@@ -130,9 +41,18 @@ class WallStack:
     def __init__(self, materials, thicknesses, node_counts, interface_resistances: Optional[float] = None):
 
         # Future Notes
+        print("In WallSurf- node/elememnt ambiguity may cause issues at interfaces when different sized wall elements, for y coord calculation")
+
         if interface_resistances is not None:
             raise NotImplementedError("I have not implemented this yet")
 
+        # Handling List and Singular Values for the above entries
+        if not isinstance(materials, list): 
+            materials = [materials]
+        if not isinstance(thicknesses, list): 
+            thicknesses = [thicknesses]
+        if not isinstance(node_counts, list): 
+            node_counts = [node_counts]
 
 
         #Maintain the User Specified inputs
@@ -142,32 +62,67 @@ class WallStack:
         self.interface_resistances = interface_resistances
 
         #Get total number of elements
-        self.n_tot = sum(node_counts)
+        self.n_tot = sum(list(node_counts))
 
-
-        # Initializing Lists to Append to 
-        self.elements = [] # List of Elements, which represents the entire Wall/Stack/Aerosurface
-        self.y_loc = [] # y, or through-wall coordinates
+        # List of Elements, which represents the entire Wall/Stack/Aerosurface
+        self.elements = [] 
         
-
         #For each of the wall components
         for i in range(len(materials)):
 
-            #Create a computational element corresponding to that material
+            #Calculate Element Thickness            
             dy_e = thicknesses[i]/(node_counts[i]-1)
-            element = SolidElement(materials[i], dy_e)
 
-            #Replicate for however many elements specified
+            #For the number of elements
             for j in range(node_counts[i]):
-                self.elements.append(element)
 
-                #Append new element to y_location vector, by adding an element thickness to the previous value
-                if self.y_loc: #If y_loc isn't empty, increase previous value
-                    self.y_loc.append( self.y_loc[-1] + dy_e)
-                else: #If it is, its the first value (setting as 0.0)
-                    self.y_loc.append(0.0)
+                #Update y location to feed into element
+                if not self.elements: #If List is empty
+                    y_e = 0.0
+                else: #Increment based on previous y value
+                    y_e = self.elements[-1].y + dy_e
+                
+
+                #Create a computational element corresponding to that material, append
+                self.elements.append( SolidElement(materials[i], y_e, dy_e) )
+
+                
 
 
 
 
+
+class SolidElement:
+    """
+    Class to represent a Solid, non-ablating wall element, for use in thermal conduction finite difference calculations
+
+    Attributes
+    ----------
+    dy : float   
+        element thickness (in the through-wall direction) [m]
+    rho : float   
+        material density [kg/m^3]
+    cp : float  
+        material specific heat at constant pressure [J/KgC]
+    k : float     
+        material thermal conductivity [W/mK]
+    emis: float   
+        material Black Body Emissivity Coefficient 
+    
+    Methods
+    -------
+
+    Notes
+    -------
+    -
+    """
+
+    def __init__(self, material, y, dy):
+
+        # Pull material properties from Solid Material Database
+        self.rho, self.cp, self.k, self.emis = solidMaterialDatabase(material)
+        # Element Coord
+        self.y = y
+        # Element Thickness
+        self.dy = dy
 

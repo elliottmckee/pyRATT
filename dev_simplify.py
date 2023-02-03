@@ -37,34 +37,17 @@ if __name__ == "__main__":
 
 
     
-    AluminumWall = WallStack(materials=["ALU6061"], thicknesses=[0.0025], node_counts = [9])
+    Wall = WallStack(materials="ALU6061", thicknesses=0.0025, node_counts = 9)
     
-
-    quit()
-
-
-
-
-
-
-
-
-
-    MyAerosurf = AerosurfaceStack(wall_components = [AluminumWall], surface_type = "nosecone", interface_resistances = None)
-    MyRocket = Rocket(nosecone_half_angle_deg = 12.0)
-
-    # Define a Flight Profile
     MyFlight = FlightData( os.path.join(os.getcwd(), "example_files", "mini_meat", "2022-12-17-serial-5939-flight-0003_RAS_FORMAT.CSV") )
 
-    #Define a Flight Simulation Object
-    MySimulation = FlightSimulation(MyAerosurf, MyRocket, MyFlight, AirModel(),
-                                x_location = 0.0508, 
+    MySimulation = FlightSimulation(Wall, MyFlight, AirModel(),
+                                x_location = 0.0508,
+                                deflection_angle_deg = 12.0, 
                                 t_step = 0.0004,
                                 t_end = 20.0,
                                 initial_temp = 281.15,
                                 boundary_layer_model = 'transition')
-    
-    # #Run Simulation
+
     MySimulation.run()
-    # end = time.time()
-    # print("Elapsed Time: ", end - start)
+

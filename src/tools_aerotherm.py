@@ -86,7 +86,7 @@ def get_edge_properties(Sim, i):
     #Determine Edge Properties (behind shock if needed)
     if m_inf >  1.0:
         # Yes Shock - Shock Relations for Post-Shock Properties
-        m_e, p2op1, _, T2oT1, _, _, _ =  tools_aero.oblique_shock( m_inf, AirModel.gam, Sim.Rocket.nosecone_angle_rad)
+        m_e, p2op1, _, T2oT1, _, _, _ =  tools_aero.oblique_shock( m_inf, AirModel.gam, Sim.deflection_angle_rad)
 
         p_e = p2op1 * p_inf
         T_e = T2oT1 * T_inf

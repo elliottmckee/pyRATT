@@ -92,10 +92,10 @@ class FlightSimulation:
     def __init__(
         self,
         Aerosurface,
-        Rocket,
         Flight,
         AirModel,
         x_location,
+        deflection_angle_deg,
         t_step,
         t_start = 0.0,
         t_end = None,
@@ -108,10 +108,11 @@ class FlightSimulation:
         
         #really gross block of passing-through variables
         self.Aerosurface        = Aerosurface 
-        self.Rocket             = Rocket 
         self.Flight             = Flight
         self.AirModel           = AirModel
-        self.x_location         = x_location 
+        self.x_location         = x_location
+        self.deflection_angle_deg = deflection_angle_deg 
+        self.deflection_angle_rad = deflection_angle_deg*constants.DEG2RAD
         self.t_step             = t_step
         self.t_start            = t_start
         self.t_end              = t_end
