@@ -1,40 +1,45 @@
 '''
 
-I will be coming back to this later to expand this header a good bit
+This includes test cases for checking the Transient Thermal conduction implementation. 
+
+Both are examples pulled from Incopera (see below) for a semi-infinite plate (infinite in all directions but one),
+where a wall at a fixed temperature is subjected at t=0.0 to either a fixed surface temperature, or a prescribed heat flux. 
 
 
-Description:
-This will be the main script that the User interacts with. 
-They will select which modules to run, point to the desired
-rocket/trajectory files, maybe point to a config file 
-containing extra information, and this will hand things off to simulate.py
 
+### USAGE ###
+I KNOW THIS IMPLEMENTATION IS DOGSHIT, BUT HERE'S HOW TO RUN THESE
+
+From the stata_mater base folder, run the following command:
+python3 tests/transient_conduction_verify.py
+
+I'm sorry 
+
+
+References:
+[1] Incropera et al., Fundamentals of Heat and Mass Transfer Sixth Edition, CH 5.7, Pg. 283-295
 
 '''
 
+import sys
 import os
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-import sys
-import filecmp
 import time
 import math
 from scipy import special
 
-# # Standard Atmosphere Model/Package (CANT HANDLE HIGH-ALT)
-# # https://ambiance.readthedocs.io/en/latest/index.html
-# from ambiance import Atmosphere
+#I have to do stupid ass directory bullshit because Python is shit with imports
+# Make it so it can find the 
+sys.path.append(os.path.dirname(os.getcwd()))
 
-from src.materials_solid import solidMaterialDatabase
-from src.obj_simulation import FlightSimulation
-from src.obj_flight_rocket import Rocket, FlightData
-from src.obj_wall_components import WallStack
-from src.materials_fluid import AirModel
-import src.tools_postproc as Post
-from src.tools_conduction import get_new_wall_temps
+from stata_mater.src.materials_solid import solidMaterialDatabase
+from stata_mater.src.obj_wall_components import WallStack
+from stata_mater.src.tools_conduction import get_new_wall_temps
 
 
+
+### ANALYTICAL SOLUTIONS
 
 # Instant Surface Temperature Analytical Solution
 def inst_T_an(x, t, T_i, T_s, alp):
@@ -52,13 +57,11 @@ def q_0_an(x, t, T_i, q_0, alp):
             + T_i
            
 
-    
-
 
 
 class Semi_Inf_Wall_Temp_Sim:
     #Pared down version of FligtSimulation object to just do wall conduction
-    #Either Specify T_i and T_s OR q_0
+    #Either Specify T_s OR q_0 to switch between ints. temp or heat flux cases
 
     def __init__(
         self,
@@ -80,7 +83,6 @@ class Semi_Inf_Wall_Temp_Sim:
         self.t_vec = np.arange(t_start, t_end, t_step)
         self.wall_temps = np.zeros((self.Aerosurface.n_tot, np.size(self.t_vec)), dtype=float)
 
-
         #Set initial wall temp
         self.wall_temps[:,0] = self.T_i
 
@@ -94,11 +96,9 @@ class Semi_Inf_Wall_Temp_Sim:
             print("Either specify T_s or q_0, not both")
         
 
-
     def run(self):
 
         print("Simulation Progress: ")
-
         # For each time step (except for the last)
         for i, t in enumerate(self.t_vec[:-1]):
             
@@ -137,12 +137,14 @@ if __name__ == "__main__":
 
 
     
-    ### DERIVED VALUES
+    ### DERIVED VALUES 
     rho, cp, k, _   = solidMaterialDatabase(test_material)
     alp             = k/(rho*cp)
 
     
 
+    ### SETUP AND SIMULATIONS
+    
     # Create Wall Object
     Wall = WallStack(materials="ALU6061", thicknesses=0.5, node_counts = 400)
     #Get coordinate data from wall
