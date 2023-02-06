@@ -3,18 +3,11 @@
 I will be coming back to this later to expand this header a good bit
 
 
-Description:
-This will be the main script that the User interacts with. 
-They will select which modules to run, point to the desired
-rocket/trajectory files, maybe point to a config file 
-containing extra information, and this will hand things off to simulate.py
-
-
 ##### USAGE #####
 I KNOW THIS IMPLEMENTATION IS DOGSHIT, BUT HERE'S HOW TO RUN THESE
 
 From the stata_mater folder, run the following command:
-python3 tests/hifire_5.py
+python3 tests/hifire_5b.py
 
 
 I'm sorry 
@@ -45,7 +38,6 @@ from stata_mater.src.materials_fluid import AirModel
 
 if __name__ == "__main__":
 
-    start = time.time()
 
     # HiFire 5B Verification Case Setup
 
@@ -85,11 +77,12 @@ if __name__ == "__main__":
 
 
     #Run Simulations
+    start = time.time()
+
     Sim_400.run()
     Sim_650.run()
     Sim_800.run()
 
-    #End Timer
     end = time.time()
     print("Elapsed Time for all 3 Sims: ", end - start)
 
@@ -109,9 +102,7 @@ if __name__ == "__main__":
 
     #Load Juliano Digitized Flight Data
     flightData_400 = pd.read_csv( os.path.join(os.getcwd(), "example_files", "hifire_5b", "5B_TempTime400.csv"), header = 1, names=['time','temp'])
-    
     flightData_650 = pd.read_csv( os.path.join(os.getcwd(), "example_files", "hifire_5b", "5B_TempTime650.csv"), header = 1, names=['time','temp'])
-
     flightData_800 = pd.read_csv( os.path.join(os.getcwd(), "example_files", "hifire_5b", "5B_TempTime800.csv"), header = 1, names=['time','temp'])
 
     # simsek_h_tRec_data = pd.read_csv( os.path.join(os.getcwd(), "example_files", "hifire_5", "raw_digitized", "HiFire_h_Treco.csv"),

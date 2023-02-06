@@ -21,7 +21,7 @@ Contains all the cool fun plotting utilities because the data vis for all this d
 
 def plot_results(Sim):
     """
-    This is basically going to be a wrapper to call all the basic plots you're probably gonna want
+    This is basically going to be a wrapper to call all the basic plots (from below) you're probably gonna want
     """
 
     #Wall Temp v Time

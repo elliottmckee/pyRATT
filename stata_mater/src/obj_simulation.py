@@ -168,8 +168,6 @@ class FlightSimulation:
         self.T_recovery = np.zeros((t_vec_size,), dtype=float)
         
 
-
-
         # Vector Quantities vs. Time
         self.wall_temps = np.zeros((self.Aerosurface.n_tot,t_vec_size), dtype=float)
 
@@ -185,7 +183,6 @@ class FlightSimulation:
 
         
         print("ADD CHECK IF SIM CONTAINS DATA BEFORE RUNNING")
-
         print("Warning: Modifications to Stability Criterion Check Needed when Ablative is added")
 
         print("Simulation Progress: ")
@@ -194,13 +191,8 @@ class FlightSimulation:
         # For each time step (except for the last)
         for i, t in enumerate(self.t_vec[:-1]):
 
-            # Get Current Atmospheric Properties
-
-
-
             # Calculate Aerothermal Hot-Wall Heat Flux
             aerothermal_heatflux(self, i)
-
 
             # Radiative Heat Flux
             self.q_rad[i] = -constants.SB_CONST * self.Aerosurface.elements[0].emis * (self.wall_temps[0,i]**4 - (self.T_inf[i])**4)
