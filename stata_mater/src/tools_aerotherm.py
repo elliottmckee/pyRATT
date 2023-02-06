@@ -4,7 +4,7 @@ import numpy as np
 
 # Standard Atmosphere Model/Package (CANT HANDLE HIGH-ALT)
 # https://ambiance.readthedocs.io/en/latest/index.html
-from ambiance import Atmosphere
+
 
 from math import pow, sqrt, log10
 
@@ -45,7 +45,8 @@ def aerothermal_heatflux(Sim, i):
     p_e, rho_e, T_e, T_te, m_e, u_e, cp_e, k_e, mu_e, pr_e, Re_e = get_edge_properties(Sim, i)
 
     # determine boundary layer state
-    Sim.bl_state[i] = get_bl_state(Sim, Re_e, m_e)
+    #Sim.bl_state[i] = get_bl_state(Sim, Re_e, m_e)
+    Sim.bl_state[i] = get_bl_state(Sim, Sim.Re_inf[i], Sim.mach[i])
     
     # calculate recovery factor, temperature
     r   = recovery_factor(Sim.bl_state[i], pr_e)
@@ -61,13 +62,14 @@ def aerothermal_heatflux(Sim, i):
     q_conv, h = ulsu_simsek_heat_transfer(Sim.x_location, T_w, T_r, k_ref, Re_ref, pr_ref, Sim.bl_state[i])
 
 
-    #Maintain Values
+    #Update Values
     Sim.T_e[i] = T_e
     Sim.T_te[i] = T_te
     Sim.T_recovery[i] = T_r
     Sim.h_coeff[i] = h
+    Sim.q_conv[i] = q_conv
 
-    return q_conv
+
 
 
 
@@ -76,18 +78,20 @@ def get_edge_properties(Sim, i):
     #Pulling the Air model out because it gets used a lot
     AirModel = Sim.AirModel
 
-    #Get Current Free-stream props
-    atm_inf = Atmosphere([Sim.alt[i]])
-    m_inf = Sim.mach[i]
+   
+    # Pull Free-Stream Values
+    tools_aero.get_freestream(Sim, i)
 
-    # Break-out Pre-Shock/Free-Stream State, 
-    p_inf   = atm_inf.pressure
-    T_inf   = atm_inf.temperature
-    rho_inf = atm_inf.density
-    mu_inf  = atm_inf.dynamic_viscosity
-    u_inf   = sqrt(AirModel.gam * AirModel.R * T_inf) * m_inf
+    #Aliasing these temporarily cuz I dont wanna re-write the below
+    # Update Free-Stream State values to time step i in Sim
+    m_inf     = Sim.mach[i]
+    p_inf    = Sim.p_inf[i]
+    T_inf    = Sim.T_inf[i]
+    u_inf    = Sim.u_inf[i]
 
-    
+
+    rho_inf, cp_inf, k_inf, mu_inf, pr_inf, Re_inf = complete_aero_state(AirModel, Sim.x_location, p_inf, T_inf, u_inf)
+
 
     # Shock Calc
     if Sim.shock_type != "oblique":
@@ -119,8 +123,8 @@ def get_edge_properties(Sim, i):
 
     # Maintain Free Stream Reynolds, Dynamic Pressure,
     Sim.T_inf[i] = T_inf
-    Sim.Re[i] = rho_inf * u_inf * Sim.x_location / mu_inf 
-    Sim.q_bar[i] = 0.5*rho_inf*u_inf**2
+    Sim.Re_inf[i] = Re_inf
+    Sim.qbar_inf[i] = 0.5*rho_inf*u_inf**2
     Sim.T_t[i] = tools_aero.total_temperature(T_inf, m_inf, AirModel.gam) 
 
 
@@ -146,17 +150,20 @@ def complete_aero_state(AirModel, x_location, p, T, u):
     return rho, cp, k, mu, pr, Re 
 
 
-def get_bl_state(Sim, Re_e, m_e):
+def get_bl_state(Sim, Re, mach):
+
 
     if Sim.bound_layer_model == 'turbulent':
         return 1
     
     elif Sim.bound_layer_model == 'laminar':
         return 0
-    
+
+    #Reynolds Number Criterion for Transition from Ulsu
+    # Assuming this uses the Free-Stream Values for Re and Mach
     elif Sim.bound_layer_model == 'transition':
-        #Reynolds Number Criterion for Transition from Ulsu
-        if (log10(Re_e) <= 5.5 + constants.C_M*m_e):
+        
+        if (log10(Re) <= 5.5 + constants.C_M*mach):
             #If Laminar
             return 0
         else:
@@ -223,8 +230,6 @@ def tauber_flat_plate_heating():
 
 def tauber_cone_heating():
     pass
-
-
 
 
 #Incopera Flat-Plate Heating Correlations

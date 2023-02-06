@@ -9,14 +9,14 @@ def get_new_wall_temps(Tvec_wall, q_net_in, Sim):
     """
 
     #Get Temperature Rates of Change
-    dT_dt = wall_temp_change(Tvec_wall, q_net_in, Sim.Aerosurface, Sim.initial_temp)
+    dT_dt = wall_temp_change(Tvec_wall, q_net_in, Sim.Aerosurface)
 
     # Update Temperatures
     return Tvec_wall + dT_dt*Sim.t_step
 
 
 
-def wall_temp_change(Tvec_wall, q_net_in, Aerosurface, initial_temp):
+def wall_temp_change(Tvec_wall, q_net_in, Aerosurface):
     
     #Initialize Zeros Vector
     dT_dt = np.zeros( (len(Aerosurface.elements),),  dtype=float)

@@ -58,27 +58,29 @@ if __name__ == "__main__":
                                 x_location = 0.40,
                                 deflection_angle_deg = 7.0, 
                                 t_step = 0.001,
-                                t_start = 513.0,
-                                t_end = 518.0,
-                                initial_temp = 360.7,
+                                t_start = 510.0,
+                                t_end = 520.0,
+                                initial_temp = 368.15,
                                 boundary_layer_model = 'transition')
+
 
     Sim_650 = FlightSimulation(AeroSurf, MyFlight, AirModel(),
                                 x_location = 0.65,
                                 deflection_angle_deg = 7.0, 
                                 t_step = 0.001,
-                                t_start = 513.0,
-                                t_end = 518.0,
-                                initial_temp = 360.7,
+                                t_start = 510.0,
+                                t_end = 520.0,
+                                initial_temp = 361.36,
                                 boundary_layer_model = 'transition')
+                                
 
     Sim_800 = FlightSimulation(AeroSurf, MyFlight, AirModel(),
                                 x_location = 0.80, 
                                 deflection_angle_deg = 7.0,
                                 t_step = 0.001,
-                                t_start = 513.0,
-                                t_end = 518.0,
-                                initial_temp = 360.7,
+                                t_start = 510.0,
+                                t_end = 520.0,
+                                initial_temp = 360.86,
                                 boundary_layer_model = 'transition')
 
 

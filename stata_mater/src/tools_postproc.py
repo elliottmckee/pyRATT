@@ -131,14 +131,14 @@ def plot_trajectory(Sim, sim_name="Sim"):
     color = 'tab:blue'
     ax3.set_xlabel('Time (s)')
     ax3.set_ylabel('Reynolds No.', color=color)
-    ax3.plot(Sim.t_vec, Sim.Re, color=color)
+    ax3.plot(Sim.t_vec, Sim.Re_inf, color=color)
     ax3.tick_params(axis='y', labelcolor=color)
 
     ax4 = ax3.twinx()  # instantiate a second axes that shares the same x-axis
 
     color = 'tab:red'
     ax4.set_ylabel('Dynamic Pressure (Pa?)', color=color)
-    ax4.plot(Sim.t_vec, Sim.q_bar, color=color)
+    ax4.plot(Sim.t_vec, Sim.qbar_inf, color=color)
     ax4.tick_params(axis='y', labelcolor=color)
 
     plt.title("Re and qBar v. Time")

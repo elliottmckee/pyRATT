@@ -3,6 +3,7 @@
 import pandas as pd
 import numpy as np
 import itertools 
+import time
 
 
 from . import constants
@@ -123,38 +124,56 @@ class FlightSimulation:
         self.shock_type         = shock_type
         self.gas_model          = gas_model
 
+        #Initialize Simulation 
+        self.sim_initialize()
+
 
     def sim_initialize(self):
 
-        # Generate Time Vector (Either ends at t_end if specified, or the last time value in the flight data)
+        ### GENERATE TIME VECTOR
+        # Either ends at t_end if specified, otherwise last time value in the flight data
         if self.t_end is not None:
             #If a end value is specified
             self.t_vec = np.arange(self.t_start, self.t_end, self.t_step)
         else:
             self.t_vec = np.arange(self.t_start, self.Flight.time_raw[-1], self.t_step)
 
-
-        # ~Pre-Allocation~
         t_vec_size      = np.size(self.t_vec)
+
+    
+        ### PRE ALLOCATION OF DATA STRUCTS
+        
         # Boolean Values vs. Time 
         self.bl_state   = list(itertools.repeat(0, t_vec_size)) # 1 is turbulent
+        
         # Scalar Quantities vs. Time
         self.q_conv     = np.zeros((t_vec_size,), dtype=float)
         self.q_rad      = np.zeros((t_vec_size,), dtype=float)
         self.q_net      = np.zeros((t_vec_size,), dtype=float)
-        self.q_bar      = np.zeros((t_vec_size,), dtype=float)
-        self.Re         = np.zeros((t_vec_size,), dtype=float) #Free-Stream Re, based on Sim.x_location
         self.h_coeff    = np.zeros((t_vec_size,), dtype=float)
+        
+        self.p_inf      = np.zeros((t_vec_size,), dtype=float)
         self.T_inf      = np.zeros((t_vec_size,), dtype=float)
+        self.rho_inf    = np.zeros((t_vec_size,), dtype=float)
+        self.mu_inf     = np.zeros((t_vec_size,), dtype=float)
+        self.u_inf      = np.zeros((t_vec_size,), dtype=float)
+
+        self.qbar_inf   = np.zeros((t_vec_size,), dtype=float)
+        self.Re_inf     = np.zeros((t_vec_size,), dtype=float) #Free-Stream Re, based on Sim.x_location
+        
+        
         self.T_e        = np.zeros((t_vec_size,), dtype=float)
         self.T_te       = np.zeros((t_vec_size,), dtype=float)
         self.T_t        = np.zeros((t_vec_size,), dtype=float)
         self.T_recovery = np.zeros((t_vec_size,), dtype=float)
+        
+
+
+
         # Vector Quantities vs. Time
         self.wall_temps = np.zeros((self.Aerosurface.n_tot,t_vec_size), dtype=float)
 
-
-        # Get/interpolate Sim-time values for Mach, Altitude, and Atmospheric Properties
+        # Pre-interpolate Mach, Altitude, and Atmospheric Properties to the discrete Sim-time points 
         self.mach, self.alt, self.atmos = self.Flight.get_sim_time_properties(self.t_vec)
 
         #Set Initial Values for Wall Temperature at First Step
@@ -164,36 +183,42 @@ class FlightSimulation:
 
     def run(self):
 
-        #Initialize Simulation Values
-        self.sim_initialize()
+        
+        print("ADD CHECK IF SIM CONTAINS DATA BEFORE RUNNING")
 
         print("Warning: Modifications to Stability Criterion Check Needed when Ablative is added")
 
         print("Simulation Progress: ")
 
+
         # For each time step (except for the last)
         for i, t in enumerate(self.t_vec[:-1]):
 
-            #Get Current Atmosphere State (this still feels kinda like a workaround, possibly optimize?)  
-            atm_curr = Atmosphere([self.alt[i]])
+            # Get Current Atmospheric Properties
+
+
 
             # Calculate Aerothermal Hot-Wall Heat Flux
-            self.q_conv[i] = aerothermal_heatflux(self, i)
+            aerothermal_heatflux(self, i)
+
 
             # Radiative Heat Flux
-            self.q_rad[i] = -constants.SB_CONST * self.Aerosurface.elements[0].emis * (self.wall_temps[0,i]**4 - (atm_curr.temperature)**4)
+            self.q_rad[i] = -constants.SB_CONST * self.Aerosurface.elements[0].emis * (self.wall_temps[0,i]**4 - (self.T_inf[i])**4)
 
             # Net Heat Flux
             self.q_net[i] = self.q_conv[i] + self.q_rad[i]
 
+
             # Check Stability Criterion
             stability_criterion_check(self.Aerosurface.elements[0], self.h_coeff[i], self.t_step)
+
 
             # Update Temps
             self.wall_temps[:,i+1] = get_new_wall_temps( self.wall_temps[:,i], self.q_net[i], self)
 
             # Print Time to screen every 5 flight seconds
             if self.t_vec[i]%5 == 0:  print(self.t_vec[i], " seconds...") 
+  
                 
 
     

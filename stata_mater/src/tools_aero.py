@@ -3,6 +3,33 @@ import scipy
 import numpy as np
 
 
+from math import pow, sqrt, log10
+
+from ambiance import Atmosphere
+
+
+
+def get_freestream(Sim, i):
+
+     #Get Current Free-stream props
+    atm_inf = Atmosphere([Sim.alt[i]])
+    
+    # Update Free-Stream State values to time step i in Sim
+    Sim.p_inf[i]    = atm_inf.pressure
+    Sim.T_inf[i]    = atm_inf.temperature
+    Sim.rho_inf[i]  = atm_inf.density
+    Sim.u_inf[i]    = sqrt(Sim.AirModel.gam * Sim.AirModel.R * atm_inf.temperature) * Sim.mach[i]
+
+
+
+
+
+
+
+
+
+
+
 def total_temperature(T, M, gam):
     # Just Returns the Total Temperature
     return T * (1 + M ** 2 * (gam - 1) / 2)

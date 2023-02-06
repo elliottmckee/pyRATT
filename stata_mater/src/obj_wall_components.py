@@ -86,6 +86,16 @@ class WallStack:
                 #Create a computational element corresponding to that material, append
                 self.elements.append( SolidElement(materials[i], y_e, dy_e) )
 
+
+
+    def get_wall_coords(self):
+        
+        out = []
+        for i, el in enumerate(self.elements):
+            out.append(el.y)
+
+        return out
+
                 
 
 

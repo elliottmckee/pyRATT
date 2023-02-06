@@ -52,14 +52,17 @@ if __name__ == "__main__":
 
     
     # #Hifire 5
+
     # AeroSurf = WallStack(materials="ALU6061", thicknesses=0.02, node_counts = 26)
     # Flight    = FlightData( os.path.join(os.getcwd(), "example_files", "hifire_5", "hifire5_traj_interp.csv") )
     
-    # MySimulation= FlightSimulation(AeroSurf, Flight, AirModel(),
+
+    
+    # MySimulation = FlightSimulation(AeroSurf, Flight, AirModel(),
     #                             x_location = 0.2, 
     #                             deflection_angle_deg = 7.0, 
     #                             t_step = 0.0040,
-    #                             t_end = 215.0,
+    #                             t_end = 40.0,
     #                             initial_temp = 281.25,
     #                             boundary_layer_model = 'transition')
     
@@ -71,13 +74,17 @@ if __name__ == "__main__":
                                 x_location = 0.40,
                                 deflection_angle_deg = 7.0, 
                                 t_step = 0.001,
-                                t_start = 513.0,
-                                t_end = 518.0,
+                                t_start = 510.0,
+                                t_end = 520.0,
                                 initial_temp = 360.7,
                                 boundary_layer_model = 'transition')
 
+    start=time.time()
 
     MySimulation.run()
+
+    end = time.time()
+    print("Elapsed Time for Sim Run: ", end - start)
 
     Post.plot_results(MySimulation)
 
