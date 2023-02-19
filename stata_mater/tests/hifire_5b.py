@@ -96,9 +96,9 @@ if __name__ == "__main__":
     #Sim_800.export_data_to_csv(out_filename = 'hifire_5b_800mm_out_data_new.csv')
 
     # Pickles
-    with open("tests/hifire_5b_400mm.pkl", "wb") as f: pickle.dump(Sim_400, f)
-    with open("tests/hifire_5b_650mm.pkl", "wb") as f: pickle.dump(Sim_650, f)
-    with open("tests/hifire_5b_800mm.pkl", "wb") as f: pickle.dump(Sim_800, f)  
+    # with open("tests/hifire_5b_400mm.pkl", "wb") as f: pickle.dump(Sim_400, f)
+    # with open("tests/hifire_5b_650mm.pkl", "wb") as f: pickle.dump(Sim_650, f)
+    # with open("tests/hifire_5b_800mm.pkl", "wb") as f: pickle.dump(Sim_800, f)  
     
 
 

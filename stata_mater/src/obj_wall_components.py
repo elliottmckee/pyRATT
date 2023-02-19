@@ -3,7 +3,7 @@
 
 from typing import Optional
 
-from .materials_solid import solidMaterialDatabase
+from .materials_solid import MATERIALS_DICT
 #from . import conversions
 #from . import constants
 
@@ -130,7 +130,11 @@ class SolidElement:
     def __init__(self, material, y, dy):
 
         # Pull material properties from Solid Material Database
-        self.rho, self.cp, self.k, self.emis = solidMaterialDatabase(material)
+        self.rho    = MATERIALS_DICT[material]["rho"]
+        self.cp     = MATERIALS_DICT[material]["cp"]
+        self.k      = MATERIALS_DICT[material]["k"]
+        self.emis   = MATERIALS_DICT[material]["emis"]
+
         # Element Coord
         self.y = y
         # Element Thickness

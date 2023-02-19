@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 sys.path.append(os.path.dirname(os.getcwd())) # This is another goofy workaround because I am bad at modules/imports
 
 
+from stata_mater.src.materials_solid import MATERIALS_DICT
 from stata_mater.src.obj_simulation import FlightSimulation
 from stata_mater.src.obj_flight_rocket import FlightData
 from stata_mater.src.obj_wall_components import WallStack
@@ -141,17 +142,17 @@ main_instructions = """Instructions: (i guess you can call them that)
 3) Hit "Run Simulation"
     - The Simulation *should* run, and you can check by looking at your terminal. It will output things like "SIMULATION PROGRESS..." and will print the timestep it is at, every ~5 seconds.
         - It may also print out some other stuff that doesn't make sense, in these early stages. I use print statements as reminders to myself to come back to certain things in the code.   
-4) Once Simulation complete, close the window and run "gui_post" from your terminal, and load in the file you just created to see the results.
+4) Once Simulation complete, close the window and run the gui_post from your terminal, and load in the file you just created to see the results.
 
 - I created this GUI to make this a bit more user friendly, but that obviously comes at the cost of control. There are more things you can tune and play with if running from an actual standalone 
     script (see examples), but I made this in the pursuit of accessibility/usability, so I am going to try and minimize the amount of complicated inputs the user needs here.
-    - I am setting a few default values "behind the scenes." Things like shock model, boundary layer type (laminar/turb/transition) are hidden (for simplicity for the user, and me, making this gui)      
+- Some of the functionality that cannot be accessed through this gui include: multi-component walls, shock-type selection (normal/default:oblique/conical), aerothermal models, and more.  
 - [NOT YET IMPLEMENTED] Multiple File Implementation: I want to be able to point to multiple RAS files, for example, if you want to compare thermal loading under different motor configurations. 
 - As always, feel free to reach out to me if you have any questions/issues. 
     email: elliott.mckee@proton.me
     github: elliottmckee"""
 
-timespace_instructions = """- Background: This uses a transient 1D Finite Difference model for thermal conduction, which is integrated forward in time to give the temperature results across the entire flights. 
+timespace_instructions = """- Background: This uses a 1D Finite Difference model for thermal conduction, which is integrated forward in time to get the through-wall temperature distribution as a function of time. 
     - Long story short, it requires discretizations of both the wall structure (number of discrete elements in the through-wall direction), and time (timestep). 
 - Solver Instability: Due to unfortunate consequences of math, discretization, etc., there are criterion that need to be satisfied for the solver to be stable and not blow up. A warning will be 
   thrown and the current simulation might break if such instability occurs, but the data will be junk regardless lol
@@ -170,11 +171,11 @@ along_body_instructions = """- This should *theoretically* be the boundary layer
     - in practice though, for relatively small nosecone angles, you can roughly use the axial distance from the nosecone tip, to the point of interest"""
 
 
-wall_mat_instructions = """- Select wall material properties. If you need to add another material not shown here, add an entry to the material database in src/materials_solid.py"""
+wall_mat_instructions = """- Uses to set wall material properties. If you need to add another material not shown here, simply add an entry to the material database in src/materials_solid.py"""
 
 wall_thickness_instructions = """- Total wall thickness at the point you're looking to analyze"""
 
-deflection_angle_instructions = """- Deflection angle of the body. Right now this GUI assumes a nosecone geomtry, so use the nosecone half angle."""
+deflection_angle_instructions = """- Deflection angle of the flow. Right now this GUI assumes a nosecone geometry, so use the nosecone half angle."""
 
 
 # Define Layout
@@ -193,7 +194,7 @@ layout = [
             #[sg.Text('                                         Input File Loaded:'), sg.Text(size=(200,1), key='-loadedfiles-')], 
 
 
-            [sg.Text("Output Filename:                       "), sg.InputText("mysimulation.sim", s=25, key='_OUTFILES_'), sg.Text("(defaults to saving in main directory. extension/location doesn't really matter though)")], 
+            [sg.Text("Sim Output Filename:                       "), sg.InputText("mysimulation.sim", s=25, key='_OUTFILES_'), sg.Text("(defaults to saving in main directory. extension/location doesn't really matter though)")], 
             #[sg.InputText("mysimulation.sim", s=25, key='_OUTFILES_')],
             #(defaults to saving in main directory. extension/location doesn't really matter though):
 
@@ -227,7 +228,7 @@ layout = [
             [sg.Text('Rocket Physical Parameters: ')],
 
             # Wall Material
-            [sg.Text('Wall Material:'), sg.InputCombo(values=["ALU6061"], default_value='', size=(12, 1), key=f'-wallmaterial-'), sg.Text(wall_mat_instructions)],
+            [sg.Text('Wall Material:'), sg.InputCombo(values=list(MATERIALS_DICT.keys()), default_value='', size=(20, 1), key=f'-wallmaterial-'), sg.Text(wall_mat_instructions)],
             
             # Wall Thickness
             [sg.Text('Wall Thickness (m):'), sg.InputText("0.0", size=(8, 1), key=f'-wallthick-'), sg.Text(wall_thickness_instructions)],

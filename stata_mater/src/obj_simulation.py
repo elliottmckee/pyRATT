@@ -187,7 +187,7 @@ class FlightSimulation:
         
         print("Warning: Modifications to Stability Criterion Check Needed when Ablative is added")
 
-        print("Simulation Progress: ")
+        print("Simulation Progress (in sim-time): ")
 
         # For each time step (except for the last)
         for i, t in enumerate(self.t_vec[:-1]):

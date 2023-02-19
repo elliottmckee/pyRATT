@@ -69,7 +69,7 @@ if __name__ == "__main__":
     #MySimulation.export_data_to_csv(out_filename = 'hifire_5_out_data_new.csv')
 
     #Pickle
-    with open ("tests/hifire_5.pkl", "wb") as f: pickle.dump(MySimulation, f)
+    # with open ("tests/hifire_5.pkl", "wb") as f: pickle.dump(MySimulation, f)
 
 
 

@@ -34,7 +34,8 @@ import pickle
 # Make it so it can find the 
 sys.path.append(os.path.dirname(os.getcwd()))
 
-from stata_mater.src.materials_solid import solidMaterialDatabase
+#from stata_mater.src.materials_solid import solidMaterialDatabase
+from stata_mater.src.materials_solid import MATERIALS_DICT
 from stata_mater.src.obj_wall_components import WallStack
 from stata_mater.src.tools_conduction import get_new_wall_temps
 
@@ -142,7 +143,11 @@ if __name__ == "__main__":
 
     
     ### DERIVED VALUES 
-    rho, cp, k, _   = solidMaterialDatabase(test_material)
+    rho    = MATERIALS_DICT[material]["rho"]
+    cp     = MATERIALS_DICT[material]["cp"]
+    k      = MATERIALS_DICT[material]["k"]
+    emis   = MATERIALS_DICT[material]["emis"]
+
     alp             = k/(rho*cp)
 
     
