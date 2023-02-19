@@ -28,6 +28,7 @@ import matplotlib.pyplot as plt
 import time
 import math
 from scipy import special
+import pickle
 
 #I have to do stupid ass directory bullshit because Python is shit with imports
 # Make it so it can find the 
@@ -86,12 +87,13 @@ class Semi_Inf_Wall_Temp_Sim:
         #Set initial wall temp
         self.wall_temps[:,0] = self.T_i
 
+
         #Set heat flux, initial conditions
         if q_0 == None and T_surface is not None:
-            self.q_0 = 0
+            self.q_net = np.zeros((np.size(self.t_vec),), dtype=float)
             self.wall_temps[0,0] = self.T_s
         elif q_0 is not None and T_surface is None:
-            self.q_0 = q_0
+            self.q_net = q_0*np.ones((np.size(self.t_vec),), dtype=float)
         else:
             print("Either specify T_s or q_0, not both")
         
@@ -101,9 +103,11 @@ class Semi_Inf_Wall_Temp_Sim:
         print("Simulation Progress: ")
         # For each time step (except for the last)
         for i, t in enumerate(self.t_vec[:-1]):
-            
+
             # Update Temps
-            self.wall_temps[:,i+1] = get_new_wall_temps( self.wall_temps[:,i], self.q_0, self)
+            #self.wall_temps[:,i+1] = get_new_wall_temps( self.wall_temps[:,i], self.q_0, self)
+            self.wall_temps[:,i+1] = get_new_wall_temps(self, i)
+
 
             #Force Surface to stay at constant temp
             if self.T_s is not None:
@@ -176,6 +180,11 @@ if __name__ == "__main__":
     q_Sim.run()
     end = time.time()
     print("Elapsed Time for Sim Run: ", end - start)
+
+
+    ### Exporting/Pickling
+    with open ("tests/trans_cond_set_temp.pkl", "wb") as f: pickle.dump(Temp_Sim, f)
+    with open ("tests/trans_cond_set_q.pkl", "wb") as f: pickle.dump(q_Sim, f)
 
 
 
