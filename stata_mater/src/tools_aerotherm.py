@@ -12,6 +12,19 @@ from . import constants
 from . import tools_aero
 
 
+
+def get_net_heat_flux(Sim, i):
+    
+    # Radiative Heat Flux
+    Sim.q_rad[i] = -constants.SB_CONST * Sim.Aerosurface.elements[0].emis * (Sim.wall_temps[0,i]**4 - (Sim.T_inf[i])**4)
+
+    # Net Heat Flux
+    Sim.q_net[i] = Sim.q_conv[i] + Sim.q_rad[i]
+
+
+
+
+
 # def aerothermal_heatflux(
 #                     Rocket,
 #                     AirModel,

@@ -7,7 +7,7 @@ import time
 
 
 from . import constants
-from .tools_aerotherm import aerothermal_heatflux
+from .tools_aerotherm import aerothermal_heatflux, get_net_heat_flux
 from .tools_conduction import get_new_wall_temps, stability_criterion_check
 
 # Standard Atmosphere Model/Package (CANT HANDLE HIGH-ALT)
@@ -124,6 +124,9 @@ class FlightSimulation:
         self.shock_type         = shock_type
         self.gas_model          = gas_model
 
+        print("I am calling get_wall_coords here and in transient rn, which is redundant")
+        self.y_coords           = Aerosurface.get_wall_coords() 
+
         #Initialize Simulation 
         self.sim_initialize()
 
@@ -187,7 +190,6 @@ class FlightSimulation:
 
         print("Simulation Progress: ")
 
-
         # For each time step (except for the last)
         for i, t in enumerate(self.t_vec[:-1]):
 
@@ -195,18 +197,13 @@ class FlightSimulation:
             aerothermal_heatflux(self, i)
 
             # Radiative Heat Flux
-            self.q_rad[i] = -constants.SB_CONST * self.Aerosurface.elements[0].emis * (self.wall_temps[0,i]**4 - (self.T_inf[i])**4)
-
-            # Net Heat Flux
-            self.q_net[i] = self.q_conv[i] + self.q_rad[i]
-
+            get_net_heat_flux(self, i)
 
             # Check Stability Criterion
-            stability_criterion_check(self.Aerosurface.elements[0], self.h_coeff[i], self.t_step)
+            stability_criterion_check(self, i)
 
-
-            # Update Temps
-            self.wall_temps[:,i+1] = get_new_wall_temps( self.wall_temps[:,i], self.q_net[i], self)
+            # Update Temps (this function was not writing new data when trying to write to self.wall_temps[:,i+1] from within get_new_wall_temps)
+            self.wall_temps[:,i+1] = get_new_wall_temps(self, i)
 
             # Print Time to screen every 5 flight seconds
             if self.t_vec[i]%5 == 0:  print(self.t_vec[i], " seconds...") 

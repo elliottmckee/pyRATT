@@ -1,24 +1,10 @@
-'''
-
-I will be coming back to this later to expand this header a good bit
-
-
-##### USAGE #####
-I KNOW THIS IMPLEMENTATION IS DOGSHIT, BUT HERE'S HOW TO RUN THESE
-
-From the stata_mater folder, run the following command:
-python3 tests/hifire_5b.py
-
-
-I'm sorry 
-'''
-
 import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import sys
 import time
+import pickle
 
 #I have to do stupid ass directory bullshit because Python is shit with imports
 # Make it so it can find the 
@@ -33,6 +19,22 @@ from stata_mater.src.obj_simulation import FlightSimulation
 from stata_mater.src.obj_flight_rocket import Rocket, FlightData
 from stata_mater.src.obj_wall_components import WallStack
 from stata_mater.src.materials_fluid import AirModel
+
+
+'''
+
+I will be coming back to this later to expand this header a good bit
+
+
+##### USAGE #####
+I KNOW THIS IMPLEMENTATION IS DOGSHIT, BUT HERE'S HOW TO RUN THESE
+
+From the stata_mater folder, run the following command:
+python3 tests/hifire_5b.py
+
+
+I'm sorry 
+'''
 
 
 
@@ -86,10 +88,18 @@ if __name__ == "__main__":
     end = time.time()
     print("Elapsed Time for all 3 Sims: ", end - start)
 
-    #Export
+    ### Export
+
+    # CSV's
     #Sim_400.export_data_to_csv(out_filename = 'hifire_5b_400mm_out_data_new.csv')
     #Sim_650.export_data_to_csv(out_filename = 'hifire_5b_650mm_out_data_new.csv')
     #Sim_800.export_data_to_csv(out_filename = 'hifire_5b_800mm_out_data_new.csv')
+
+    # Pickles
+    with open ("hifire_5b_400mm.pkl", "wb") as f: pickle.dump(Sim_400, f)
+    with open ("hifire_5b_650mm.pkl", "wb") as f: pickle.dump(Sim_650, f)
+    with open ("hifire_5b_800mm.pkl", "wb") as f: pickle.dump(Sim_800, f)  
+    
 
 
 

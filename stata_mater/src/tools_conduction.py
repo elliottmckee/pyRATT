@@ -2,14 +2,39 @@ import numpy as np
 
 
 
-def get_new_wall_temps(Tvec_wall, q_net_in, Sim):
+def get_new_wall_temps(Sim, i):
     """
-    Wrapper Function to get the wall temperatures at the next time step
+    Get the wall temperatures and update next time step
     
     """
 
+    #Aliases
+    Tvec_wall = Sim.wall_temps[:,i]
+    q_net_in = Sim.q_net[i]
+
     #Get Temperature Rates of Change
-    dT_dt = wall_temp_change(Tvec_wall, q_net_in, Sim.Aerosurface)
+    #dT_dt = wall_temp_change(Tvec_wall, q_net_in, Sim.Aerosurface)
+
+    #Initialize Zeros Vector
+    dT_dt = np.zeros( (len(Sim.Aerosurface.elements),),  dtype=float)
+
+    #For all of the Elements in the Aerosurface Stack
+    for i, e in enumerate(Sim.Aerosurface.elements):
+
+        # Outermost or Hot-wall Element
+        if i == 0:
+            dT_dt[i] = 1 / (e.dy*e.rho*e.cp) * (q_net_in + e.k*(Tvec_wall[1] - Tvec_wall[0]) / e.dy)
+
+        # Inner Wall
+        elif i == len(Sim.Aerosurface.elements)-1:
+            T_internal = Tvec_wall[-1] # Inner Wall BC
+            #T_internal = initial_temp
+            dT_dt[i] = e.k / (e.rho*e.cp* e.dy**2) * (T_internal - 2*Tvec_wall[i] + Tvec_wall[i-1])
+
+        # #Middle Elements
+        else:
+            dT_dt[i] = e.k/(e.rho*e.cp*e.dy**2) * (Tvec_wall[i+1] - 2*Tvec_wall[i] + Tvec_wall[i-1])
+
 
     # Update Temperatures
     return Tvec_wall + dT_dt*Sim.t_step
@@ -42,7 +67,7 @@ def wall_temp_change(Tvec_wall, q_net_in, Aerosurface):
 
 
 
-def stability_criterion_check(SurfE, h, dt):
+def stability_criterion_check(Sim, i):
     # From Ulsu-Simsek 
     # This is a stability criterion for the numerical stability of the solver
     # In my past experience this is a pretty accurate marker of when your timestep is too big. 
@@ -60,10 +85,15 @@ def stability_criterion_check(SurfE, h, dt):
     #     Cp_s  = interp1(Abl.cpLUTab.Var1,Abl.cpLUTab.Var2, Abl.TVec(1,i), 'linear', 'extrap');
     #     k_s = interp1(Abl.kLUTab.Var1,Abl.kLUTab.Var2, Abl.TVec(1,i),'linear', 'extrap');
         
+    #Aliasing
+    SurfE   = Sim.Aerosurface.elements[0]
+    h       = Sim.h_coeff[i] 
+    dt      = Sim.t_step
+    
     # Perform Stability Check 
     F_0 = (SurfE.k * dt) / (SurfE.rho * SurfE.cp * SurfE.dy**2)
     Bi = (h * SurfE.dy) / SurfE.k
 
     if ( F_0*(1+Bi) > .5):
-        print('Warning: Stability Criterion not met. Consider increasing time resolution (smaller time step) or \n decreasing the spatial wall resolution (decrease the number of wall nodes, Sim.N)')
+        print('Warning: Stability Criterion not met. Consider decreasing timestep or number of wall nodes)')
 
