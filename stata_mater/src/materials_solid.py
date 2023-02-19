@@ -1,5 +1,34 @@
 
 
+
+
+
+MATERIALS_DICT = { 
+    
+    # ALU6061
+    'ALU6061': {
+        'rho':  2700.0, #[kg/m^3] Density
+        'cp':   896.0,  #[J/KgC] Specific Heat
+        'k':    167.0,  #[W/mK]Thermal Conductivity
+        'emis': 0.8     #[] Black Body Emissivity Coefficient
+                        # Fundamentals of Thermal Fluid Sciences, Cengel 
+                        # Polished 300–900K 0.04–0.06, Commercial sheet 400K 0.09
+                        # Heavily oxidized 400–800K 0.20–0.33, Anodized 300K 0.8
+    },
+
+
+
+    'EXAMPLE_MATERIAL_NAME': {
+        'rho':  -1.0, #[kg/m^3]   Density
+        'cp':   -1.0,  #[J/KgC]    Specific Heat
+        'k':    -1.0,  #[W/mK]     Thermal Conductivity
+        'emis': -1.0     #[]         Black Body Emissivity Coefficient
+    },
+}
+
+
+
+
 def solidMaterialDatabase(material_name: str):
     '''
     Returns material properties for a solid, nonablating wall material from the database (if-else chain) below 
@@ -14,6 +43,31 @@ def solidMaterialDatabase(material_name: str):
                     k,      material thermal conductivity [W/mK]
                     emis    material Black Body Emissivity Coefficient 
     '''
+
+
+    MATERIALS_DICT = { 
+        
+        # ALU6061
+        'ALU6061': {
+            'rho':  2700.0, #[kg/m^3] Density
+            'cp':   896.0,  #[J/KgC] Specific Heat
+            'k':    167.0,  #[W/mK]Thermal Conductivity
+            'emis': 0.8     #[] Black Body Emissivity Coefficient
+                            # Fundamentals of Thermal Fluid Sciences, Cengel 
+                            # Polished 300–900K 0.04–0.06, Commercial sheet 400K 0.09
+                            # Heavily oxidized 400–800K 0.20–0.33, Anodized 300K 0.8
+        },
+
+
+
+        'EXAMPLE_MATERIAL_NAME': {
+            'rho':  -1.0, #[kg/m^3]   Density
+            'cp':   -1.0,  #[J/KgC]    Specific Heat
+            'k':    -1.0,  #[W/mK]     Thermal Conductivity
+            'emis': -1.0     #[]         Black Body Emissivity Coefficient
+        },
+    }
+
 
     if material_name == "ALU6061":
         

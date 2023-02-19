@@ -185,7 +185,6 @@ class FlightSimulation:
     def run(self):
 
         
-        print("ADD CHECK IF SIM CONTAINS DATA BEFORE RUNNING")
         print("Warning: Modifications to Stability Criterion Check Needed when Ablative is added")
 
         print("Simulation Progress: ")

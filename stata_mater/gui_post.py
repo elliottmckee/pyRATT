@@ -19,7 +19,7 @@ I really hate making plots in Python, so I am going to make a GUI tool to handle
 
 
 Notes:
--I was having issues with the plots displaying before 
+-I was having issues with the plots displaying before switching backend to TkAgg
 
 
 I am leveraging this Dr Adam Luke Baskerville's work here: 
@@ -181,7 +181,7 @@ hopefully they're labelled in a way that makes sense.
 
 - Multiple Input File implementation: If you load multiple files and select a plot below, it'll automatically pull the correponding values 
 from all loaded files. I.E. if you load 3 files and only enable Plot 1 with Mach v. Time,  you'll get 3 lines labelled according to each 
-input file  
+input file. This is useful for doing things like comparing between different motor configs, plotting multiple locations along the body, etc.
 
     - Note, if you have different wall thicknesses between the files, it may not work for points besides the surface/skin
 
@@ -206,25 +206,26 @@ h_spacings = [8, 6, 8, 22, 22, 23, 20]
 # Define Layout
 
 layout = [
-            [sg.Text('_'  * 150, size=(150, 1))], #--------------------------
+            [sg.Text('-'  * 150, size=(150, 1))], #--------------------------
+            [sg.Text('------ STATA MATER GUI POST -------', size=(150, 1))], #--------------------------
+            [sg.Text('-'  * 150, size=(150, 1))], #--------------------------
             [sg.Text(instructions)],
-            [sg.Text('_'  * 150, size=(150, 1))], #--------------------------
+            [sg.Text('-'  * 150, size=(150, 1))], #--------------------------
               
             [sg.Text('Load Files: ')],
 
             [sg.Input(key='_FILES_', enable_events=True), sg.FilesBrowse()], 
             [sg.Text('Note, select multiple files by holding ctrl and clicking the number required.')],
 
-            [sg.Text('')],
             [sg.Text('Files Loaded: (only shows first 5, should be handle up to 12, only limited by my bad implementation in draw_plot())')],
 
             #*[ [sg.Text(str(i+1) + ") "+  name, key='-filesloaded-')] for i, name in enumerate(fnames) ],
             [sg.Text(size=(25,5), key='-loadedfiles-')],
             
 
-            [sg.Text('_'  * 150, size=(150, 1))], #--------------------------
+            [sg.Text('-'  * 150, size=(150, 1))], #--------------------------
 
-            [sg.Text('Select Time Series Data')],
+            [sg.Text('Select Time Series Data: ')],
             
             
             [sg.Text(h, size=(s,1)) for h, s in zip(headings, h_spacings)],  # build header layout
@@ -262,7 +263,7 @@ layout = [
             ] for i in range(MAXPLOTS)],
             
             
-            [sg.Text('_'  * 150, size=(150, 1))], #--------------------------
+            [sg.Text('-'  * 150, size=(150, 1))], #--------------------------
             [sg.Button('Plot'), sg.Text(' '  * 130, size=(130, 1)), sg.Button('Quit')],
          ]
 
