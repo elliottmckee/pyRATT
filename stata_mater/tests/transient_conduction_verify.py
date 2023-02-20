@@ -143,10 +143,10 @@ if __name__ == "__main__":
 
     
     ### DERIVED VALUES 
-    rho    = MATERIALS_DICT[material]["rho"]
-    cp     = MATERIALS_DICT[material]["cp"]
-    k      = MATERIALS_DICT[material]["k"]
-    emis   = MATERIALS_DICT[material]["emis"]
+    rho    = MATERIALS_DICT["ALU6061"]["rho"]
+    cp     = MATERIALS_DICT["ALU6061"]["cp"]
+    k      = MATERIALS_DICT["ALU6061"]["k"]
+    emis   = MATERIALS_DICT["ALU6061"]["emis"]
 
     alp             = k/(rho*cp)
 
