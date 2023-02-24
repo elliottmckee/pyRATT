@@ -1,42 +1,283 @@
+"""
+Contains all the aerodynamic tool functions. Mainly the Shock calculation scripts,
+and determination of freestream states/properties
+
+Notes:
+
+
+"""
+
 import math
 import scipy
 import numpy as np
-
-
 from math import pow, sqrt, log10
 
 from ambiance import Atmosphere
 
+from . import constants
 
 
-def get_freestream(Sim, i):
 
-     #Get Current Free-stream props
-    atm_inf = Atmosphere([Sim.alt[i]])
+def get_freestream(alt, AirModel, mach=None):
+    """
+    Function for returning the base state - atmospheric/
+    freestream pressure, temperature, density, and optionally, 
+    velocity, if you supply mach as an argument
+
+    Inputs:
+        - alt: float, altitude [m]
+        - mach: float, optional
+        - gamma: float, gas ratio of specific heats
+        - R:    float, specific gas constant [J/KgK?]
+
+    Outputs:
+        -p_inf: float, atmospheric pressure [Pa]
+        -T_inf: float, atmospheric temperature [K]
+        -rho_inf: float, atmospheric denisty, [kg/m^3]
+        *u_inf: float, freestream velocity [m/s]
+            *only if mach specified
+    """
+
+    #Get atmospheric properties
+    atm_inf = Atmosphere(alt)
     
-    # Update Free-Stream State values to time step i in Sim
-    Sim.p_inf[i]    = atm_inf.pressure
-    Sim.T_inf[i]    = atm_inf.temperature
-    Sim.rho_inf[i]  = atm_inf.density
-    Sim.u_inf[i]    = sqrt(Sim.AirModel.gam * Sim.AirModel.R * atm_inf.temperature) * Sim.mach[i]
+    #If Mach Specified
+    if mach:
+        u_inf = sqrt(AirModel.gam * AirModel.R * atm_inf.temperature) * mach
+        return atm_inf.pressure, atm_inf.temperature, atm_inf.density, u_inf
+    else:
+        return atm_inf.pressure, atm_inf.temperature, atm_inf.density
 
 
 
+def complete_aero_state(p, T, u, x_loc, AirModel):
+    """
+    "Completes" the Aero state, by providing density (derived),
+    Cp, k, mu, pr, and Re
+
+    Inputs:
+        -p:     float, static pressure at given point [Pa]
+        -T:     float, static temperature at given point [K]
+        -u:     float, flow velocity at given point [m/s]
+        -x_loc, float, downstream location of analysis [m]
+        -AirModel, AirModel object for the fluid
+
+    Outputs:
+        -rho,   float, fluid density [kg/m^3]
+        -cp,    float, fluid specific heat at constant presure [J/KgK?]
+        -k,     float, fluid thermal conductivity [too lazy to lookup rn]
+        -mu,    float, fluid viscosity
+        -pr,    float, fluid prandtl number
+        -Re,    float, fluid local reynolds number 
+    """
+
+    # Calculate Derived Density 
+    rho = p / (AirModel.R*T)
+    
+    # Get Transport Properties from Air Model
+    cp = AirModel.specific_heat(T)
+    k  = AirModel.thermal_conductivity(T)
+    mu = AirModel.dynamic_viscosity(T)
+    
+    # Prandtl Number
+    pr = cp * mu / k 
+
+    # Reynolds Number
+    Re = (rho*u*x_loc)/mu 
+
+    return rho, cp, k, mu, pr, Re 
+
+
+def get_freestream_complete(Sim, i):
+    """ 
+    Returns both the "base" and "complete" fluid states at the freestream
+    for a Simulation at timestep i
+
+    Outputs:
+        p_inf, 
+        T_inf, 
+        u_inf, 
+        m_inf, 
+        rho_inf, 
+        cp_inf, 
+        k_inf, 
+        mu_inf, 
+        pr_inf, 
+        Re_inf
+    """
+    
+    # Get Freestream values
+    m_inf = Sim.mach[i]
+    p_inf, T_inf, _, u_inf = get_freestream(Sim.alt[i], Sim.AirModel, mach=m_inf)
+
+    # Get "complete" Freestream Aero State
+    rho_inf, cp_inf, k_inf, mu_inf, pr_inf, Re_inf = complete_aero_state(p_inf, 
+                                                                            T_inf, 
+                                                                            u_inf, 
+                                                                            Sim.x_location,
+                                                                            Sim.AirModel)
+
+    return p_inf, T_inf, u_inf, m_inf, rho_inf, cp_inf, k_inf, mu_inf, pr_inf, Re_inf
+
+
+def get_edge_state(p_inf, T_inf, m_inf, Sim):
+    """ 
+    Returns the flow properties at the boundary layer edge.
+
+    Inputs:
+        Sim:    Simulation Object
+        i:      Simulation Timestep
+    
+    Outputs:
+        p_e, 
+        rho_e, 
+        T_e, 
+        T_te, 
+        m_e, 
+        u_e, 
+        cp_e, 
+        k_e, 
+        mu_e, 
+        pr_e, 
+        Re_e
+    """
+
+    # Get Post-shock state
+    m_e, p_e, T_e = get_post_shock_state(m_inf, p_inf, T_inf, Sim) 
+
+    # Edge Velocity
+    u_e = sqrt(Sim.AirModel.gam * Sim.AirModel.R * T_e) * m_e
+
+    # Total Temperature at Edge
+    T_te = total_temperature(T_e, m_e, Sim.AirModel.gam)
+    
+    #Complete Aero State at Boundary Layer Edge
+    rho_e, cp_e, k_e, mu_e, pr_e, Re_e = complete_aero_state(p_e, 
+                                                                T_e, 
+                                                                u_e, 
+                                                                Sim.x_location,
+                                                                Sim.AirModel)
+
+    return p_e, rho_e, T_e, T_te, m_e, u_e, cp_e, k_e, mu_e, pr_e, Re_e
 
 
 
+def get_bl_state(Sim, Re, mach):
+    """
+    Returns the state of the boundary layer. 
+    Turbulent is 1, Laminar is 0. 
 
+    Inputs:
+        Sim: Simulation Object
+        Re: Local Reynolds Number (freestream conditions)
+        mach: Freestream Mach
+    """
 
+    if Sim.bound_layer_model == 'turbulent':
+        return 1
+    
+    elif Sim.bound_layer_model == 'laminar':
+        return 0
+
+    elif Sim.bound_layer_model == 'transition':
+        """
+        Reynolds Number Criterion for Transition from Ulsu
+        Assuming this uses the Free-Stream Values for Re and Mach
+        """
+        if (log10(Re) <= 5.5 + constants.C_M*mach):
+            #If Laminar
+            return 0
+        else:
+            #Turbulent
+            return 1
+    else:
+        raise Exception("Invalid Boundary Layer Model Specification")
 
 
 
 def total_temperature(T, M, gam):
-    # Just Returns the Total Temperature
+    """Just returns the flow total temperature
+    
+    Inputs:
+        T: Temperature [K]
+        M: Mach
+        gam: gas ratio of specific heats 
+    """
     return T * (1 + M ** 2 * (gam - 1) / 2)
 
 
-# NORMAL SHOCK RELATIONS (FROM ASEN 3111)
+
+
+
+
+
+
+
+##########################################################################################
+# ---------------------------------------------------------------------------------------#
+#                               SHOCK FUNCTIONS                                          #
+# ---------------------------------------------------------------------------------------#
+##########################################################################################
+
+
+def get_post_shock_state(m_inf, p_inf, T_inf, Sim):
+    """
+    High-level driver function to handle the shock models/implementation
+
+    Inputs:
+        m_inf: Freestream Mach
+        p_inf: Freestream Pressure
+        T_inf: Freestream Temp
+        Sim: Simulation Object
+
+    Outputs:
+        m_e: boundary-layer edge mach
+        p_e: boundary-layer edge pressure
+        T_e: boundary-layer edge temperature
+
+    """
+
+    if shock_type != "oblique":
+        raise NotImplementedError()
+
+    # Determine if shock or not
+    if m_inf >  1.0:
+        # Yes Shock - Shock Relations for Post-Shock Properties
+        m_e, p2op1, _, T2oT1, _, _, _ =  oblique_shock( m_inf, AirModel.gam, deflection_ang_rad)
+
+        p_e = p2op1 * p_inf
+        T_e = T2oT1 * T_inf
+        
+    else:
+        #No Shock, same as freestream
+        m_e = m_inf
+        p_e = p_inf
+        T_e = T_inf
+
+    return m_e, p_e, T_e
+
+
+
 def shock_calc(M_1, g):
+    """
+    Normal Shock Relation functions
+
+    Inputs
+        T:          float, upstream static temperature
+        M:          float, upstream mach number 
+        gam:        float, ratio of specific heats
+
+    Outputs
+        M2n:        float, mach downstream of normal shock
+        P2_P1:      float, ratio of downstream/upstream static pressure
+        rho2_rho1:  float, ratio of downstream/upstream density
+        T2_T1:      float, ratio of downstream/upstream static temperature
+        deltasoR:   float, TODO cant remember
+        P02_P01:    float, ratio of downstream/upstream total pressure
+
+    Sources:
+    -Adapted from material from the CU Boulder ASEN 3111 Fundamentals of Aerodynamics course
+    """
     M2n = math.sqrt((1 + (g - 1) / 2 * M_1 ** 2) / (g * M_1 ** 2 - (g - 1) / 2))
     P2_P1 = 1 + 2 * g / (g + 1) * (M_1 ** 2 - 1)
     rho2_rho1 = (g + 1) * M_1 ** 2 / (2 + (g - 1) * M_1 ** 2)
@@ -47,25 +288,60 @@ def shock_calc(M_1, g):
     return M2n, P2_P1, rho2_rho1, T2_T1, deltasoR, P02_P01
 
 
-# OBLIQUE SHOCK RELATIONS
+
 def oblique_shock(M_1, g, theta):
-    # ROOTSOLVE FOR SHOCK ANGLE:
+    """
+    Oblique Shock Relations
+
+    Inputs
+        M_1:        float, upstream mach number
+        g:          float, gamma, ratio of specific heats
+        theta:      float, turning angle of the 2D wedge flow
+
+    Outputs
+        M2:         float, mach downstream of normal shock
+        P2_P1:      float, ratio of downstream/upstream static pressure
+        rho2_rho1:  float, ratio of downstream/upstream density
+        T2_T1:      float, ratio of downstream/upstream static temperature
+        deltasoR:   float, TODO can't remember
+        P02_P01:    float, ratio of downstream/upstream total pressure
+        beta:       float, shock angle
+
+    """
+    
+    # rootsolve beta-theta-mach relation to get shock angle
     beta = btm(M_1, g, theta)
 
-    # CALCULATE VELOCITY NORMAL TO SHOCK:
+    # calculate mach component normal to shock
     M_1n = M_1 * math.sin(beta)
 
-    # CALL NORMAL SHOCK RELATIONS:
+    # use normal shock relations on the normal component of the upstream mach
     [M2n, P2_P1, rho2_rho1, T2_T1, deltasoR, P02_P01] = shock_calc(M_1n, g)
 
-    # COMPUTE DOWNSTREAM MACH NUMBER GIVEN SHOCK ANGLE AND NORMAL VELOCITY COMPONENT:
+    # compute downstream total mach from the shock angle and normal component 
     M2 = M2n / math.sin(beta - theta)
 
     return M2, P2_P1, rho2_rho1, T2_T1, deltasoR, P02_P01, beta
 
 
-# BETA-THETA-MACH RELATION (ANDERSON, FUNDAMENTALS OF DYNAMICS p.624)
+
 def btm(M_1, g, theta):
+    """ 
+    Performs the rootsolve/residual-minimization numerical procedure to solve the 
+    beta-theta-mach relation for oblique shocks.
+
+    Inputs
+        M_1:        float, upstream mach number
+        g:          float, gamma, ratio of specific heats
+        theta:      float, turning angle of the 2D wedge flow
+
+    Returns
+        beta:       float, shock angle
+
+    Sources
+        -Anderson, Fundamentals of Dynamics p. 624
+    """
+
     # BTM RESIDUAL:
     fun = lambda beta: abs(math.tan(theta) - (2 * math.tan(beta) ** (-1) * (M_1 ** 2 * math.sin(beta) ** 2 - 1) / (
             M_1 ** 2 * (g + math.cos(2 * beta)) + 2)))
@@ -91,15 +367,25 @@ def btm(M_1, g, theta):
     return beta
 
 
-# CONICAL SHOCK CALCULATOR
+
 def conical_shock(M_1, delta_c, g, N=100, deltaTol=1e-2):
+    """
+    Conical Shock Solver
+
+    Not yet implemented
+    
+    """
+
+    # mach angle
     mu_1 = math.asin(1 / M_1)  # MACH ANGLE
 
+   
     # ========================= PREDICTOR STEP =========================
 
-    theta = delta_c + mu_1 / 2  # PREDICTOR
+    # predictor
+    theta = delta_c + mu_1 / 2
 
-    # INTEGRATION PARAMETERS:
+    # integration parameters
     M_1_star = ((g + 1) / 2 * M_1 ** 2 / (1 + (g - 1) / 2 * M_1 ** 2)) ** (1 / 2)
     v_psi_bar_s = -M_1_star * math.sin(theta) * (
             1 - (2 / (g + 1) * (M_1 ** 2 * math.sin(theta) ** 2 - 1) / (M_1 ** 2 * math.sin(theta) ** 2)))
@@ -129,6 +415,7 @@ def conical_shock(M_1, delta_c, g, N=100, deltaTol=1e-2):
 
     delta = sol.t[-1]  # UPDATE CONE ANGLE FOUND
 
+    
     # ========================= MULTI-CORRECTOR STEP =========================
 
     itrCorrect = 0  # CORRECTOR ITERATION COUNTER

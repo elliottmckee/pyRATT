@@ -7,21 +7,23 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-# from . import constants
-# from .tools_aerotherm import aerothermal_heatflux
-# from .tools_conduction import get_new_wall_temps, stability_criterion_check
 
+'''---------------------------------------------------------------------------
+This file contains a good few kinda boilerplate plots I got tired of making over and over.
 
-"""
+This isn't as useful now that I added the Post GUI, but I am keeping it here 
+nonetheless, because I really hate making plots from scratch in python.
 
-Contains all the cool fun plotting utilities because the data vis for all this data is annoying
+I am not going to go through the effort of cleaning it up though
 
-"""
+plot_results basically calls most of the plots you'd want below. Just use that one.
+---------------------------------------------------------------------------'''
+
 
 
 def plot_results(Sim):
     """
-    This is basically going to be a wrapper to call all the basic plots (from below) you're probably gonna want
+    Plotting function for a few of the main "boilerplate" plots you'd want after running a sim
     """
 
     #Wall Temp v Time

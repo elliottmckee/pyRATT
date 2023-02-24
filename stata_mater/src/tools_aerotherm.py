@@ -1,236 +1,240 @@
+"""
+Contains all the tools, models, etc. for the convection and radiation 
+portions of thermal heat transfer. 
 
+"""
 
+# Standard Modules
 import numpy as np
-
-# Standard Atmosphere Model/Package (CANT HANDLE HIGH-ALT)
-# https://ambiance.readthedocs.io/en/latest/index.html
-
-
 from math import pow, sqrt, log10
 
+#Internal Modules
 from . import constants
 from . import tools_aero
 
 
 
 def get_net_heat_flux(Sim, i):
-    
+    """
+    High-level driver for determining the net heat flux to hand into the conduction solver,
+    for a simulation at a given timestep
+
+    Inputs:
+        Sim:    Simulation Object
+        i:      Simulation Timestep
+
+    Outputs:
+        None
+
+    Updates:
+        Sim.q_rad[i],   float, radiative heatflux in W/m^2. Positive if heat is going into the wall
+        Sim.q_conv[i],  float, convective heatflux in W/m^2. Positive if heat is going into the wall
+        Sim.q_net[i],   float, net heatflux in W/m^2. Positive if heat is going into the wall
+
+    TODO:
+        Make it so all updated variables return up to this funciton. I want all Sim.value[i] updates to 
+        be no more than 1 (2 at max) functions deep, so we are not setting values silently super deep
+        in a nested chain of functions
+
+    Sources:
+    """
+
+    # Get Convective Heatflux
+    Sim.q_conv[i] = aerothermal_heatflux(Sim, i)
+
     # Radiative Heat Flux
-    Sim.q_rad[i] = -constants.SB_CONST * Sim.Aerosurface.elements[0].emis * (Sim.wall_temps[0,i]**4 - (Sim.T_inf[i])**4)
+    Sim.q_rad[i] = radiative_heatflux(Sim, i)
 
     # Net Heat Flux
     Sim.q_net[i] = Sim.q_conv[i] + Sim.q_rad[i]
 
 
 
+def radiative_heatflux(Sim, i):
+    """
+    High level wrapper for the radiative thermal models that are implmemented/can be used
+
+    Inputs:
+        Sim:    Simulation Object
+        i:      Simulation Timestep
+    Outputs:
+        q_rad:  float, radiative heatflux in W/m^2. Positive if heat is going into the wall
+    """
+
+    # Just the plain ole black body radiation equation. Nothing fancy here. 
+    return constants.SB_CONST * Sim.Aerosurface.elements[0].emis * ((Sim.T_inf[i])**4 - Sim.wall_temps[0,i]**4)
 
 
-# def aerothermal_heatflux(
-#                     Rocket,
-#                     AirModel,
-#                     T_w, 
-#                     x_location, 
-#                     m_inf, 
-#                     atm_state, 
-#                     shock_type, 
-#                     aerothermal_model,
-#                     bound_layer_model = 'turbulent',
-# ):
+
 def aerothermal_heatflux(Sim, i):
     '''
-    Returns the Aerothermal heat flux for a Simulation at timestep i 
+    High level wrapper/driver for the aerothermal convective models that are 
+    implmemented/can be used. 
 
-            Parameters:
-                    Sim, Simulation Object
-                    i, index corresponding to the current timestep  
-
-            Returns:
-                    q_conv, Convective Heat Flux [W]
-                    h, Heat Transfer Coefficient (check the non-dimensionalization based on what model you are using)
-                    T_te, Local (Boundary Layer Edge) Total Temperature [K] 
-                    T_r, Recovery Temperature [K] 
+    Inputs:
+        Sim:    Simulation Object
+        i:      Simulation Timestep
+    Updates:
+        T_e:        float, edge temperature [K]
+        T_te:       float, edge total temperature [K]
+        T_recovery: float, recovery temperature [K]
+        h_coeff:    float, heat transfer coefficient
+    Outputs:
+        q_conv:  float, convective heatflux in [W/m^2]. Positive if heat is going into the wall
     '''
+
+    # Implemented Aerothermal Models
+    # ------------------------------
+    # 1) default: This is the correlation used in the Ulsu [1] paper. Arnas is who is referenced there,  
+    # but it is not who actually developed these correlations. However, after long while of running into 
+    # paywalls because I am not a student anymore, I give up. Fuck publishers.
+
+    aerothermal_model_dict = {  "default": ulsu_simsek_heating(Sim, i) }
+
+    if Sim.aerothermal_model not in aerothermal_model_dict.keys():
+        raise ValueError("Error in Aerothermal Model Specification")
+
     
-    #Break out Exposed Surface Wall Temp
+    # Implemented Boundary Layer Models
+    # ------------------------------
+    # 1) turbulent: fully turbulent flow
+    # 2) laminar: fully laminar flow
+    # 3) transition: flow transitions using a modified Re correlation described in Ulsu [1], but
+    #                 real source is: 
+    #                 Quinn, R. D., and L. Gong. 2000. A method for calculating transient surface temperatures 
+    #                 and surface heating rates for high-speed aircraft. NASA/TP-2000-209034. Washington, DC: NASA.
+    
+    valid_boundarylayer_models     = ["turbulent","laminar","transition"]
+
+    if Sim.bound_layer_model not in valid_boundarylayer_models:
+        raise ValueError("Error in Boundary Layer/Transition Model Specification")
+
+
+    # Call Aerothermal Model
+    # ------------------------------
+    q_conv = aerothermal_model_dict[Sim.aerothermal_model]
+
+
+    return q_conv
+
+
+
+
+
+def ulsu_simsek_heating(Sim, i):
+    """ 
+    Driver script for the heating model outline in Ulsu [1] to determine the convective heatflux.
+
+    I will come back to document this more but hope its somewhat straightforward. If not, read [1],
+    it explains it better than I will here
+    """
+    
+    # break out exposed Surface Wall Temp
     T_w = Sim.wall_temps[0,i]
 
-    # calculate boundary layer edge properties
-    p_e, rho_e, T_e, T_te, m_e, u_e, cp_e, k_e, mu_e, pr_e, Re_e = get_edge_properties(Sim, i)
+    # Get Freestream Properties
+    p_inf, T_inf, u_inf, m_inf, rho_inf, cp_inf, k_inf, mu_inf, pr_inf, Re_inf = tools_aero.get_freestream_complete(Sim, i)
 
-    # determine boundary layer state
-    #Sim.bl_state[i] = get_bl_state(Sim, Re_e, m_e)
-    Sim.bl_state[i] = get_bl_state(Sim, Sim.Re_inf[i], Sim.mach[i])
+    # calculate boundary layer edge properties (post-shock)
+    p_e, rho_e, T_e, T_te, m_e, u_e, cp_e, k_e, mu_e, pr_e, Re_e = tools_aero.get_edge_state(p_inf, T_inf, m_inf, Sim)
+
+    # check boundary layer state (laminar/turbulent)
+    bl_state = tools_aero.get_bl_state(Sim, Re_inf, m_inf)
     
     # calculate recovery factor, temperature
-    r   = recovery_factor(Sim.bl_state[i], pr_e)
+    r   = recovery_factor(bl_state, pr_e)
     T_r = recovery_temperature(T_e, T_te, T_w, r)
 
     # calculate Eckert reference temperature
     T_ref = eckert_ref_temperature(T_e, T_te, T_w, r)
 
-    # Get fluid properties evaluated at reference temperature
-    rho_ref, cp_ref, k_ref, mu_ref, pr_ref, Re_ref = complete_aero_state(Sim.AirModel, Sim.x_location, p_e, T_ref, u_e)
+    # Get complete fluid properties evaluated at reference temperature
+    rho_ref, cp_ref, k_ref, mu_ref, pr_ref, Re_ref = tools_aero.complete_aero_state( p_e, T_ref, u_e, Sim.x_location, Sim.AirModel)
 
     # Heating Model
-    q_conv, h = ulsu_simsek_heat_transfer(Sim.x_location, T_w, T_r, k_ref, Re_ref, pr_ref, Sim.bl_state[i])
+    q_conv, h = flat_plate_heat_transfer(Sim.x_location, T_w, T_r, k_ref, Re_ref, pr_ref, bl_state)
 
 
-    #Update Values
+    # Update/Pass values out of sim
+    Sim.T_inf[i] = T_inf
+    Sim.Re_inf[i] = Re_inf
+    Sim.qbar_inf[i] = 0.5*rho_inf*u_inf**2
+    Sim.T_t[i] = tools_aero.total_temperature(T_inf, m_inf, Sim.AirModel.gam)
+
     Sim.T_e[i] = T_e
     Sim.T_te[i] = T_te
     Sim.T_recovery[i] = T_r
     Sim.h_coeff[i] = h
-    Sim.q_conv[i] = q_conv
-
-
-
-
-
-def get_edge_properties(Sim, i):
-
-    #Pulling the Air model out because it gets used a lot
-    AirModel = Sim.AirModel
-
-   
-    # Pull Free-Stream Values
-    tools_aero.get_freestream(Sim, i)
-
-    #Aliasing these temporarily cuz I dont wanna re-write the below
-    # Update Free-Stream State values to time step i in Sim
-    m_inf     = Sim.mach[i]
-    p_inf    = Sim.p_inf[i]
-    T_inf    = Sim.T_inf[i]
-    u_inf    = Sim.u_inf[i]
-
-
-    rho_inf, cp_inf, k_inf, mu_inf, pr_inf, Re_inf = complete_aero_state(AirModel, Sim.x_location, p_inf, T_inf, u_inf)
-
-
-    # Shock Calc
-    if Sim.shock_type != "oblique":
-        raise NotImplementedError()
-
-    #Determine Edge Properties (behind shock if needed)
-    if m_inf >  1.0:
-        # Yes Shock - Shock Relations for Post-Shock Properties
-        m_e, p2op1, _, T2oT1, _, _, _ =  tools_aero.oblique_shock( m_inf, AirModel.gam, Sim.deflection_angle_rad)
-
-        p_e = p2op1 * p_inf
-        T_e = T2oT1 * T_inf
-        
-    else:
-        #No Shock
-        m_e = m_inf
-        p_e = p_inf
-        T_e = T_inf
-        
-        
-    # Total Temperature at Edge
-    T_te = tools_aero.total_temperature(T_e, m_e, AirModel.gam) 
-
-    # Edge Velocity
-    u_e = sqrt(AirModel.gam * AirModel.R * T_e) * m_e
     
-    #Complete Aero State at Edge conditions
-    rho_e, cp_e, k_e, mu_e, pr_e, Re_e = complete_aero_state(AirModel, Sim.x_location, p_e, T_e, u_e)
 
-    # Maintain Free Stream Reynolds, Dynamic Pressure,
-    Sim.T_inf[i] = T_inf
-    Sim.Re_inf[i] = Re_inf
-    Sim.qbar_inf[i] = 0.5*rho_inf*u_inf**2
-    Sim.T_t[i] = tools_aero.total_temperature(T_inf, m_inf, AirModel.gam) 
+    return q_conv
 
-
-
-    return p_e, rho_e, T_e, T_te, m_e, u_e, cp_e, k_e, mu_e, pr_e, Re_e
-
-
-
-def complete_aero_state(AirModel, x_location, p, T, u):
-
-    #Get Aero Properties
-    rho = p / (AirModel.R*T)
     
-    #Get Transport Properties
-    cp = AirModel.specific_heat(T)
-    k  = AirModel.thermal_conductivity(T)
-    mu = AirModel.dynamic_viscosity(T)
-    pr = cp * mu / k 
-
-    #Reynolds No
-    Re = (rho*u*x_location)/mu 
-
-    return rho, cp, k, mu, pr, Re 
-
-
-def get_bl_state(Sim, Re, mach):
-
-
-    if Sim.bound_layer_model == 'turbulent':
-        return 1
-    
-    elif Sim.bound_layer_model == 'laminar':
-        return 0
-
-    #Reynolds Number Criterion for Transition from Ulsu
-    # Assuming this uses the Free-Stream Values for Re and Mach
-    elif Sim.bound_layer_model == 'transition':
-        
-        if (log10(Re) <= 5.5 + constants.C_M*mach):
-            #If Laminar
-            return 0
-        else:
-            #Turbulent
-            return 1
-    else:
-        raise Exception("Invalid Boundary Layer Model Specification")
-
 
 
 def recovery_factor(isTurbulent, pr_e):
+    """ 
+    Returns the recovery factor of a gas
+
+    TODO put a source, and prandtl 
+    limits/checks for the applicability of this
+    """
     if isTurbulent:
         return pow(pr_e, 1.0/3.0)
     else:
         return pow(pr_e, 1.0/2.0)
 
 
-
 def recovery_temperature(T_e, T_te, T_w, r): 
-    # Source: Bertin Hypersonic Aerothermodynamics
+    """ 
+    Returns the recovery temperature of a flow.
+    
+    TODO: Prandtl number applicability limits
+    Source: Bertin Hypersonic Aerothermodynamics
+    """
     return r * (T_te - T_e) + T_e
     
 
-
 def eckert_ref_temperature(T_e, T_te, T_w, r):
-    #Calculate Eckert Reference Temperature
+    """
+    Calculate Eckert Reference Temperature of a high-speed boundary layer
 
-    # Note: The Recovery Factor is a function of the local air properties at a given
-    # point. However, we cannot calculate Eckert's Reference temperature until
-    # we have it. Using Free-stream Prandtl for this Calculation
+    Notes:
+    -The Recovery Factor is a function of the local air properties at a given
+    point. However, we cannot calculate Eckert's Reference temperature until
+    we have it. Currently using Free-stream Prandtl for this Calculation.
+    -TODO: Prandtl number applicability limits
+
+    Source:
+    - Bertin, Hypersonic Aerothermodynamics
+    """
 
     #Eckert Reference Temperature 
-    return 0.5*(T_e + T_w) + 0.22*r*(T_te - T_e) # Source: Bertin, Hypersonic Aerothermodynamics
+    return 0.5*(T_e + T_w) + 0.22*r*(T_te - T_e)
 
 
+def flat_plate_heat_transfer(x, T_w, T_r, k_ref, Re_ref, pr_ref, isTurbulent):
+    """ 
+    Flat plate Nusselt-number/heating correlations.
 
-def ulsu_simsek_heat_transfer(x, T_w, T_r, k_ref, Re_ref, pr_ref, isTurbulent):
+    Source:
+    -Ill find the root source at some point lol, but these are super common
+    """
 
-    # #Laminar to Turbulent Transition as given in Quinn and Gong
+    #Get Heat Transfer Coefficient
     if isTurbulent:
         #Turbulent Heat Transfer Coeff
         h =  (k_ref/x) * 0.02914 * pow(Re_ref, 4.0/5.0) * pow(pr_ref, 1.0/3.0)
-        #lam = .4;
+        #lambda = .4;
     else:
         #Laminar Heat Transfer Coeff
         h = (k_ref/x) * 0.33206 * pow(Re_ref, 1.0/2.0) * pow(pr_ref, 1.0/3.0)
-        #lam = .5;
+        #lambda = .5;
         
     # Heat Flux
     q_conv = h*(T_r - T_w)
 
-    #Heat Flux
     return q_conv, h 
-
 
 
 #Fay-Riddell Stagnation Point Heating
@@ -252,7 +256,7 @@ def incopera_heating_correlations():
 
     # THERE ARE ALSO AVERAGE NUSSELT NUMBER CORRELATIONS - POSSIBLY USEFUL FOR LUMPED SUM?
 
-    #This doens't acutally work yet - PLEASE CHECK THESE
+    # These are so close to the Ulsu simsek flat plate heating values lol, i dont need to implement
 
     raise NotImplementedError()
 

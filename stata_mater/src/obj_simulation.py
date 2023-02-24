@@ -23,7 +23,7 @@ class FlightSimulation:
 
     Attributes
     ----------
-    REQUIRED OBJECTS
+    Required Objects:
         Aerosurface : AeroSurface object
             object representing the aerosurface being simulated
         Rocket : Rocket object
@@ -32,7 +32,8 @@ class FlightSimulation:
             object containing the flight data for the desired flight trajectory
         AirModel : AirModel object
             object representing the free-stream/atmospheric air model
-    PARAMETERS/OPTIONS
+    
+    Parameters, Config Options
         x_location: float
             downstream x location to be simulated
         t_step: float
@@ -51,7 +52,8 @@ class FlightSimulation:
             used for specifying normal, oblique, or conical shock for the upstream shock modelling
         gas_model : ???
             ??????????????????????????????????
-    RESULTS/DATA
+    
+    Results, Data
         mach : numpy float array
             mach at each timestep
         alt : numpy float array
@@ -102,7 +104,7 @@ class FlightSimulation:
         t_start = 0.0,
         t_end = None,
         initial_temp = 290.0,
-        aerothermal_model = 'flat_plate',
+        aerothermal_model = 'default',
         boundary_layer_model = 'turbulent',
         shock_type = 'oblique',
         gas_model = 'air_standard'
@@ -192,17 +194,14 @@ class FlightSimulation:
         # For each time step (except for the last)
         for i, t in enumerate(self.t_vec[:-1]):
 
-            # Calculate Aerothermal Hot-Wall Heat Flux
-            aerothermal_heatflux(self, i)
-
-            # Radiative Heat Flux
+            # Calculate Net Heat Flux
             get_net_heat_flux(self, i)
 
-            # Check Stability Criterion
+            # Stability Criterion Check
             stability_criterion_check(self, i)
 
-            # Update Temps (this function was not writing new data when trying to write to self.wall_temps[:,i+1] from within get_new_wall_temps)
-            self.wall_temps[:,i+1] = get_new_wall_temps(self, i)
+            # Get New Wall Temperatures
+            get_new_wall_temps(self, i)
 
             # Print Time to screen every 5 flight seconds
             if self.t_vec[i]%5 == 0:  print(self.t_vec[i], " seconds...") 
