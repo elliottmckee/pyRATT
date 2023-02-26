@@ -1,9 +1,12 @@
-# stata-mater
-The protectress against damage by fire... 
-https://en.wikipedia.org/wiki/Stata_Mater
-
-(Don't think this name is final- more of a codeword)
-
+              (                             
+              )\ )    (       *   )  *   )  
+        (    (()/(    )\    ` )  /(` )  /(  
+ `  )   )\ )  /(_))((((_)(   ( )(_))( )(_)) 
+ /(/(  (()/( (_))   )\ _ )\ (_(_())(_(_())  
+((_)_\  )(_))| _ \  (_)_\(_)|_   _||_   _|  
+| '_ \)| || ||   /   / _ \    | |    | |    
+| .__/  \_, ||_|_\  /_/ \_\   |_|    |_|    
+|_|     |__/                
 
 
 # Background
