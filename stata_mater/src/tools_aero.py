@@ -94,7 +94,7 @@ def get_freestream_complete(Sim, i):
     for a Simulation at timestep i
 
     Outputs:
-        p_inf, 
+        p_inf, See above definitions. _inf denotes freestream properties
         T_inf, 
         u_inf, 
         m_inf, 
@@ -129,7 +129,7 @@ def get_edge_state(p_inf, T_inf, m_inf, Sim):
         i:      Simulation Timestep
     
     Outputs:
-        p_e, 
+        p_e, See above definitions. _e denotes edge properties
         rho_e, 
         T_e, 
         T_te, 
@@ -237,13 +237,13 @@ def get_post_shock_state(m_inf, p_inf, T_inf, Sim):
 
     """
 
-    if shock_type != "oblique":
+    if Sim.shock_type != "oblique":
         raise NotImplementedError()
 
     # Determine if shock or not
     if m_inf >  1.0:
         # Yes Shock - Shock Relations for Post-Shock Properties
-        m_e, p2op1, _, T2oT1, _, _, _ =  oblique_shock( m_inf, AirModel.gam, deflection_ang_rad)
+        m_e, p2op1, _, T2oT1, _, _, _ =  oblique_shock( m_inf, Sim.AirModel.gam, Sim.deflection_angle_rad)
 
         p_e = p2op1 * p_inf
         T_e = T2oT1 * T_inf
@@ -258,7 +258,7 @@ def get_post_shock_state(m_inf, p_inf, T_inf, Sim):
 
 
 
-def shock_calc(M_1, g):
+def normal_shock(M_1, g):
     """
     Normal Shock Relation functions
 
@@ -316,7 +316,7 @@ def oblique_shock(M_1, g, theta):
     M_1n = M_1 * math.sin(beta)
 
     # use normal shock relations on the normal component of the upstream mach
-    [M2n, P2_P1, rho2_rho1, T2_T1, deltasoR, P02_P01] = shock_calc(M_1n, g)
+    [M2n, P2_P1, rho2_rho1, T2_T1, deltasoR, P02_P01] = normal_shock(M_1n, g)
 
     # compute downstream total mach from the shock angle and normal component 
     M2 = M2n / math.sin(beta - theta)
@@ -461,7 +461,7 @@ def conical_shock(M_1, delta_c, g, N=100, deltaTol=1e-2):
     # COMPUTE PROPERTIES IMMEDIATELY AFTER SHOCK:
     M_1n = M_1 * math.sin(theta)
     # M_1t = M_1 * math.cos(theta)
-    P02_P01 = shock_calc(M_1n, g)[5]
+    P02_P01 = normal_shock(M_1n, g)[5]
     # P2_P1 = 1+2*g/(g+1)*(M_1**2*math.sin(theta)**2-1)
     # rho2_rho1 = (1-2/(g+1)*(M_1**2*math.sin(theta)**2-1)/(M_1**2*math.sin(theta)**2))**(-1)
     # T2_T1 = 1+2*(g-1)/(g+1)**2*(M_1**2*math.sin(theta)**2-1)/(M_1**2*math.sin(theta)**2)*(g*M_1**2*math.sin(theta)+1)

@@ -48,7 +48,7 @@ class WallStack:
             raise NotImplementedError("I have not implemented this yet")
 
 
-        # Handling List and Singular Values for the above entries (convert everything to a list if isnt already)
+        # handling both list and single values for the above entries (convert everything to a list if isnt already)
         if not isinstance(materials, list): 
             materials = [materials]
         if not isinstance(thicknesses, list): 
@@ -57,13 +57,13 @@ class WallStack:
             node_counts = [node_counts]
 
 
-        #Maintain the User Specified inputs
+        # Maintain the User Specified inputs
         self.materials = materials
         self.thicknesses = thicknesses
         self.node_counts = node_counts
         self.interface_resistances = interface_resistances
 
-        #Get total number of elements
+        # Get total number of elements
         self.n_tot = sum(list(node_counts))
 
         # List of Elements, which represents the entire Wall/Stack/Aerosurface
@@ -93,7 +93,7 @@ class WallStack:
     def get_wall_coords(self):
         """Function for pulling out a list of the wall cooordinates 
         
-        I should probably put this in the init() of WallStack but...
+        TODO: I should probably put this in the init() of WallStack...
         """
         out = []
         for i, el in enumerate(self.elements):

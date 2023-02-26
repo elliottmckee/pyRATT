@@ -15,10 +15,10 @@ sys.path.append(os.path.dirname(os.getcwd()))
 # # https://ambiance.readthedocs.io/en/latest/index.html
 # from ambiance import Atmosphere
 
-from stata_mater.src.obj_simulation import FlightSimulation
-from stata_mater.src.obj_flightdata import Rocket, FlightData
-from stata_mater.src.obj_wall_components import WallStack
-from stata_mater.src.airmodel import AirModel
+from stata_mater.src.obj_simulation import Thermal_Sim_1D
+from stata_mater.src.obj_flightprofile import FlightProfile
+from stata_mater.src.obj_wallcomponents import WallStack
+from stata_mater.src.materials_gas import AirModel
 
 
 '''
@@ -45,10 +45,10 @@ if __name__ == "__main__":
 
     AeroSurf = WallStack(materials="ALU6061", thicknesses=0.02, node_counts = 26)
 
-    MyFlight    = FlightData( os.path.join(os.getcwd(), "example_files", "hifire_5b", "Hifire5BData.csv") )
+    MyFlight    = FlightProfile( os.path.join(os.getcwd(), "validation_cases", "resources", "hifire_5b", "hifire_5b_flight_profile.csv") )
 
     
-    Sim_400 = FlightSimulation(AeroSurf, MyFlight, AirModel(),
+    Sim_400 = Thermal_Sim_1D(AeroSurf, MyFlight, AirModel(),
                                 x_location = 0.40,
                                 deflection_angle_deg = 7.0, 
                                 t_step = 0.001,
@@ -58,7 +58,7 @@ if __name__ == "__main__":
                                 boundary_layer_model = 'transition')
 
 
-    Sim_650 = FlightSimulation(AeroSurf, MyFlight, AirModel(),
+    Sim_650 = Thermal_Sim_1D(AeroSurf, MyFlight, AirModel(),
                                 x_location = 0.65,
                                 deflection_angle_deg = 7.0, 
                                 t_step = 0.001,
@@ -68,7 +68,7 @@ if __name__ == "__main__":
                                 boundary_layer_model = 'transition')
                                 
 
-    Sim_800 = FlightSimulation(AeroSurf, MyFlight, AirModel(),
+    Sim_800 = Thermal_Sim_1D(AeroSurf, MyFlight, AirModel(),
                                 x_location = 0.80, 
                                 deflection_angle_deg = 7.0,
                                 t_step = 0.001,
@@ -111,9 +111,9 @@ if __name__ == "__main__":
     #                             usecols=['time','q_hw(W?)','heat_trans_coeff','T_recover(K)', 'T_wall:x=0.0000', 'T_wall:x=0.0200'])
 
     #Load Juliano Digitized Flight Data
-    flightData_400 = pd.read_csv( os.path.join(os.getcwd(), "example_files", "hifire_5b", "5B_TempTime400.csv"), header = 1, names=['time','temp'])
-    flightData_650 = pd.read_csv( os.path.join(os.getcwd(), "example_files", "hifire_5b", "5B_TempTime650.csv"), header = 1, names=['time','temp'])
-    flightData_800 = pd.read_csv( os.path.join(os.getcwd(), "example_files", "hifire_5b", "5B_TempTime800.csv"), header = 1, names=['time','temp'])
+    flightData_400 = pd.read_csv( os.path.join(os.getcwd(), "validation_cases", "resources", "hifire_5b", "hifire_5b_temp_time_400.csv"), header = 1, names=['time','temp'])
+    flightData_650 = pd.read_csv( os.path.join(os.getcwd(), "validation_cases", "resources", "hifire_5b", "hifire_5b_temp_time_650.csv"), header = 1, names=['time','temp'])
+    flightData_800 = pd.read_csv( os.path.join(os.getcwd(), "validation_cases", "resources", "hifire_5b", "hifire_5b_temp_time_800.csv"), header = 1, names=['time','temp'])
 
     # simsek_h_tRec_data = pd.read_csv( os.path.join(os.getcwd(), "example_files", "hifire_5", "raw_digitized", "HiFire_h_Treco.csv"),
     #                             header = 1,

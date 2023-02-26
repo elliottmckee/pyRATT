@@ -16,10 +16,10 @@ sys.path.append(os.path.dirname(os.getcwd())) # This is another goofy workaround
 
 
 from stata_mater.src.materials_solid import MATERIALS_DICT
-from stata_mater.src.obj_simulation import FlightSimulation
-from stata_mater.src.obj_flightdata import FlightData
-from stata_mater.src.obj_wallcomponents import WallStack
-from stata_mater.src.materials_gas import AirModel
+from src.obj_simulation import Thermal_Sim_1D
+from src.obj_flightprofile import FlightProfile
+from src.obj_wallcomponents import WallStack
+from src.materials_gas import AirModel
 
 
 """
@@ -75,10 +75,10 @@ def gui_run_simulation(values):
         AeroSurf = WallStack(materials=wallmaterial[i], thicknesses=wallthick[i], node_counts = n_nodes[i])
 
         #Get RAS Flight Data
-        Flight    = FlightData( inFiles[i] )
+        Flight    = FlightProfile( inFiles[i] )
         
         #Initialized Simulation
-        MySimulation= FlightSimulation(AeroSurf, Flight, AirModel(),
+        MySimulation= Thermal_Sim_1D(AeroSurf, Flight, AirModel(),
                                     x_location              = x_location[i], 
                                     deflection_angle_deg    = deflection[i], 
                                     t_step                  = t_step[i],

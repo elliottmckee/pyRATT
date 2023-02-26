@@ -1,12 +1,11 @@
 """
-For the definition of any hard-coded conversion factors, constants to be used
-
-For an example of usage, see RAS_traj_CSV_Parse in obj_flightdata.py
+Contains definitions of any hard-coded conversion factors, constants that are used
 
 Name and usage for Conversions should be of the form:
 var_in_meters = var_in_feet * constants.FT2M 
 
-Where it makes sense, try and add sources for #tracability 
+Notes:
+    -Where it makes sense, try and add sources for #tracability 
 """
 
 #---------------------------------------------------------------------------------------------------#

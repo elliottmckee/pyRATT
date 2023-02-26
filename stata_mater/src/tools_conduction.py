@@ -10,7 +10,6 @@ def get_new_wall_temps(Sim, i):
     Updates:
     --------
         - Sim.wall_temps[:,i+1], temps at next timestep
-    
     """
 
     #Aliases
@@ -82,5 +81,5 @@ def stability_criterion_check(Sim, i):
     Bi = (h * SurfE.dy) / SurfE.k
 
     if ( F_0*(1+Bi) > .5):
-        print('Warning: Stability Criterion not met. Consider decreasing timestep or number of wall nodes)')
+        print('~~WARNING~~: Stability Criterion not met. Consider decreasing timestep or number of wall nodes)')
 

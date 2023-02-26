@@ -22,21 +22,19 @@ def get_net_heat_flux(Sim, i):
     Inputs:
         Sim:    Simulation Object
         i:      Simulation Timestep
-
     Outputs:
-        None
-
+        
     Updates:
         Sim.q_rad[i],   float, radiative heatflux in W/m^2. Positive if heat is going into the wall
         Sim.q_conv[i],  float, convective heatflux in W/m^2. Positive if heat is going into the wall
         Sim.q_net[i],   float, net heatflux in W/m^2. Positive if heat is going into the wall
 
     TODO:
-        Make it so all updated variables return up to this funciton. I want all Sim.value[i] updates to 
-        be no more than 1 (2 at max) functions deep, so we are not setting values silently super deep
-        in a nested chain of functions
+        Ideally, make it so all updated variables return up to this funciton. 
+        I kinda want all Sim.value[i] updates to be no more than 1 (2 at max) functions deep, 
+        so we are not setting values silently super deep, in a nested chain of functions
+        but may be a non-issue since you can search all files for where things get written
 
-    Sources:
     """
 
     # Get Convective Heatflux
@@ -52,7 +50,7 @@ def get_net_heat_flux(Sim, i):
 
 def radiative_heatflux(Sim, i):
     """
-    High level wrapper for the radiative thermal models that are implmemented/can be used
+    High level wrapper for the radiative thermal models that are implmemented/can be used.
 
     Inputs:
         Sim:    Simulation Object
@@ -69,7 +67,7 @@ def radiative_heatflux(Sim, i):
 def aerothermal_heatflux(Sim, i):
     '''
     High level wrapper/driver for the aerothermal convective models that are 
-    implmemented/can be used. 
+    implmemented and can be used. 
 
     Inputs:
         Sim:    Simulation Object
@@ -87,8 +85,9 @@ def aerothermal_heatflux(Sim, i):
     # ------------------------------
     # 1) default: This is the correlation used in the Ulsu [1] paper. Arnas is who is referenced there,  
     # but it is not who actually developed these correlations. However, after long while of running into 
-    # paywalls because I am not a student anymore, I give up. Fuck publishers.
+    # paywalls trying to find original source because I am not a student anymore, I give up. Fuck publishers.
 
+    # Dictionary containing all models and their corresponding function calls
     aerothermal_model_dict = {  "default": ulsu_simsek_heating(Sim, i) }
 
     if Sim.aerothermal_model not in aerothermal_model_dict.keys():
@@ -114,7 +113,6 @@ def aerothermal_heatflux(Sim, i):
     # ------------------------------
     q_conv = aerothermal_model_dict[Sim.aerothermal_model]
 
-
     return q_conv
 
 
@@ -125,11 +123,27 @@ def ulsu_simsek_heating(Sim, i):
     """ 
     Driver script for the heating model outline in Ulsu [1] to determine the convective heatflux.
 
-    I will come back to document this more but hope its somewhat straightforward. If not, read [1],
-    it explains it better than I will here
+    This is the high-level computational flow outlined in Ulsu [1], to determine the convective
+    heatflux. If you're confused about anything here, I *highly* reccomend reading that paper
+    
+    Inputs:
+        Sim:    Simulation Object
+        i:      Simulation Timestep
+    Updates:
+        T_inf
+        Re_inf
+        qbar_inf
+        T_t
+        T_e
+        T_te
+        T_recovery
+        h_coeff
+    Outputs:
+        q_conv: float, Convective Heat Flux [W/m^2]
+
     """
     
-    # break out exposed Surface Wall Temp
+    # alias exposed hot-wall surface temperature
     T_w = Sim.wall_temps[0,i]
 
     # Get Freestream Properties
@@ -151,7 +165,7 @@ def ulsu_simsek_heating(Sim, i):
     # Get complete fluid properties evaluated at reference temperature
     rho_ref, cp_ref, k_ref, mu_ref, pr_ref, Re_ref = tools_aero.complete_aero_state( p_e, T_ref, u_e, Sim.x_location, Sim.AirModel)
 
-    # Heating Model
+    # Flat Plate Heating Model, properties evaluated at reference temperature
     q_conv, h = flat_plate_heat_transfer(Sim.x_location, T_w, T_r, k_ref, Re_ref, pr_ref, bl_state)
 
 
@@ -160,6 +174,8 @@ def ulsu_simsek_heating(Sim, i):
     Sim.Re_inf[i] = Re_inf
     Sim.qbar_inf[i] = 0.5*rho_inf*u_inf**2
     Sim.T_t[i] = tools_aero.total_temperature(T_inf, m_inf, Sim.AirModel.gam)
+
+    Sim.bl_state[i] = bl_state
 
     Sim.T_e[i] = T_e
     Sim.T_te[i] = T_te
