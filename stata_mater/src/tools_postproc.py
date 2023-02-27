@@ -29,6 +29,9 @@ def plot_results(Sim):
     #Wall Temp v Time
     plot_wall_temps(Sim)
 
+    #Plot Wall Temperature Distribution when y=0.0 hits its max temp
+    plot_wall_temp_dist_at_maxtemp(Sim, sim_name="Sim")
+
     # Heat Fluxes (conv, rad, tot)
     plot_heat_fluxes(Sim)
 
@@ -41,6 +44,8 @@ def plot_results(Sim):
     #Total, Total Edge, Recovery Temps
     plot_air_temperatures(Sim)
 
+    plt.show()
+
     
 
 
@@ -51,13 +56,30 @@ def plot_wall_temps(Sim, sim_name="Sim"):
    
     plt.figure()
 
-    plt.plot(Sim.t_vec, Sim.wall_temps[0,:],      label = sim_name + " - Hot Wall",  color='red') 
-    plt.plot(Sim.t_vec, Sim.wall_temps[-1,:],     label = sim_name + " - Cold Wall", color='cyan')  
+    plt.plot(Sim.t_vec, Sim.wall_temps[0,:],      label = sim_name + " - y=0.0 Wall",  color='red') 
+    plt.plot(Sim.t_vec, Sim.wall_temps[-1,:],     label = sim_name + " - y=max(y) Wall", color='cyan')  
 
     plt.legend()
     plt.xlabel("Time (s)")
     plt.ylabel("Temeperature, K")
     plt.title("Temperature vs. Time Trace")
+
+
+def plot_wall_temp_dist_at_maxtemp(Sim, sim_name="Sim"):
+
+    # Get index where external wall is at its max temp
+    maxtemp_Idx = np.argmax( Sim.wall_temps[0,:] ) 
+
+
+    plt.figure()
+
+    plt.plot(Sim.y_coords, Sim.wall_temps[:,maxtemp_Idx],      label = sim_name + "Temperature Distribution",  color='red') 
+
+    plt.legend()
+    plt.xlabel("Through-Wall Coordinate (m)")
+    plt.ylabel("Temeperature, K")
+    plt.title("Through-Wall Temperature Distribution Sampled at Max Surface Temp")
+
 
 
 
@@ -179,7 +201,7 @@ def plot_air_temperatures(Sim, sim_name="Sim"):
 
     plt.xlabel('Time (s)')
     plt.ylabel('Temp (K)')
-    plt.title("Total Temps v. Time")
+    plt.title("Flow Total Temps v. Time")
     plt.legend()
     plt.tight_layout()
 

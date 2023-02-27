@@ -25,13 +25,29 @@ def get_new_wall_temps(Sim, i):
 
         # Outermost or Hot-wall Element
         if j == 0:
-            dT_dt[j] = 1 / (e.dy*e.rho*e.cp) * (q_net_in + e.k*(Tvec_wall[1] - Tvec_wall[0]) / e.dy)
+
+            #Parse Boundary Condition Types
+            if Sim.wall_thermal_bcs[0] == "q_in_aerothermal":
+                dT_dt[j] = 1 / (e.dy*e.rho*e.cp) * (q_net_in + e.k*(Tvec_wall[1] - Tvec_wall[0]) / e.dy)
+            else:
+                raise Exception('Only "q_in_aerothermal" type supported for first B.C.') 
 
         # Inner Wall
         elif j == len(Sim.Aerosurface.elements)-1:
-            T_internal = Tvec_wall[-1] # Inner Wall BC
-            #T_internal = initial_temp
-            dT_dt[j] = e.k / (e.rho*e.cp* e.dy**2) * (T_internal - 2*Tvec_wall[j] + Tvec_wall[j-1])
+            
+
+            #Parse Boundary Condition Types
+            if Sim.wall_thermal_bcs[1] == "q_in_aerothermal":
+                dT_dt[j] = 1 / (e.dy*e.rho*e.cp) * (q_net_in + e.k*(Tvec_wall[j-1] - Tvec_wall[j]) / e.dy)
+            elif Sim.wall_thermal_bcs[1] == "adiabatic":
+                # No heat-flux. Accomplish by forcing the "internal" (i.e. inside the nosecone) temperature
+                # to be in equilibrium with inner-most wall element 
+                T_internal = Tvec_wall[-1] # Inner Wall BC
+
+                dT_dt[j] = e.k / (e.rho*e.cp* e.dy**2) * (T_internal - 2*Tvec_wall[j] + Tvec_wall[j-1])
+            else:
+                raise Exception('Unsupported B.C type specified for second B.C.') 
+
 
         # #Middle Elements
         else:

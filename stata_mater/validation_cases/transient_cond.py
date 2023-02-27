@@ -36,7 +36,7 @@ sys.path.append(os.path.dirname(os.getcwd()))
 
 #from stata_mater.src.materials_solid import solidMaterialDatabase
 from stata_mater.src.materials_solid import MATERIALS_DICT
-from stata_mater.src.obj_wall_components import WallStack
+from stata_mater.src.obj_wallcomponents import WallStack
 from stata_mater.src.tools_conduction import get_new_wall_temps
 
 
@@ -107,7 +107,7 @@ class Semi_Inf_Wall_Temp_Sim:
 
             # Update Temps
             #self.wall_temps[:,i+1] = get_new_wall_temps( self.wall_temps[:,i], self.q_0, self)
-            self.wall_temps[:,i+1] = get_new_wall_temps(self, i)
+            get_new_wall_temps(self, i)
 
 
             #Force Surface to stay at constant temp
@@ -188,8 +188,8 @@ if __name__ == "__main__":
 
 
     ### Exporting/Pickling
-    with open ("tests/trans_cond_set_temp.pkl", "wb") as f: pickle.dump(Temp_Sim, f)
-    with open ("tests/trans_cond_set_q.pkl", "wb") as f: pickle.dump(q_Sim, f)
+    with open ("validation_cases/trans_cond_set_temp.sim", "wb") as f: pickle.dump(Temp_Sim, f)
+    with open ("validation_cases/trans_cond_set_q.sim", "wb") as f: pickle.dump(q_Sim, f)
 
 
 

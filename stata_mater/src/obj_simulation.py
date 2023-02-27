@@ -72,6 +72,11 @@ class Thermal_Sim_1D:
             see tools_aerotherm.aerothermal_heatflux() for supported values
         shock_type : string
             used for specifying normal, oblique, or conical shock for the upstream shock modelling
+        wall_thermal_bcs: string list (of length 2)
+            used for specifying the thermal boundary conditions on either side of the wall. This 
+            is what allows for modelling of both nosecones and fins. Default behavior is the 
+            nosecone implementation, with ["q_in_aerothermal","adiabatic"]. The current specification
+            for a fun simulation would be ["q_in_aerothermal",q_in_aerothermal"]
     
     Results, Data
         mach : numpy float array
@@ -125,6 +130,7 @@ class Thermal_Sim_1D:
         aerothermal_model = 'default',
         boundary_layer_model = 'turbulent',
         shock_type = 'oblique',
+        wall_thermal_bcs = ["q_in_aerothermal","adiabatic"]
         #gas_model = 'air_standard'
     ):
         
@@ -142,6 +148,7 @@ class Thermal_Sim_1D:
         self.aerothermal_model      = aerothermal_model
         self.bound_layer_model      = boundary_layer_model
         self.shock_type             = shock_type
+        self.wall_thermal_bcs       = wall_thermal_bcs
         #self.gas_model          = gas_model
 
         #Get Vector of Wall Nodal Coordinates
@@ -219,9 +226,11 @@ class Thermal_Sim_1D:
         written to within the functions called within the main simulation loop.
 
         Notes:
+            TODO: Fix Time output for less regular timesteps
         """
 
         print("Simulation Progress (in sim-time): ")
+        time_progress_marker = 0.0 
 
         ####### MAIN SIMULATION LOOP #######
         # For each timestep
@@ -237,7 +246,9 @@ class Thermal_Sim_1D:
             get_new_wall_temps(self, i)
 
             # Update screen every 5 seconds in sim-time
-            if self.t_vec[i]%5 == 0:  print(self.t_vec[i], " seconds...") 
+            if self.t_vec[i] > time_progress_marker:  
+                print(time_progress_marker, " seconds...")
+                time_progress_marker += 5.0 
   
                 
 

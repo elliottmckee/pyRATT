@@ -95,13 +95,6 @@ for real.
 
 [4] Bertin, J.J. 1994. Hypersonic aerothermodynamics. Reston, VA: AIAA.
 
-[5] Bianchi, D. 2007. “Modeling of ablation phenomena in space applications.�?
-Ph.D. dissertation, Dept. of Mechanics and Aeronautics, Università di
-Roma “La Sapienza�?
-
-[6] Aerothermodynamics of Pre-Flight and In-Flight Testing Methodologies for
-Atmospheric Entry Probes, VON KARMAN INSTITUTE FOR FLUID DYNAMICS
-Isil Sakraker
 
 
 NOTES:
@@ -110,11 +103,11 @@ NOTES:
 
 
 TODO : 
-- Add Export Checkbox to GUI
-- Add other Hifire heatflux comparison plots
-- Implment switch for different kinds of shocks (normal, oblique, conical)
-- Fin/Root Heating
+- Add additional Hifire heatflux comparison plots
+- Add Thermal Interface Resistances
+- Expand Fin/Root Heating
 - Stagnation Point Heating
+- Add temperature dependant material properties, for example, thermal conductivity changes at high temp
 - Lumped Capacitance Simulations for things like nosecones
 - Clean up the nodes vs. elements nomenclature throughout
     -In WallSurf- node/elemement ambiguity may cause issues at interfaces when different sized wall elements, for y coord calculation
@@ -142,6 +135,7 @@ import matplotlib.pyplot as plt
 import sys
 import filecmp
 import time
+import pickle
 
 #Internal Modules
 from src.obj_simulation import Thermal_Sim_1D
@@ -155,19 +149,35 @@ import src.tools_postproc as Post
 if __name__ == "__main__":
 
     
-    # HiFire 5B
+    # Define Wall
     AeroSurf = WallStack(materials="ALU6061", thicknesses=0.02, node_counts = 26)
+
+    # Point to Trajectory Data CSV
+    Flight    = FlightProfile( os.path.join(os.getcwd(), "validation_cases", "resources", "hifire_5", "hifire_5_flight_profile.csv") )
     
-    MyFlight    = FlightProfile( os.path.join(os.getcwd(), "validation_cases", "resources", "hifire_5b",  "hifire_5b_flight_profile.csv") )
-    
-    MySimulation = Thermal_Sim_1D(AeroSurf, MyFlight, AirModel(),
-                                x_location = 0.40,
+    # Define Simulation Object
+    MySimulation= Thermal_Sim_1D(AeroSurf, Flight, AirModel(),
+                                x_location = 0.2, 
                                 deflection_angle_deg = 7.0, 
-                                t_step = 0.001,
-                                t_start = 510.0,
-                                t_end = 520.0,
-                                initial_temp = 360.7,
+                                t_step = 0.0040,
+                                t_end = 215.0,
+                                initial_temp = 281.25,
                                 boundary_layer_model = 'transition')
+
+
+    # # HiFire 5B
+    # AeroSurf = WallStack(materials="ALU6061", thicknesses=0.02, node_counts = 26)
+    
+    # MyFlight    = FlightProfile( os.path.join(os.getcwd(), "validation_cases", "resources", "hifire_5b",  "hifire_5b_flight_profile.csv") )
+    
+    # MySimulation = Thermal_Sim_1D(AeroSurf, MyFlight, AirModel(),
+    #                             x_location = 0.40,
+    #                             deflection_angle_deg = 7.0, 
+    #                             t_step = 0.001,
+    #                             t_start = 510.0,
+    #                             t_end = 520.0,
+    #                             initial_temp = 360.7,
+    #                             boundary_layer_model = 'transition')
 
 
     MySimulation.run()

@@ -69,6 +69,10 @@ class FlightProfile:
         #Parse the Trajectory CSV file for Mach, Alt, Time, etc. into a Pandas Dataframe
         df = pd.read_csv(trajectory_filepath, usecols=['Time (sec)', 'Mach Number', 'Altitude (ft)'])
 
+
+        # Mach = 0.0 breaks a lot of the math later so just overwriting it here with a small value
+        df["Mach Number"].replace(to_replace = 0, value = 0.001, inplace=True)
+
         #Convert Pandas Dataframe Object to a Numpy Array
         df = df.to_numpy()
 

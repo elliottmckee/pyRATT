@@ -42,7 +42,7 @@ def get_freestream(alt, AirModel, mach=None):
     atm_inf = Atmosphere(alt)
     
     #If Mach Specified
-    if mach:
+    if mach is not None:
         u_inf = sqrt(AirModel.gam * AirModel.R * atm_inf.temperature) * mach
         return atm_inf.pressure, atm_inf.temperature, atm_inf.density, u_inf
     else:
@@ -237,13 +237,22 @@ def get_post_shock_state(m_inf, p_inf, T_inf, Sim):
 
     """
 
-    if Sim.shock_type != "oblique":
+    if Sim.shock_type not in  ["normal", "oblique", "conical"]:
         raise NotImplementedError()
 
     # Determine if shock or not
     if m_inf >  1.0:
         # Yes Shock - Shock Relations for Post-Shock Properties
-        m_e, p2op1, _, T2oT1, _, _, _ =  oblique_shock( m_inf, Sim.AirModel.gam, Sim.deflection_angle_rad)
+        if Sim.shock_type == "normal":
+            m_e, p2op1, _, T2oT1, _, _ =  normal_shock( m_inf, Sim.AirModel.gam)
+
+        if Sim.shock_type == "oblique":
+            m_e, p2op1, _, T2oT1, _, _, _ =  oblique_shock( m_inf, Sim.AirModel.gam, Sim.deflection_angle_rad)
+
+        if Sim.shock_type == "conical":
+            raise Exception("Conical Shocks not implemented yet. Reccomed using Oblique")
+            #_, _, M, p2op1, T2oT1, _, _, _ =  conical_shock( m_inf, Sim.AirModel.gam, Sim.deflection_angle_rad)
+
 
         p_e = p2op1 * p_inf
         T_e = T2oT1 * T_inf
@@ -368,7 +377,7 @@ def btm(M_1, g, theta):
 
 
 
-def conical_shock(M_1, delta_c, g, N=100, deltaTol=1e-2):
+def conical_shock(M_1, g, delta_c, N=100, deltaTol=1e-2):
     """
     Conical Shock Solver
 
@@ -421,6 +430,8 @@ def conical_shock(M_1, delta_c, g, N=100, deltaTol=1e-2):
     itrCorrect = 0  # CORRECTOR ITERATION COUNTER
     x = [0, theta]  # STORE LAST TWO THETA (SHOCK ANGLE) VALUES
     y = [0, delta - delta_c]  # STORE LAST TWO DELTA (CONE ANGLE) RESIDUALS
+
+
 
     while True:
         # CORRECTOR:

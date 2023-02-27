@@ -23,6 +23,7 @@ I really hate making plots in Python, so I am going to make a GUI tool to handle
 
 Notes:
 -I was having issues with the plots displaying before switching backend to TkAgg
+- The only wall quantity that is maintined/supported is wall_temps
 
 
 I am leveraging this Dr Adam Luke Baskerville's work here: 
@@ -76,7 +77,6 @@ def draw_plot(SimList, SimNames, values, MAXPLOTS):
                 # If Vector data, need to get Wall Y location index
                 if values[f'-yvar{i}-'] == "wall_temps":
 
-                    print("Need to add other vector/wall quantities- can only handle temp rn")
                     y_index = SimList[j].y_coords.index(values[f'-yloc{i}-'])
 
                     plot_yvar = getattr(SimList[j], values[f'-yvar{i}-'])[y_index, :]
@@ -120,7 +120,7 @@ def load_sim_files(FILES):
     -Uses first Sim object to get names. Assumes all else have corresponding variables. 
 
     """
-    print("In load_sim_files: Rounding Y data to 4 digits of precision. This shouldn't cause issues but just letting ya know")
+    print("Note - in load_sim_files: Rounding Y data to 4 digits of precision. This shouldn't cause issues but just letting ya know.")
     
     #List of Simulation Objects
     SimList = []
@@ -170,23 +170,27 @@ matplotlib_colours = ["dodgerblue", "indianred", "gold", "steelblue", "tomato", 
 matplotlib_linestyles = ["solid", "dashed", "dashdot", "dotted"]
 
 
-instructions = """Instructions: (i guess you can call them that)
+instructions = """Instructions:
 
-- Use the browser below to point to one or more pickled FlightSimulation objects. These should be saved out when running w/ the gui 
-    but code for it will be in the example hifire cases if needed (may be commented out)
+- Use the browser below to point to one or more pickled FlightSimulation objects. These should be saved out to .sim files when 
+running w/ the gui. Code for outputting these files from a script are included in the examples.
+
+- To plot the wall temperatures, you need to select "wall_temps" as the Y-variable. Additionally, you need to specify the through-
+wall location, as you need to tell it *where* in the wall you want the temperature. Inner surface? Outer surface? etc.
+    - For Nosecone simulations, y=0.0 is the exposed/skin/hot-wall, and max(y) is the inner-wall. 
+    - For Fin simulations, both y=0.0 and max(y) will be fin exposed surfaces, and halfway between these will be the fin centerline.
+
+- THRU-WALL LOCATION ONLY NEEDS TO BE SPECIFIED IF PLOTTING WALL TEMPERATURES
 
 - I haven't cleaned up the selectable variables fully, and theyres some that wont work if you try and plot them. But
 hopefully they're labelled in a way that makes sense. 
 
-    - The only confusing one should be the Thru-wall location. This value only needs to be specified if youre plotting wall temperatures, 
-    because you need to tell it *where* in the wall you want the temperature. y=0.0 is the exposed/skin/hot-wall, and the maximum value 
-    will be the inner-wall. Note the inner wall BC.
-
 - Multiple Input File implementation: If you load multiple files and select a plot below, it'll automatically pull the correponding values 
-from all loaded files. I.E. if you load 3 files and only enable Plot 1 with Mach v. Time,  you'll get 3 lines labelled according to each 
-input file. This is useful for doing things like comparing between different motor configs, plotting multiple locations along the body, etc.
+from all loaded files. I.E. if you load 3 files and only enable Plot 1 with Mach v. Time,  you'll get 3 lines labelled according to each input 
+file. This is useful for doing things like comparing between different materials, motor configs, plotting multiple locations along the body, etc.
 
-    - Note, if you have different wall thicknesses between the files, it may not work for points besides the surface/skin
+    - Note, if you have different wall thicknesses between the files, the Thru-wall thicknesses may not line up correctly and cause things
+        to break
 
 - If you're a real masochist and need more than 8 plots on a figure, you can change MAXPLOTS in src/gui_post.py 
 
@@ -204,13 +208,11 @@ h_spacings = [8, 6, 8, 22, 22, 23, 20]
 
 
 
-
-
 # Define Layout
 
 layout = [
             [sg.Text('-'  * 150, size=(150, 1))], #--------------------------
-            [sg.Text('------ STATA MATER GUI POST -------', size=(150, 1))], #--------------------------
+            [sg.Text('------ pyRATT GUI POST -------', size=(150, 1))], #--------------------------
             [sg.Text('-'  * 150, size=(150, 1))], #--------------------------
             [sg.Text(instructions)],
             [sg.Text('-'  * 150, size=(150, 1))], #--------------------------
@@ -262,7 +264,7 @@ layout = [
                 # Linespec
                 #sg.InputCombo(values=(matplotlib_linestyles), size=(25, 1),          key=f'-lspc{i}-'),
                 
-                sg.InputText('NotImplemented Legend Prefix', size=(20, 1)),
+                #sg.InputText('NotImplemented Legend Prefix', size=(20, 1)),
             ] for i in range(MAXPLOTS)],
             
             
@@ -276,7 +278,7 @@ layout = [
 
 
 # Define Plot Control Window
-window = sg.Window('Stata-Mater GUI Post', layout)
+window = sg.Window('pyRATT GUI Post', layout)
 
 # Generate persistent plot control window 
 while True:

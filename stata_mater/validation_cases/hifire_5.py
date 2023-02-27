@@ -45,9 +45,11 @@ if __name__ == "__main__":
                                 x_location = 0.2, 
                                 deflection_angle_deg = 7.0, 
                                 t_step = 0.0040,
-                                t_end = 215.0,
+                                t_end = 35.0,
                                 initial_temp = 281.25,
-                                boundary_layer_model = 'transition')
+                                boundary_layer_model = 'transition',
+                                wall_thermal_bcs = ["q_in_aerothermal","q_in_aerothermal"]
+                                )
 
 
     #Run and time Simulation
@@ -61,9 +63,9 @@ if __name__ == "__main__":
 
     # Export
     #csv
-    MySimulation.export_data_to_csv(out_filename = 'hifire_5_out_data_new.csv')
+    #MySimulation.export_data_to_csv(out_filename = 'hifire_5_out_data_new.csv')
     #pickle
-    with open ("hifire_5_new.sim", "wb") as f: pickle.dump(MySimulation, f)
+    #with open ("hifire_5_new.sim", "wb") as f: pickle.dump(MySimulation, f)
 
 
 
