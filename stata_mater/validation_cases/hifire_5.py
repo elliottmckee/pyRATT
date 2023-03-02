@@ -6,28 +6,40 @@ import sys
 import time
 import pickle
 
-# # Standard Atmosphere Model/Package (CANT HANDLE HIGH-ALT)
-# # https://ambiance.readthedocs.io/en/latest/index.html
-# from ambiance import Atmosphere
-
-# Wacky inplementation to be able to run these from the main directory
-#   I know there is probably a simpler way to do this. I hate this. 
-#   Let me know if you know a better solution
+#todo: this is super goofy- find better way to do this
 sys.path.append(os.path.dirname(os.getcwd()))
 
-from stata_mater.src.obj_simulation import Thermal_Sim_1D
-from stata_mater.src.obj_flightprofile import FlightProfile
-from stata_mater.src.obj_wallcomponents import WallStack
-from stata_mater.src.materials_gas import AirModel
+try:
+    from stata_mater.src.obj_simulation import Thermal_Sim_1D
+    from stata_mater.src.obj_flightprofile import FlightProfile
+    from stata_mater.src.obj_wallcomponents import WallStack
+    from stata_mater.src.materials_gas import AirModel
+except:
+    print("\n Run this script from the main pyRATT directory using 'python3 validation_cases/hifire_5.py")
+    quit()
 
 
 '''
-Usage:
 
-In the stata_mater directory, run the following command:
-python3 tests/hifire_5.py
+USAGE:  From the main pyRATT directory run: "python3 validation_cases/hifire_5.py"
 
-I'm sorry for the way I implemented this
+
+ABOUT:
+    This script is a validation case studying the HiFIRE-5 flight data from the below reference.
+
+    The HiFire payload was basically an aluminum nosecone instrumented with a TON of thermocouples,
+    heat-flux sensors, etc. with the aim of investigating transition to turbulence for hypersonic flows.
+
+    The 2nd stage on this flight didn't light, only resulting in a peak mach number of ~3. Regardless,
+    it still measured data, and provides a GREAT validation case for this tool.
+
+    The other validation case is the HiFIRE-5B data, where the 2nd stage did light...
+
+
+REFERENCES:
+
+    [1] HIFiRE-5 Flight Test Results, Thomas J. Juliano, David Adamczak, and Roger L. Kimmel, Journal of Spacecraft and Rockets 2015 52:3, 650-663
+
 '''
 
 
@@ -45,10 +57,9 @@ if __name__ == "__main__":
                                 x_location = 0.2, 
                                 deflection_angle_deg = 7.0, 
                                 t_step = 0.0040,
-                                t_end = 35.0,
+                                t_end = 215.0,
                                 initial_temp = 281.25,
-                                boundary_layer_model = 'transition',
-                                wall_thermal_bcs = ["q_in_aerothermal","q_in_aerothermal"]
+                                boundary_layer_model = 'transition'
                                 )
 
 
@@ -63,14 +74,14 @@ if __name__ == "__main__":
 
     # Export
     #csv
-    #MySimulation.export_data_to_csv(out_filename = 'hifire_5_out_data_new.csv')
+    MySimulation.export_data_to_csv(out_filename = 'hifire_5_validation.csv')
     #pickle
-    #with open ("hifire_5_new.sim", "wb") as f: pickle.dump(MySimulation, f)
+    with open ("hifire_5_validation.sim", "wb") as f: pickle.dump(MySimulation, f)
 
 
 
 
-    # Verification Plotting
+    ################################################# PLOTTING ##############################################
 
     # Load HiFire 5 Digitized data
     hifire_temp_data = pd.read_csv( os.path.join(os.getcwd(), "validation_cases", "resources", "hifire_5", "hifire_5_300mm_7degminoraxis_temps.csv"),

@@ -6,34 +6,48 @@ import sys
 import time
 import pickle
 
-#I have to do stupid ass directory bullshit because Python is shit with imports
-# Make it so it can find the 
+#todo: this is super goofy- find better way to do this
 sys.path.append(os.path.dirname(os.getcwd()))
-#sys.path.append(os.path.dirname(os.path.dirname(os.getcwd())))
 
-# # Standard Atmosphere Model/Package (CANT HANDLE HIGH-ALT)
-# # https://ambiance.readthedocs.io/en/latest/index.html
-# from ambiance import Atmosphere
 
-from stata_mater.src.obj_simulation import Thermal_Sim_1D
-from stata_mater.src.obj_flightprofile import FlightProfile
-from stata_mater.src.obj_wallcomponents import WallStack
-from stata_mater.src.materials_gas import AirModel
+try:
+    from stata_mater.src.obj_simulation import Thermal_Sim_1D
+    from stata_mater.src.obj_flightprofile import FlightProfile
+    from stata_mater.src.obj_wallcomponents import WallStack
+    from stata_mater.src.materials_gas import AirModel
+except:
+    print("\n Run this script from the main pyRATT directory using 'python3 validation_cases/hifire_5b.py")
+    quit()
 
 
 '''
 
-I will be coming back to this later to expand this header a good bit
+USAGE:  From the main pyRATT directory run: "python3 validation_cases/hifire_5b.py"
 
 
-##### USAGE #####
-I KNOW THIS IMPLEMENTATION IS DOGSHIT, BUT HERE'S HOW TO RUN THESE
+ABOUT:
+    This script is a validation case studying the HiFIRE-5B flight data from the below reference.
 
-From the stata_mater folder, run the following command:
-python3 tests/hifire_5b.py
+    The HiFire payload was basically an aluminum nosecone instrumented with a TON of thermocouples,
+    heat-flux sensors, etc. with the aim of investigating transition to turbulence for hypersonic flows.
+
+    On this flight the 2nd stage did light, which resulted in a quite speedy boy, being just barely 
+    shy of Mach 8 on re-entry. 
+
+    However, there is much less raw-temperature data given in this report. There was a good few article on
+    this mission, so I might just need to look harder...
+
+    Nevertheless, we get a short window of data on descent at Mach 7+, where transition occurs, and can 
+    be seen in both the flight data, as well as the simulation results below.
 
 
-I'm sorry 
+
+REFERENCES:
+
+    [1] Hypersonic International Flight Research Experimentation-5b Flight Overview 
+        Roger L. Kimmel, David W. Adamczak, David Hartley, Hans Alesi, Myles A. Frost, Robert Pietsch, Jeremy Shannon, and Todd Silvester
+        Journal of Spacecraft and Rockets 2018 55:6, 1303-1314
+
 '''
 
 
@@ -41,13 +55,14 @@ I'm sorry
 if __name__ == "__main__":
 
 
-    # HiFire 5B Verification Case Setup
-
+   
+    # Define Wall
     AeroSurf = WallStack(materials="ALU6061", thicknesses=0.02, node_counts = 26)
 
+    # Point to Flight Trajectory
     MyFlight    = FlightProfile( os.path.join(os.getcwd(), "validation_cases", "resources", "hifire_5b", "hifire_5b_flight_profile.csv") )
 
-    
+    # Setup 400mm downstream sim
     Sim_400 = Thermal_Sim_1D(AeroSurf, MyFlight, AirModel(),
                                 x_location = 0.40,
                                 deflection_angle_deg = 7.0, 
@@ -57,7 +72,7 @@ if __name__ == "__main__":
                                 initial_temp = 368.15,
                                 boundary_layer_model = 'transition')
 
-
+    # Setup 650mm downstream sim
     Sim_650 = Thermal_Sim_1D(AeroSurf, MyFlight, AirModel(),
                                 x_location = 0.65,
                                 deflection_angle_deg = 7.0, 
@@ -67,7 +82,7 @@ if __name__ == "__main__":
                                 initial_temp = 361.36,
                                 boundary_layer_model = 'transition')
                                 
-
+    # Setup 800mm downstream sim
     Sim_800 = Thermal_Sim_1D(AeroSurf, MyFlight, AirModel(),
                                 x_location = 0.80, 
                                 deflection_angle_deg = 7.0,
@@ -88,22 +103,25 @@ if __name__ == "__main__":
     end = time.time()
     print("Elapsed Time for all 3 Sims: ", end - start)
 
+    
     ### Export
 
     # CSV's
-    #Sim_400.export_data_to_csv(out_filename = 'hifire_5b_400mm_out_data_new.csv')
-    #Sim_650.export_data_to_csv(out_filename = 'hifire_5b_650mm_out_data_new.csv')
-    #Sim_800.export_data_to_csv(out_filename = 'hifire_5b_800mm_out_data_new.csv')
+    Sim_400.export_data_to_csv(out_filename = 'hifire_5b_400mm_validation.csv')
+    Sim_650.export_data_to_csv(out_filename = 'hifire_5b_650mm_validation.csv')
+    Sim_800.export_data_to_csv(out_filename = 'hifire_5b_800mm_validation.csv')
 
     # Pickles
-    # with open("tests/hifire_5b_400mm.pkl", "wb") as f: pickle.dump(Sim_400, f)
-    # with open("tests/hifire_5b_650mm.pkl", "wb") as f: pickle.dump(Sim_650, f)
-    # with open("tests/hifire_5b_800mm.pkl", "wb") as f: pickle.dump(Sim_800, f)  
+    with open("hifire_5b_400mm_validation.sim", "wb") as f: pickle.dump(Sim_400, f)
+    with open("hifire_5b_650mm_validation.sim", "wb") as f: pickle.dump(Sim_650, f)
+    with open("hifire_5b_800mm_validation.sim", "wb") as f: pickle.dump(Sim_800, f)  
     
 
 
 
-    # Verification Plotting
+
+
+    ###########################  PLOTTING #########################
 
     #Load Matlab Simulation Data
     print("Try and extract Matlab 5B Simulation data at some point for these")

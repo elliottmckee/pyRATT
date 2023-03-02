@@ -1,25 +1,4 @@
-'''
 
-This includes test cases for checking the Transient Thermal conduction implementation. 
-
-Both are examples pulled from Incopera (see below) for a semi-infinite plate (infinite in all directions but one),
-where a wall at a fixed temperature is subjected at t=0.0 to either a fixed surface temperature, or a prescribed heat flux. 
-
-
-
-### USAGE ###
-I KNOW THIS IMPLEMENTATION IS DOGSHIT, BUT HERE'S HOW TO RUN THESE
-
-From the stata_mater base folder, run the following command:
-python3 tests/transient_conduction_verify.py
-
-I'm sorry 
-
-
-References:
-[1] Incropera et al., Fundamentals of Heat and Mass Transfer Sixth Edition, CH 5.7, Pg. 283-295
-
-'''
 
 import sys
 import os
@@ -30,18 +9,50 @@ import math
 from scipy import special
 import pickle
 
-#I have to do stupid ass directory bullshit because Python is shit with imports
-# Make it so it can find the 
+#todo: this is super goofy- find better way to do this
 sys.path.append(os.path.dirname(os.getcwd()))
 
-#from stata_mater.src.materials_solid import solidMaterialDatabase
-from stata_mater.src.materials_solid import MATERIALS_DICT
-from stata_mater.src.obj_wallcomponents import WallStack
-from stata_mater.src.tools_conduction import get_new_wall_temps
+try:
+    from stata_mater.src.materials_solid import MATERIALS_DICT
+    from stata_mater.src.obj_wallcomponents import WallStack
+    from stata_mater.src.tools_conduction import get_new_wall_temps
+except:
+    print("\n Run this script from the main pyRATT directory using 'python3 validation_cases/transient_cond.py")
+    quit()
 
 
 
-### ANALYTICAL SOLUTIONS
+'''
+
+USAGE:  From the main pyRATT directory run: "python3 validation_cases/transient_cond.py"
+
+
+ABOUT:
+    This includes test cases for checking the Transient Thermal conduction implementation. It compares against
+    two Analytical solutions for transient thermal conduction in a semi-infinite plate (infinite in all directions but one).
+
+    The analytical solutions are pulled from Incropera [1] below.
+
+    The two cases that are compared below are:
+        1) Instantaneous, Fixed Wall Temperature imparted at T=0 seconds
+        2) Specified Heatflux imparted at T=0 seconds
+
+    Both simulations start from equilibrium, and the semi-infinite-ness is approximated by making the walls really
+    thick. Since this is a 1D tool, we are already handling the other dimensions fine.
+
+
+TODO:
+    Idk just like, clean this one up. Its gross, and needs to be sleeker and integrated better. 
+
+REFERENCES:
+    [1] Incropera et al., Fundamentals of Heat and Mass Transfer Sixth Edition, CH 5.7, Pg. 283-295
+'''
+
+
+
+
+
+################################# ANALYTICAL SOLUTIONS ########################################
 
 # Instant Surface Temperature Analytical Solution
 def inst_T_an(x, t, T_i, T_s, alp):
@@ -60,70 +71,105 @@ def q_0_an(x, t, T_i, q_0, alp):
            
 
 
+################################# MODIFIED CLASS FOR TESTING ########################################
 
-class Semi_Inf_Wall_Temp_Sim:
-    #Pared down version of FligtSimulation object to just do wall conduction
-    #Either Specify T_s OR q_0 to switch between ints. temp or heat flux cases
+class Transient_Cond_Sim:
+    """
+    Pared down version of Thermal_Sim_1D for the purposes of these testcases.
+
+    Should ideally make pull this functionality into the Thermal_Sim_1D object. 
+    
+    """
 
     def __init__(
         self,
         Aerosurface,
         t_step,
-        t_start,
-        t_end,
-        T_initial=None,
-        T_surface=None,
-        q_0=None
+        t_start = 0.0,
+        t_end = None,
+        initial_temp = 290.0,
+        set_T = None,
+        set_q0 = 0.0,
+        wall_thermal_bcs = ["q_in_aerothermal","adiabatic"]
     ):
-
-        self.T_i = T_initial
-        self.T_s = T_surface
-        self.t_step = t_step
-        self.Aerosurface    = Aerosurface
-
-        # Generate Data Arrays
-        self.t_vec = np.arange(t_start, t_end, t_step)
-        self.wall_temps = np.zeros((self.Aerosurface.n_tot, np.size(self.t_vec)), dtype=float)
-
-        #Set initial wall temp
-        self.wall_temps[:,0] = self.T_i
-
-
-        #Set heat flux, initial conditions
-        if q_0 == None and T_surface is not None:
-            self.q_net = np.zeros((np.size(self.t_vec),), dtype=float)
-            self.wall_temps[0,0] = self.T_s
-        elif q_0 is not None and T_surface is None:
-            self.q_net = q_0*np.ones((np.size(self.t_vec),), dtype=float)
-        else:
-            print("Either specify T_s or q_0, not both")
         
+        #Unavoidable gross block of passing-through variables
+        self.Aerosurface            = Aerosurface 
+        self.t_step                 = t_step
+        self.t_start                = t_start
+        self.t_end                  = t_end
+        self.initial_temp           = initial_temp
+
+        self.set_T                  = set_T
+        self.set_q0                 = set_q0
+        
+    
+        self.wall_thermal_bcs       = wall_thermal_bcs
+
+        #Get Vector of Wall Nodal Coordinates
+        self.y_coords               = Aerosurface.get_wall_coords() 
+
+        #Initialize Simulation 
+        self.sim_initialize()
+
+
+    def sim_initialize(self):
+        """
+        Pre-allocate and initialize all datastructs needed to run simulation
+        """
+        self.t_vec = np.arange(self.t_start, self.t_end, self.t_step)
+            
+        # get time vector size
+        self.t_vec_size      = np.size(self.t_vec)
+
+        ### PRE ALLOCATION OF DATA STRUCTS
+        self.q_net     = self.set_q0 * np.ones((self.t_vec_size,), dtype=float) # Convective Heat Flux [w/m^2]
+        
+        # Vector Quantities vs. Time
+        self.wall_temps = np.zeros((self.Aerosurface.n_tot,self.t_vec_size), dtype=float)
+
+        #Set Initial Values for Wall Temperature at First Step
+        self.wall_temps[:,0] = self.initial_temp
+
 
     def run(self):
+        """ 
+        High-level Simulation Run Loop
 
-        print("Simulation Progress: ")
-        # For each time step (except for the last)
+        """
+
+        print("Simulation Progress (in sim-time): ")
+        time_progress_marker = self.t_vec[0] 
+
+        ####### MAIN SIMULATION LOOP #######
+        # For each timestep
         for i, t in enumerate(self.t_vec[:-1]):
 
-            # Update Temps
-            #self.wall_temps[:,i+1] = get_new_wall_temps( self.wall_temps[:,i], self.q_0, self)
+
+            #If temp sim, force surface temp to be equal to setTemp
+            if self.set_T:
+                self.wall_temps[0,i] = self.set_T
+
+
+            # Get New Wall Temperatures
             get_new_wall_temps(self, i)
 
-
-            #Force Surface to stay at constant temp
-            if self.T_s is not None:
-                self.wall_temps[0,i+1] = self.T_s
-
-            # Print Time to screen every 5 sim seconds
-            if self.t_vec[i]%5 == 0:  print(self.t_vec[i], " seconds...") 
+            # Update screen every 5 seconds in sim-time
+            if self.t_vec[i] > time_progress_marker:  
+                print(time_progress_marker, " seconds...")
+                time_progress_marker += 5.0 
 
 
+
+
+################################# MAIN ########################################
 
 
 if __name__ == "__main__":
 
     
-    ### INPUTS 
+    ###### INPUTS/PARAMETERS ###### 
+    
     # Instantaneous Temp Testcase Parameters
     T_i = 300.0 #[K] Initial Material Temperature
     T_s = 350.0 #[K] Temperature Imparted instantanously at the surface at x=0
@@ -139,8 +185,6 @@ if __name__ == "__main__":
 
     # Position Values to Bound and plot at
     x_plot = np.linspace(0.0, 0.05, num=50)
-
-
     
     ### DERIVED VALUES 
     rho    = MATERIALS_DICT["ALU6061"]["rho"]
@@ -152,7 +196,8 @@ if __name__ == "__main__":
 
     
 
-    ### SETUP AND SIMULATIONS
+
+    ##### SETUP AND SIMULATIONS #######
     
     # Create Wall Object
     Wall = WallStack(materials="ALU6061", thicknesses=0.5, node_counts = 400)
@@ -160,20 +205,25 @@ if __name__ == "__main__":
     sim_x = Wall.get_wall_coords()
 
     
-    #Create Simulation Objects
-    Temp_Sim = Semi_Inf_Wall_Temp_Sim(Aerosurface=Wall,
-                                        t_step = 0.01,
-                                        t_start = 0.0,
-                                        t_end = t_plot[-1]+0.001,
-                                        T_initial=T_i,
-                                        T_surface=T_s)
+    # Specified Surface Temperature Sim
+    Temp_Sim = Transient_Cond_Sim(Aerosurface=Wall,
+                                t_step = 0.01,
+                                t_start = 0.0,
+                                t_end = t_plot[-1]+0.001,
+                                initial_temp=T_i,
+                                set_T=T_s,
+                                wall_thermal_bcs = ["q_in_aerothermal","adiabatic"])
 
-    q_Sim = Semi_Inf_Wall_Temp_Sim(Aerosurface=Wall,
-                                        t_step = 0.01,
-                                        t_start = 0.0,
-                                        t_end = t_plot[-1]+0.001,
-                                        T_initial=T_i,
-                                        q_0 = q_0)
+
+
+    # Specified Heatflux Sim
+    q_Sim = Transient_Cond_Sim(Aerosurface=Wall,
+                                t_step = 0.01,
+                                t_start = 0.0,
+                                t_end = t_plot[-1]+0.001,
+                                initial_temp=T_i,
+                                set_q0=q_0,
+                                wall_thermal_bcs = ["q_in_aerothermal","adiabatic"])
 
     # Run Simulations
     start=time.time()
@@ -188,12 +238,16 @@ if __name__ == "__main__":
 
 
     ### Exporting/Pickling
-    with open ("validation_cases/trans_cond_set_temp.sim", "wb") as f: pickle.dump(Temp_Sim, f)
-    with open ("validation_cases/trans_cond_set_q.sim", "wb") as f: pickle.dump(q_Sim, f)
+    with open ("trans_cond_set_temp_validate.sim", "wb") as f: pickle.dump(Temp_Sim, f)
+    with open ("trans_cond_set_q_validate.sim", "wb") as f: pickle.dump(q_Sim, f)
 
 
 
-    ### Plotting 
+    
+
+
+
+    ################################# PLOTTING ########################################
     
     ### Instant Temperature Plot
     plt.figure()

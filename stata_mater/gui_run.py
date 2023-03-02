@@ -114,6 +114,8 @@ def gui_run_simulation(values):
         #Pickle output to outFile
         with open(outFiles[i]+".sim", "wb") as f: pickle.dump(MySimulation, f)
 
+        print("Done!")
+
 
 
 
@@ -151,7 +153,9 @@ if __name__ == "__main__":
 
     ##################################### LARGE BLOCKS OF TEXT ##########################################
 
-    main_instructions = """Instructions:
+    main_instructions = """*If this GUI is too big for your screen, run "python3 gui_run -s" to make it scrollable*
+    
+Instructions:
 
     1) Use the browser below to point to a RASAeroII (can add support for other formats, but RAS likely most useful) flight sim .CSV export file. 
         - To generate this output data file from RASAeroII Sim:
@@ -211,7 +215,7 @@ if __name__ == "__main__":
 
     layout = [
 
-                
+
                 [sg.Text('-'  * 200, size=(200, 1))], #--------------------------
                 [sg.Text('------ pyRATT GUI_RUN -------', size=(150, 1))],
                 [sg.Text('-'  * 200, size=(200, 1))], #--------------------------
@@ -284,8 +288,19 @@ if __name__ == "__main__":
 
     ##################################### WINDOW DEFINITION, MAIN EVENT LOOP ##########################################
 
-    # Define Plot Control Window
-    window = sg.Window('pyRATT gui_run', layout)
+
+    # Define Plot Control Window based on command line args
+
+
+    if len(sys.argv) > 1: 
+        if sys.argv[1] == "-s":
+            #Scrollable Window
+            window = sg.Window('pyRATT gui_run', [[sg.Column(layout, scrollable=True, size=(1280, 720))]], size = (1280, 720), resizable = True)
+        else:
+            raise Exception("Invalid Arguments Input")
+    else:
+        #Better Looking resizable one
+        window = sg.Window('pyRATT gui_run', layout, resizable = True)
 
     # Generate persistent plot control window, event loop
     while True:
@@ -308,6 +323,7 @@ if __name__ == "__main__":
 
         ### Plot Event
         elif event == 'Run Simulation':
+
             gui_run_simulation(values)
         
 

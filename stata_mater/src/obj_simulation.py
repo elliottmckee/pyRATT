@@ -221,7 +221,7 @@ class Thermal_Sim_1D:
 
     def run(self):
         """ 
-        High-level call to perform simulation. 
+        High-level Simulation Run Loop
 
         Handles the high-level simulation loop, outputs progress as it goes.
         All (most of, actually) the data initialized in sim_initialize gets 
@@ -231,7 +231,7 @@ class Thermal_Sim_1D:
         """
 
         print("Simulation Progress (in sim-time): ")
-        time_progress_marker = 0.0 
+        time_progress_marker = self.t_vec[0] 
 
         ####### MAIN SIMULATION LOOP #######
         # For each timestep
