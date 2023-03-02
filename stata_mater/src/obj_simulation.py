@@ -1,5 +1,6 @@
 """
-Contains Definitions for all the Main Simulation Objects 
+Contains Definitions for all the Main, High-Level Simulation Objects
+which handle the running and data from a given Simulation. 
 """
 
 import pandas as pd
@@ -30,7 +31,7 @@ class Thermal_Sim_1D:
     timestep into the functions it is calling (see run() below), such that all the
     data like temperatures, heatflux, etc. is all written within those functions 
     themselves, which helps kinda keep the high-level functionality of this 
-    relatively clean and easy to understand.  
+    relatively clean-ish.  
 
 
     Required Attributes/Objects:
@@ -99,7 +100,8 @@ class Thermal_Sim_1D:
             flow recovery temperature at each time step 
         wall_temps : numpy float 2D array
             2D array, wall_temps[k,i], where k is the element number (0 is exposed/hot wall, -1 is interior wall for nosecone), and i is the simulation timestep
-          
+        ...
+         
 
     Methods
     -------
@@ -223,10 +225,9 @@ class Thermal_Sim_1D:
 
         Handles the high-level simulation loop, outputs progress as it goes.
         All (most of, actually) the data initialized in sim_initialize gets 
-        written to within the functions called within the main simulation loop.
+        written to from within the functions called within the main simulation loop.
 
         Notes:
-            TODO: Fix Time output for less regular timesteps
         """
 
         print("Simulation Progress (in sim-time): ")

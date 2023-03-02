@@ -20,11 +20,12 @@ from . import constants
 
 def get_freestream(alt, AirModel, mach=None):
     """
-    Function for returning the base state - atmospheric/
+    Function for returning the base aero state - atmospheric/
     freestream pressure, temperature, density, and optionally, 
     velocity, if you supply mach as an argument
 
     Inputs:
+    -------
         - alt: float, altitude [m]
         - mach: float, optional
         - gamma: float, gas ratio of specific heats
@@ -65,7 +66,7 @@ def complete_aero_state(p, T, u, x_loc, AirModel):
     Outputs:
         -rho,   float, fluid density [kg/m^3]
         -cp,    float, fluid specific heat at constant presure [J/KgK?]
-        -k,     float, fluid thermal conductivity [too lazy to lookup rn]
+        -k,     float, fluid thermal conductivity [too lazy to lookup units rn]
         -mu,    float, fluid viscosity
         -pr,    float, fluid prandtl number
         -Re,    float, fluid local reynolds number 
@@ -180,10 +181,8 @@ def get_bl_state(Sim, Re, mach):
         return 0
 
     elif Sim.bound_layer_model == 'transition':
-        """
-        Reynolds Number Criterion for Transition from Ulsu
-        Assuming this uses the Free-Stream Values for Re and Mach
-        """
+        #Reynolds Number Criterion for Transition from Ulsu
+            #Assuming this uses the Free-Stream Values for Re and Mach
         if (log10(Re) <= 5.5 + constants.C_M*mach):
             #If Laminar
             return 0
@@ -281,7 +280,7 @@ def normal_shock(M_1, g):
         P2_P1:      float, ratio of downstream/upstream static pressure
         rho2_rho1:  float, ratio of downstream/upstream density
         T2_T1:      float, ratio of downstream/upstream static temperature
-        deltasoR:   float, TODO cant remember
+        deltasoR:   float, change in entropy or something
         P02_P01:    float, ratio of downstream/upstream total pressure
 
     Sources:
@@ -312,7 +311,7 @@ def oblique_shock(M_1, g, theta):
         P2_P1:      float, ratio of downstream/upstream static pressure
         rho2_rho1:  float, ratio of downstream/upstream density
         T2_T1:      float, ratio of downstream/upstream static temperature
-        deltasoR:   float, TODO can't remember
+        deltasoR:   float, 
         P02_P01:    float, ratio of downstream/upstream total pressure
         beta:       float, shock angle
 

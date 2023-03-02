@@ -8,7 +8,7 @@ from math import pow
 
 class AirModel:
     """
-    Class to represent the standard Air Model for use in a Simulation
+    Standard Air Model for use in a Simulation Object
 
     Attributes:
     ----------
@@ -17,7 +17,7 @@ class AirModel:
     gam : float
         ratio of specific heats
     lookup_table_csv : str
-        file path pointing to .csv containing cp, mu, k, etc. w/ temperature for air
+        file path pointing to .csv containing cp, mu, k, etc. vs. temperature for air
     Cp_interp : scipy interp1d object 
         1D interpolation lookup object for interpolating Cp at a specific temperature. 
         Intended for use internally by specific_heat() below
@@ -61,17 +61,22 @@ class AirModel:
 
 
     def specific_heat(self, T):
+        """ Interpolates and returns Cp at T [K] using Lookup table interpolation object"""
         return self.Cp_interp(T)
 
 
     def thermal_conductivity(self, T):
+        """ Interpolates and returns k at T [K] using Sutherland Law"""
+        
         # Using Thermal Conductivity Model Provided in Ambience Documentation
         # Appears similar to that used in 1976 Standard Atmosphere
-        # Bertin Sutherland is Different...?
+        # Bertin Sutherland Law is Different...?
         return (2.648151e-3 * pow(T, 3.0/2.0)) / (T + (245.4 * pow(10, -12.0/T)))
 
 
     def dynamic_viscosity(self, T):
+        """ Interpolates and returns mu at T [K] using Sutherland Law"""
+        
         # Sutherland Law 
         # Source: Bertin, Hypersonic Aerothermodynamics
         return (1.458e-6 * pow(T, 3.0/2.0)) / (T + 110.4)

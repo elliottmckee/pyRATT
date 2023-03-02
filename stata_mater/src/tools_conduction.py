@@ -34,8 +34,7 @@ def get_new_wall_temps(Sim, i):
 
         # Inner Wall
         elif j == len(Sim.Aerosurface.elements)-1:
-            
-
+        
             #Parse Boundary Condition Types
             if Sim.wall_thermal_bcs[1] == "q_in_aerothermal":
                 dT_dt[j] = 1 / (e.dy*e.rho*e.cp) * (q_net_in + e.k*(Tvec_wall[j-1] - Tvec_wall[j]) / e.dy)

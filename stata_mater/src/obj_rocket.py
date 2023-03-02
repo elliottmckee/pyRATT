@@ -19,8 +19,12 @@
                                                                               
 
 (this is not implemented yet)
-"""
 
+
+This will be used for the automated parsing of RASAero files. Still not sure if super necessary 
+feature. But idk, if I start needing more geometric properties ill throw them here
+
+"""
 
 
 

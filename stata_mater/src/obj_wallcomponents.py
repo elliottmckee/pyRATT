@@ -17,20 +17,38 @@ class WallStack:
     through-wall direction of an Aerosurface. This wall is discretized into a number of computational nodes, which
     are used to solve for the 1D transient heat transfer
     
-    Example of a wall stack: Cork->RTV->Alu
-        (implementation proably cant handle all of this yet)
+    A Wall stack is just the materials sandwiched together to form a wall. It can be a single material, or many,
+    but is defined by the individual materials and their thicknesses.
+
+    A wall stack is split up into components. These components are then split up into elements/nodes, which
+    are used to perform the finite difference calculations.
     
+    Inputs
+    ----------
+        materials: str list or str, List of strings containing the names (see materials_solid.py) of the 
+                    components that make up the wall
+    
+        thicknesses: float list or float, List that defines how thick each of the components is
+    
+        node_counts: int list or int, list that defines how many nodes each component is divided into
+
+    *The above inputs all must be in corresponding order, and be of equal length*
+            
+
     
     Attributes
     ----------
-    wall_components : str list of Wall Component Objects  
-        list of each of the wall material names that make up the wall
-    elements : float  
-        ordered list containing wall element objects (different than components) that form the numerical representation of the 1D wall/aerosurface
-    n_tot : int    
-        total number of elements
-    y_loc: float list   
-        list of through-wall node/element coordinate values 
+        materials: str or str list of Wall material names
+        thicknesses: float or float list of wall component thicknesses
+        node_counts = int or int list of the number of nodes in each wall componenet
+        elements: list of SolidElement objects  
+            contains the material properties at node 
+        n_tot: int    
+            total number of elements
+        y_loc: float list   
+            list of through-wall node/element coordinate values 
+        interface_resistances:
+            not yet implemented
     
     Methods
     -------
@@ -42,6 +60,7 @@ class WallStack:
     """
 
     def __init__(self, materials, thicknesses, node_counts, interface_resistances: Optional[float] = None):
+
 
 
         if interface_resistances is not None:

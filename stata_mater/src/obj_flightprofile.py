@@ -64,7 +64,7 @@ class FlightProfile:
 
 
     def RAS_traj_CSV_Parse(self, trajectory_filepath):
-        """Parse the RASAero Flight Trajectory .csv and return Time, Mach, and Alt[m] numpy vectors"""
+        """Parse RASAero Flight Trajectory .csv and return Time, Mach, and Alt[m] numpy vectors"""
 
         #Parse the Trajectory CSV file for Mach, Alt, Time, etc. into a Pandas Dataframe
         df = pd.read_csv(trajectory_filepath, usecols=['Time (sec)', 'Mach Number', 'Altitude (ft)'])
@@ -119,7 +119,7 @@ def convert_AVA_traj_to_RAS(AVA_traj_filepath, out_filepath):
     #df = pandas.read_csv( AVA_traj_filepath, header=0, skiprows=range(1, 269), usecols=['Flight Time(s)', ' Pos xi(m)', 'Vel xi(m/s)'])
     #df = pandas.read_csv( AVA_traj_filepath, header=0, skiprows=range(1, 269), usecols=['time', 'altitude', 'speed'])
     
-    print("THIS IS A ONE-OFF SCRIPT I MADE, DO NOT USE THIS LOL")
+    print("THIS IS A ONE-OFF SCRIPT I MADE, DO NOT USE THIS IF I FORGET TO REMOVE IT")
 
     # Convert Pandas Dataframe Object to a Numpy Array
     df = df.dropna()

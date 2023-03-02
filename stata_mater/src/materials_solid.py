@@ -3,6 +3,13 @@ Dictionary containing all the solid (standard, non-ablating) material definition
 You can modify properties or add new materials here.
 
 
+HOW-TO-ADD MATERIAL :
+(idk if i really needed to add this, You're probably smart enough to add to a dict :))
+- Make a copy of template material, 
+- Paste it below it (but not outside the last closing bracket)
+- Input material properties, taking note of units.
+
+
 Notes:
 - ALL MATERIAL PROPERTIES MUST BE INPUT IN THE UNITS SPECIFIED IN 'TEMPLATE_MATERIAL'
     (kg/m^3 for density, J/KgK or J/KgC for Specific Heat, W/mK for Thermal Conductivity)
@@ -18,14 +25,6 @@ Resources:
     - Epoxy: k = 0.19 W/mK, Cp = 1010 J/kgG
     - Phenolic: k = 0.15 W/mK, Cp = 1590-1760 J/KgK
 - Phenolic Composite source? : https://sci-hub.ru/10.1016/0266-3538(87)90070-4
-
-
-
-
-HOW-TO-ADD MATERIAL (idk if i really needed to add this, You're probably smare enough to add to a dict :))
-- Make a copy of template material, 
-- Paste it below it (but not outside the last closing bracket)
-- Input material properties, taking note of units.
 
 """
 
@@ -78,6 +77,25 @@ MATERIALS_DICT = {
                         # THIS VALUE WAS NOT SPECIFIED, JUST PUTTING AS 0.8 AS DEFAULT
     },
 
+    # Fiberglass CompositeSumitomo E264H
+    'FIBERGLASS': {
+        # Source: https://www.osti.gov/servlets/purl/1328167
+        'rho':  1815.0, #[kg/m^3] Density
+        'cp':   1200.0,  #[J/KgC] Specific Heat
+        'k':    0.48,   #[W/mK]Thermal Conductivity,
+        'emis': 0.8     #[] Black Body Emissivity Coefficient - NO SOURCE, JUST PUTTING AS 0.8 AS DEFAULT
+    },
+
+
+    # Carbon Fiber + Epoxy Composite
+    'CARBONFIBER': {
+        'rho':  1500.0, #[kg/m^3] Density, https://www.mcmaster.com/5287T97-5287T731/
+        'cp':   1100.0,  #[J/KgC] Specific Heat, using AS4 values at like 80C from p.44 https://digital.library.ncat.edu/cgi/viewcontent.cgi?article=1012&context=theses
+        'k':    0.6,   #[W/mK]Thermal Conductivity, using AS4 values at like 80C from p.47 of above reference. 
+                        # In family w/ here though: https://www.christinedemerchant.com/carbon_characteristics_heat_conductivity.html
+        'emis': 0.8     #[] Black Body Emissivity Coefficient - NO SOURCE, JUST PUTTING AS 0.8 AS DEFAULT
+    },
+
 
     # FR-4, Woven Glass Fiber Composite
     'FR4': {
@@ -90,26 +108,10 @@ MATERIALS_DICT = {
     },
 
 
-    # Carbon Fiber Epoxy
-    'CARBONFIBER': {
-        'rho':  1500.0, #[kg/m^3] Density, https://www.mcmaster.com/5287T97-5287T731/
-        'cp':   1100.0,  #[J/KgC] Specific Heat, using AS4 values at like 80C from p.44 https://digital.library.ncat.edu/cgi/viewcontent.cgi?article=1012&context=theses
-        'k':    0.6,   #[W/mK]Thermal Conductivity, using AS4 values at like 80C from p.47 of above reference. 
-                        # In family w/ here though: https://www.christinedemerchant.com/carbon_characteristics_heat_conductivity.html
-        'emis': 0.8     #[] Black Body Emissivity Coefficient - NO SOURCE, JUST PUTTING AS 0.8 AS DEFAULT
-    },
+    
 
 
-    # Fiberglass, Sumitomo E264H
-    'FIBERGLASS': {
-        # Source: https://www.osti.gov/servlets/purl/1328167
-        'rho':  1815.0, #[kg/m^3] Density
-        'cp':   1200.0,  #[J/KgC] Specific Heat
-        'k':    0.48,   #[W/mK]Thermal Conductivity,
-        'emis': 0.8     #[] Black Body Emissivity Coefficient - NO SOURCE, JUST PUTTING AS 0.8 AS DEFAULT
-    },
-
-
+    
 
 
     # TEMPLATE MATERIAL, please do not actually use this material in simulations.

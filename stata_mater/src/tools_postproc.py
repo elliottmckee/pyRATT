@@ -20,7 +20,6 @@ plot_results basically calls most of the plots you'd want below. Just use that o
 ---------------------------------------------------------------------------'''
 
 
-
 def plot_results(Sim):
     """
     Plotting function for a few of the main "boilerplate" plots you'd want after running a sim
@@ -66,6 +65,8 @@ def plot_wall_temps(Sim, sim_name="Sim"):
 
 
 def plot_wall_temp_dist_at_maxtemp(Sim, sim_name="Sim"):
+    """ Get the time index where the first element hits the max temp, and plot the 
+    through-wall temperature distribution"""
 
     # Get index where external wall is at its max temp
     maxtemp_Idx = np.argmax( Sim.wall_temps[0,:] ) 
@@ -172,6 +173,7 @@ def plot_trajectory(Sim, sim_name="Sim"):
 
 
 def plot_air_temperatures(Sim, sim_name="Sim"):
+    """ Various Air temperatures vs. time"""
 
     #First Plot: Free-Stream Temp, Edge Temperature
     plt.figure()

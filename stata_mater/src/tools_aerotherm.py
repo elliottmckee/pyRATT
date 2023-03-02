@@ -124,7 +124,8 @@ def ulsu_simsek_heating(Sim, i):
     Driver script for the heating model outline in Ulsu [1] to determine the convective heatflux.
 
     This is the high-level computational flow outlined in Ulsu [1], to determine the convective
-    heatflux. If you're confused about anything here, I *highly* reccomend reading that paper
+    heatflux. If you're confused about anything here, I *highly* reccomend reading that paper.
+    Honestly, just go read it now. Like right now. Do it. 
     
     Inputs:
         Sim:    Simulation Object
