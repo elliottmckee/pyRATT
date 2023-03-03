@@ -5,6 +5,7 @@ import time
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib import animation
 
 
 
@@ -206,11 +207,6 @@ def plot_air_temperatures(Sim, sim_name="Sim"):
     plt.title("Flow Total Temps v. Time")
     plt.legend()
     plt.tight_layout()
-
-
-
-
-
 
 
 
