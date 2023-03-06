@@ -1,56 +1,98 @@
+# Python Rocket AeroThermal Toolbox
+
+PyRATT is an Aero/Thermal Analysis tool aimed at *very* high performance (or high-speed) amateur rockets, or for performing more general 1D Transient Thermal analyses.
+
+Primarily, it performs coupled Aerothermal/Thermal simulations of the temperature response of structural components like nosecone walls and fins, given a flight profile material properties, geometric parameters, etc. 
+
+Secondarily, it aims to be a more general tool for analyzing more general, 1D transient thermal behavior, being able to handle a wide array of wall specification types, wall thermal boundary conditions, and more.
 
 
-# Background
-Aerothermal analysis, characterization for high-performance amateur rockets. 
+#  Notices
+This is currently in what I am humbly going to call a "Pre-Release" state. There are definitely still issues (specifically with the GUI's being a bit finicky and not fully polished by any means), but I want to get it out here to gauge interest to see how much I should be developing this for others vs. just myself.
 
-This aims to be a follow-on analysis to trajectory analysis for high-performance amateur rockets; as in, ones that go fast enough for aerothermal heating to do more than just char the paint off the leading edges...
-
-The scope here is definitely somewhat flexible, but basically, I want this to be singular tool that can perform any/all aerothermal analysis you would want to perform short of full (FEM?)+CFD. So things like:
-
-Transient Aero/thermal Analysis across a given rocket trajectory for:
-- Environment Characterization (Stagnation+Recovery Temps vs. time)
-- 1D (for now) Conduction in the through-wall direction for "standard" materials (metals, isotropic)
-  - Nosecones
-  - Fins
-- Ablative Modelling, TPS sizing
-- Lumped Capacitance Modelling of Structures (metals, fins/nosecone tips?) 
-
-This is a Python-rework and hopefully expansion of this previous work: https://github.com/elliottmckee/1DThermal-Ablation
+Please do let me know if you run into any issues with any part of it, or have any questions. This helps me know what to fix, where to add additional information, etc. 
 
 
-# Desired Additions from the above software (some of these are STRETCHES)
-- Get out of cringe MatLab
-- Read-in RAS/RockSim/OR files for rocket geometry specification
-- Better Post-Proc/Visualization
-- Visual to show how much of a structure exceeds a threshold (i.e. melting temp) (and for how long?)
-- Add implementation for fins, body-tubes, general lumped-masses
-- Lighter module/version that just plots the stagnation temps, recovery temps throughout flight profile
-- .CSV map for aerotherm loads for external program (idk bout this one)
-- FEM? Axisymmetric (nosecome) or Planar (Fins) for 2D effects
+# Demonstrations
 
+Some examples of the results of the flight-thermal-simulation functionality of the code are shown below. 
 
-
-# Usage
-This leverages a flight trajectory as simulated by your favorite rocket flight simulation software (RASAero, ~~RockSim, or if you're a real masochist, OpenRocket~~). 
-
-Using both the .CDX1, ~~.ork, or .rkt~~ file, along with the exported flight simulation data, with a few additional user inputs to fully define the geometry and the simulation parameters, certain modules will be ran to perform the desired aerothermal analysis, plot things, and save the data so it can be manipulated with later. 
+These example files used to generate these simulations can be found in `pyratt/example_files`. Instructions on how to run them can be found below. 
 
 
 
 
-# Coding Emphases 
+## Nosecone Heating
 
--**Modularity**
 
--Ease of Use
 
--Reccomended values set as Default- User inputs required, or over-writes as desired
+![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.gif?raw=true)  |  ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.jpg?raw=true)
+:-------------------------:|:-------------------------:
 
--Readability
 
--Expandability
 
--Efficiency, hopefully
+
+##  Fin Heating
+
+
+![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_fin_SS.gif?raw=true) | ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_fin_SS.jpg?raw=true)
+:-------------------------:|:-------------------------:
+
+
+## Multi-Component Nosecone Heating
+
+![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_multi_material_nc.gif?raw=true) | ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_multi_material_nc.jpg?raw=true)
+:-------------------------:|:-------------------------:
+
+
+
+
+# Core Functionality
+
+
+# Planned Functionality
+
+
+
+
+
+
+
+
+
+# Quickstart Guide
+
+# Installation/Requirements
+
+This requires 
+
+
+
+
+## Running with the GUI
+
+## Running without the GUI
+
+## Code Examples
+
+
+
+
+
+# Validation Cases
+
+
+
+
+
+
+# References
+
+Ambiance
+
+ULSU
+
+HiFire
 
 
 
