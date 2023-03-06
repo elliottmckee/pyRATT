@@ -22,19 +22,17 @@ These example files used to generate these simulations can be found in `pyratt/e
 
 
 
-## Nosecone Heating
+## Nosecone Heating: `pyratt/example_files/example_nosecone.py`
 
-`pyratt/example_files/example_nosecone.py`
-
-This is a 1D Transient Thermal/Aerothermal simulation of a nosecone along a flight trajectory simulated by RASAeroII [1] of 2-stage rocket, using a M2245 to M1378 to get to just below Mach 5.  
+This is a 1D Transient Thermal/Aerothermal simulation of a nosecone along a flight trajectory simulated by RASAeroII [1] of 2-stage rocket, using a M2245 to M1378 to get to just below Mach 5 (trajectory shown in the figure below).
 
 A location/station 20 cm downstream of the nosecone tip was analyzed, using the following geometric properties:
  - Wall Thickness: 1.0 cm
  - Wall Material: 316 Stainless
  
- The first figure shows an animation of the through-wall temperature distribution in the through-wall direction, throughout flight, in real-time. 
+ The first figure shows an animation of the temperature distribution in the through-wall direction, throughout flight, in real-time, alongside the flight trajectory. 
  
- The second figure shows the hot-wall and cold-wall temperatures seen throughout the flight. 
+ The second figure shows the hot-wall (outer surface) and cold-wall (inner surface) temperatures seen throughout the flight. 
 
 
 ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.gif?raw=true)  |  ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.jpg?raw=true)
@@ -47,6 +45,18 @@ This 25-second simulation ran in ~10 seconds on a 1.8Ghz i5-8250U using Conda Py
 
 ##  Fin Heating
 
+This is a 1D Transient Thermal/Aerothermal simulation of a Fin along the same flight trajectory as the previous example.
+
+A location/station 10 cm downstream of the fin leading edge was analyzed, using the following geometric properties:
+ - Fin Thickness: 1.27cm or 0.5in  
+ - Fin Material: 316 Stainless
+ - Fin Chamfer Angle: 10 degrees
+ 
+ The first figure shows an animation of the through-wall temperature distribution in the through-wall direction, throughout flight, in real-time, alongside the flight trajectory. 
+ 
+ The second figure shows the hot-wall (outer surface) and centerline temperatures seen throughout the flight. 
+
+
 
 ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_fin_SS.gif?raw=true) | ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_fin_SS.jpg?raw=true)
 :-------------------------:|:-------------------------:
@@ -54,8 +64,18 @@ This 25-second simulation ran in ~10 seconds on a 1.8Ghz i5-8250U using Conda Py
 
 ## Multi-Component Nosecone Heating
 
+
+
+
 ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_multi_material_nc.gif?raw=true) | ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_multi_material_nc.jpg?raw=true)
 :-------------------------:|:-------------------------:
+
+
+
+
+
+
+
 
 
 
