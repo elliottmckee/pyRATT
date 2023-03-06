@@ -247,6 +247,7 @@ Comparison between the Wall surface temperatures from the flight data presented 
 ![alt text](https://github.com/elliottmckee/pyRATT/blob/main/images/hifire_5.png?raw=true)
 
 
+We see relatively strong agreement with the exception of the knuckle or elbow at ~30 seconds. It should be noted that the hitch/spike in the pyRATT data at this point is where the flow transitions back to laminar from turbulence, so it is likely that the inherently coarse transition model could be contributing.  
 
 
 
@@ -262,6 +263,11 @@ However, this still serves as an interesting validation case, firstly, due to th
 ![alt text](https://github.com/elliottmckee/pyRATT/blob/main/images/hifire_5b.png?raw=true)
 
 
+The sharp corners/elbows we see in the pyRATT data above are where the modelled flow state transitions from laminar to turbulent. It is cool seeing that this does appear to match roughly with this flight data. 
+
+The heating appears to be over-predicted by pyRATT in this case- At Mach 7+ though, there are likely non-insignificant high-temperature gas effects occuring, which are not currently modelled by pyRATT, which could be leading to the higher heat fluxes seen.
+
+
 
 
 ## [6] Semi-Infinite Wall Analytical Solutions:  `pyratt/validation_cases/transient_cond.py`
@@ -271,10 +277,11 @@ The thermal conduction model along was verified using the analytical solutions f
 In order to simulate the semi-infinite plate, the wall was just made very long, relative to the timescales examined, which introduces some error into the below solutions. 
 
 
-
 ![alt text](https://github.com/elliottmckee/pyRATT/blob/main/images/trans_cond_settemp.png?raw=true) | ![alt text](https://github.com/elliottmckee/pyRATT/blob/main/images/trans_cond_setq.png?raw=true)
 :-------------------------:|:-------------------------:
 
+
+The agreement for the instantaneous-surface-temperature case is nearly perfect for all timesteps seen. There is a small lag for the simulated data in the instananeous-set-heatflux case, and since it occurs at all timesteps, I think there is likely something going on at the first time-step with how I am imparting the boundary conditions. But overall, still good agreement. 
 
 
 # References
