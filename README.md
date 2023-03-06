@@ -259,7 +259,7 @@ We see relatively strong agreement with the exception of the knuckle or elbow at
 
 
 
-## [5] Hifire-5B:  `pyratt/validation_cases/hifire_5b.py`
+## Hifire-5B:  `pyratt/validation_cases/hifire_5b.py`
 
 The HiFire-5B [5] flight vehicle was equivalent to that of the HiFire-5 vehicle, except for the 2nd stage did successfully light. 
 
@@ -279,7 +279,7 @@ The heating appears to be over-predicted by pyRATT in this case- At Mach 7+ thou
 
 
 
-## [6] Semi-Infinite Wall Analytical Solutions:  `pyratt/validation_cases/transient_cond.py`
+## Semi-Infinite Wall Analytical Solutions:  `pyratt/validation_cases/transient_cond.py`
 
 The thermal conduction model along was verified using the analytical solutions for the transient conduction in a semi-infinite plate presented by Incopera [6].
 
