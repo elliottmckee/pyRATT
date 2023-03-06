@@ -36,7 +36,16 @@ These example files used to generate these simulations can be found in `pyratt/e
 
 ##  Fin Heating
 
+
+![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_fin_SS.gif?raw=true)
+![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_fin_SS.jpg?raw=true)
+
+
+
 ## Multi-Component Nosecone Heating
+
+![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_multi_material_nc.gif?raw=true)
+![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_multi_material_nc.jpg?raw=true)
 
 
 
