@@ -136,7 +136,7 @@ If you're new to python, and on Windows (maybe the others, this is just what I u
  * It'll look something like the image below
  * There is an example flight trajectory here: `example_files/example_ascent_traj_M2245_to_M1378.csv`. 
    * If this wasn't an example, this is where you would normally input your own RASAeroII flight trajectory output file. The instructions on how to do that are at the top of the GUI window.
-- Enter your simulation properties. The GUI has explanations of all of the inputs:
+ * Enter your simulation properties. The GUI has explanations of all of the inputs:
 
 [IMAGE HERE]
 
@@ -154,8 +154,8 @@ Time to Simulate:  27.074697971343994
 Exporting Data...
 Done!
 ```
-- There will be 2 output files. `mysimulation.csv` will be a .csv file with your simulation data, and `mysimulation.sim` is a pickled/serialized version of the Thermal_Sim_1D Object that was used to run the sim, which can be read back into other python scripts for further data processing, etc. (this is what the post-gui uses)
-- When the simulation is finished, close the window.
+* There will be 2 output files. `mysimulation.csv` will be a .csv file with your simulation data, and `mysimulation.sim` is a pickled/serialized version of the Thermal_Sim_1D Object that was used to run the sim, which can be read back into other python scripts for further data processing, etc. (this is what the post-gui uses)
+* When the simulation is finished, close the window.
 
 
 
