@@ -246,7 +246,7 @@ Comparison between the Wall surface temperatures from the flight data presented 
 
 ![alt text](https://github.com/elliottmckee/pyRATT/blob/main/images/hifire_5.png?raw=true)
 
-![alt text](https://github.com/elliottmckee/pyRATT/blob/main/images/hifire_5_traj.png?raw=true)
+![alt text](https://github.com/elliottmckee/pyRATT/blob/main/images/hifire_5_traj.png?raw=true | width=200)
 
 
 We see relatively strong agreement with the exception of the knuckle or elbow at ~30 seconds. It should be noted that the hitch/spike in the pyRATT data at this point is where the flow transitions back to laminar from turbulence, so it is likely that the inherently coarse transition model could be contributing.  
