@@ -23,9 +23,6 @@ The best places to check for information are:
 - Asking me (elliottmckee)
 
 
-# Table of Contents
-[TOC]
-
 
 # Demonstrations
 
