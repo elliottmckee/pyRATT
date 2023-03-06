@@ -135,8 +135,6 @@ The required packages to install can be found in the `requirements.txt` file in 
 
 If you're new to python, and on Windows (maybe the others, this is just what I use) The plotting/GUI portions of this tool require some way of interacting with Linux graphical appications. So if plots and GUI's dont show up, you'll also need a Display Server or something, idk, see [here](https://devpress.csdn.net/python/62fd06487e6682346619136c.html "here").
 
-This tool uses Ambiance [3] for the Atmosphere model. 
-
 
 
 ## Running with the GUI: `gui_run.py`
