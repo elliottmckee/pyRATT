@@ -138,7 +138,7 @@ If you're new to python, and on Windows (maybe the others, this is just what I u
  * It'll look something like the image below, but with additional instructions.
  * There is an example flight trajectory here: `example_files/example_ascent_traj_M2245_to_M1378.csv`. 
    * If this wasn't an example, this is where you would normally input your own RASAeroII flight trajectory output file. The instructions on how to do that are at the top of the GUI window.
- * Enter your simulation properties. The GUI has explanations of all of the inputs:
+ * Enter your simulation properties. The GUI has explanations of all of the inputs, but it'll look something like this:
 
 ![alt text](https://github.com/elliottmckee/pyRATT/blob/main/images/gui_run_example.PNG?raw=true)
 
@@ -164,7 +164,7 @@ Done!
 
 * From the main `\pyratt` directory, run `gui_post.py`
 * It'll look something like below. There are additional instructions in the GUI, but here's where you'll select which variables you want to plot
- * **NOT ALL THE VARIABLES AVAILABLE WILL WORK WHEN PLOTTED. I just need to filter out the things that are and aren't data. Worst thing that'll happen if you plot something you shouldn't is that the GUI will crash lol.
+ * **NOT ALL THE VARIABLES AVAILABLE WILL WORK WHEN PLOTTED. (I just need to filter out the things that are and aren't data. Worst thing that'll happen if you plot something you shouldn't is that the GUI will crash lol)
 * Here's an example of inputs showing how to plot the surface wall temperatures on the left Y-axis, and Mach on the right, both vs. Time.
 ![alt text](https://github.com/elliottmckee/pyRATT/blob/main/images/gui_post_example.PNG?raw=true)
 * Plot and Save whatever you want. The GUI will remain up to make as many plots until you close it.
