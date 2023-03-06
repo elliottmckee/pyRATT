@@ -40,6 +40,8 @@ A location/station 20 cm downstream of the nosecone tip was analyzed, using the 
 ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.gif?raw=true)  |  ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.jpg?raw=true)
 :-------------------------:|:-------------------------:
 
+This 25-second simulation ran in ~10 seconds on a 1.8Ghz i5-8250U using Conda Python 3.9.7
+
 
 
 
