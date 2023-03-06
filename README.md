@@ -12,9 +12,7 @@ This work is heavily inspired by the work of Ulsu, Simsek [1]. This paper talks 
 #  Notices
 This is currently in what I am humbly going to call a "Pre-Release" state. There are definitely still issues (specifically with the GUI's being a bit finicky and not fully polished by any means), but I want to get it out here to gauge interest to see how much I should be developing this for others vs. just myself.
 
-Please do let me know if you run into any issues with any part of it, or have any questions. This helps me know what to fix, where to add additional information, etc. 
- 
-Currently, only RASAero files are supported for trajectory input, but let me know if you need another format. 
+Please do let me know if you run into any issues with any part of it, or have any questions. This helps me know what to fix, where to add additional information, etc.  
 
 The best places to check for information are:
 - This readme
