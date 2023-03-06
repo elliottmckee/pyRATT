@@ -190,7 +190,7 @@ Instructions:
         - Values in the ballpark of 0.001-0.005 seconds are what i've used, but this depends pretty strongly on wall nodes/spacing and total wall thickness."""
 
     wallnode_instructions = """- Number of nodes that the wall is divided into, in the through-wall direction. More nodes == more resolution, but longer sim times, and possibly instability.
-        - Very roughly, I tend to keep this around 15-25ish, but play with this as needed."""
+        - Very roughly, I tend to keep this around 10-20ish, but play with this as needed."""
 
     simulation_endtime_instructions = """- By default, the simulation will go until the end of the trajectory file. Use this if you want to cut the simulation short (i.e. only simulate ascent)"""
 
