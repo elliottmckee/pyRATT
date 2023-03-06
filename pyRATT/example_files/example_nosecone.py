@@ -62,7 +62,12 @@ if __name__ == "__main__":
 
     # Run Simulation
     # --------------
+    start = time.time()
+    
     MySimulation.run()
+    
+    end = time.time()
+    print("Time to Simulate: ", end-start)
 
 
     # Export Data back into Examples folder
