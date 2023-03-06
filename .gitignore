@@ -160,8 +160,10 @@ cython_debug/
 #.idea/
 
 # Additional Directories
-stata_mater/validation_cases/resources/archive
-stata_mater/_archive
+pyratt/validation_cases/resources/archive
+pyratt/_archive
+pyratt/animation_dev
+pyratt/validation_cases/resources/hifire_5/*.PNG
 
 #
 .vscode
