@@ -152,7 +152,7 @@ if __name__ == "__main__":
 
     
     # Read in Sim File
-    with open("animtest.sim", "rb") as input_file:
+    with open("multi_material_example_out.sim", "rb") as input_file:
             Sim = pickle.load(input_file)
 
         
@@ -165,82 +165,35 @@ if __name__ == "__main__":
     plt.rcParams['ytick.color'] = "#f8f8f2"
 
     #Create Figure
-    fig, ax = plt.subplots(2, facecolor="#282a36", figsize=(13, 10))
+    fig, ax = plt.subplots(1, facecolor="#282a36", figsize=(8, 6))
     #plt.tight_layout()
 
     
 
     # Plot 1 
-    line, = ax[0].plot(Sim.y_coords, Sim.wall_temps[:,0], color="#bd93f9", linewidth=2)
+    line, = ax.plot(Sim.t_vec, Sim.wall_temps[0,:], color="#ff5555", linewidth=2, label="Outer-Wall")
+    line, = ax.plot(Sim.t_vec, Sim.wall_temps[-1,:], color="#8be9fd", linewidth=2, label="Inner-Wall")
 
-    ax[0].set_title(f"Wall Temperature Distribution at t=0.000 seconds")
-    ax[0].set_xlim(min(Sim.y_coords), max(Sim.y_coords))
-    ax[0].set_ylim( 0.95*np.amin(Sim.wall_temps), 1.05*np.amax(Sim.wall_temps))
+    ax.set_title(f"Wall Temperatures Throughout Flight")
+    ax.set_xlim(0, 25)
+    #ax.set_ylim( 0.95*np.amin(Sim.wall_temps), 1.05*np.amax(Sim.wall_temps))
 
-    ax[0].set_xlabel("Through-Wall Location [m]")
-    ax[0].set_ylabel("Temperature [K]", color="#bd93f9")
-    ax[0].tick_params(axis='y', labelcolor="#bd93f9")
-    ax[0].set_facecolor("#44475a")
+    ax.set_xlabel("Flight Time (s)")
+    ax.set_ylabel("Temperature [K]", color="#f8f8f2")
+    ax.tick_params(axis='y', labelcolor="#f8f8f2")
+    ax.set_facecolor("#44475a")
 
-    ax[0].grid(True, color="#282a36")
-
-    # verticalline2, = ax[0].plot([0.01, 0.01], [-1000.0, 1000000.0], "k--", linewidth=2)
-
-    # ax[0].annotate("<- Carbon Fiber", [0.0075, 330], color="#ff79c6")
-    # ax[0].annotate("Aluminum ->",  [0.0103, 330], color="#ff79c6")
+    ax.grid(True, color="#282a36")
 
 
-    # Plot 2 
-    ax2 = ax[1].twinx()
+    plt.legend(facecolor="#282a36")
 
-    ax[1].set_title("Flight Profile")
-    ax[1].set_xlim([0.0, max(Sim.t_vec)])
-    ax[1].set_xlabel("Flight Time (s)")
-    ax[1].set_ylabel('Mach', color="#50fa7b")
-    ax[1].tick_params(axis='y', labelcolor="#50fa7b")
-    ax[1].set_facecolor("#44475a")
-    ax[1].grid(True, color="#282a36")
+
+
+    plt.savefig("piss.jpg")
+    
+    
 
     
     
-    
-    
-    machline, = ax[1].plot(Sim.t_vec, Sim.mach, color="#50fa7b")
-    machpoint = ax[1].scatter(Sim.t_vec[0], Sim.mach[0], color="#50fa7b")
-
-
-    ax2.set_ylim([0.0, max(Sim.alt)])
-    ax2.set_ylabel('Altitude [m]', color="#8be9fd")
-    ax2.tick_params(axis='y', labelcolor="#8be9fd")
-    altline, = ax2.plot(Sim.t_vec, Sim.alt, color="#8be9fd")
-    altpoint = ax2.scatter(Sim.t_vec[0], Sim.alt[0], color="#8be9fd")
-
-    verticalline, = ax2.plot([0.0, 0.0], [-1000.0, 1000000.0], "k--", linewidth=0.5)
-
-    def animate(i):
-        
-        #Skipping timesteps since i is called sequentialls
-        i = i*20
-
-
-        ax[0].set_title(f"Wall Temperature Distribution at t={Sim.t_vec[i]:.3f} seconds")
-
-        line.set_ydata(np.flip(Sim.wall_temps[:,i]))
-
-        verticalline.set_xdata([Sim.t_vec[i],Sim.t_vec[i]])
-
-        machpoint.set_offsets([Sim.t_vec[i], Sim.mach[i]])
-        altpoint.set_offsets([Sim.t_vec[i], Sim.alt[i]])
-
-
-        return line
-
-    ani = animation.FuncAnimation(fig, animate, frames=250, interval= 100, repeat=True) 
-
-    #ani.save('flight.gif', fps=10.0)
-
-
-    ani.save("test.gif", writer= animation.PillowWriter(fps=10))
-    
-    
-    #plt.show()
+    plt.show()
