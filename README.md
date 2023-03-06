@@ -72,7 +72,7 @@ A location/station 10 cm downstream of the fin leading edge was analyzed, using 
 :-------------------------:|:-------------------------:
 
 
-## Multi-Component Nosecone HeatingL `pyratt/example_files/example_multi_component_nosecone.py`
+## Multi-Component Nosecone Heating: `pyratt/example_files/example_multi_component_nosecone.py`
 
 pyRATT can handle walls made up of multiple materials. For example, if you have a TPS material layer on top of a structural one. 
 
