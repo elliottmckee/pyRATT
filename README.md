@@ -187,38 +187,38 @@ An example script for running a standalone simulation, without the GUI, can be f
 The high-level flow for running a simulation is relatively straightforward, and looks something like:
 
 
-
 ```python
-    # Define Wall
+    # Define Wall Composition
     AeroSurf = WallStack(materials="ALU6061", thicknesses=0.02, node_counts = 15)
 
-    # Point to Trajectory Data CSV
-    Flight    = FlightProfile( os.path.join(os.getcwd(), "example_files", "example_ascent_traj_M2245_to_M1378.csv") )
+    # Point to Trajectory Data .csv
+    Flight    = FlightProfile( "path/to/flighttrajectory.csv" )
     
     # Define Simulation Object
-    MySimulation= Thermal_Sim_1D(AeroSurf, Flight, AirModel(),
-                                x_location = 0.2, 
-                                deflection_angle_deg = 7.0, 
-                                t_end = 30.0,
-                                t_step = 0.0050,
-                                boundary_layer_model = 'transition')
+    MySimulation= Thermal_Sim_1D(...)
 
     #Run Simulation
     MySimulation.run()
 
-
-    #Export to CSV
+    # Export
+    # to .csv
     MySimulation.export_data_to_csv()
-
-    #Export via Pickle
+    # pickle
     with open("animtest_2material.sim", "wb") as f: pickle.dump(MySimulation, f)
 ```
 
+
+While straightforward, there are a good few arguments and things you can/need to pass to WallStack and Therml_Sim_1D(). I reccomend checking out the examples provided first, and the docstrings for those objects themselves. 
 
 
 
 ## Code Examples
 
+Example driver scripts can be found in the `pyratt/example_files` directory. The following examples are provided, and correspond with the above demos:
+
+* `example_nosecone.py`: Nosecone heating Example.
+* `example_fin.py`: Fin heating Example.
+* `example_multi_component_nosecone.py` :  Nosecone example but highlights the syntax for defining walls with multiple componenents.
 
 
 
@@ -231,6 +231,8 @@ The high-level flow for running a simulation is relatively straightforward, and 
 
 
 # References
+
+[1] RASAero II
 
 Ambiance
 
