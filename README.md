@@ -38,12 +38,22 @@ A location/station 20 cm downstream of the nosecone tip was analyzed, using the 
 ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.gif?raw=true)  |  ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.jpg?raw=true)
 :-------------------------:|:-------------------------:
 
-This 25-second simulation ran in ~10 seconds on a 1.8Ghz i5-8250U using Conda Python 3.9.7
+
+
+And here's the same trajectory and geometry as above, but with 6061 Aluminum as the Wall Material:
+
+![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_ALU.gif?raw=true)  |  ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_ALU.jpg?raw=true)
+:-------------------------:|:-------------------------:
 
 
 
 
-##  Fin Heating
+These 25-second simulation ran in ~10 seconds on a 1.8Ghz i5-8250U using Conda Python 3.9.7
+
+
+
+
+##  Fin Heating: `pyratt/example_files/example_fin.py`
 
 This is a 1D Transient Thermal/Aerothermal simulation of a Fin along the same flight trajectory as the previous example.
 
@@ -62,7 +72,7 @@ A location/station 10 cm downstream of the fin leading edge was analyzed, using 
 :-------------------------:|:-------------------------:
 
 
-## Multi-Component Nosecone Heating
+## Multi-Component Nosecone HeatingL `pyratt/example_files/example_multi_component_nosecone.py`
 
 
 
