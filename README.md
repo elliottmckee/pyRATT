@@ -23,6 +23,10 @@ The best places to check for information are:
 - Asking me (elliottmckee)
 
 
+* Table of Contents
+[TOC]
+
+
 # Demonstrations
 
 Some examples of the results of the flight-thermal-simulation functionality of the code are shown below. 
