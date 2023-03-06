@@ -17,6 +17,7 @@ Please do let me know if you run into any issues with any part of it, or have an
 The best places to check for information are:
 - This readme
 - The header of `nogui_run.py`
+- The Ulsu-Simsek Paper [1]
 - The comments/docstrings of the Objects/Functions .py files in `.src` themselves
 - Asking me (elliottmckee)
 
