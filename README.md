@@ -31,6 +31,9 @@ These example files used to generate these simulations can be found in `pyratt/e
 
 
 
+Solarized dark             |  Solarized Ocean
+:-------------------------:|:-------------------------:
+![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.gif?raw=true)  |  ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.jpg?raw=true)
 
 
 
