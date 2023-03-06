@@ -51,6 +51,7 @@ A location/station 20 cm downstream of the nosecone tip was analyzed, using the 
 
 <img src="https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.jpg?raw=true" width="650" height="450">
 
+<br/>
 
 And here's the same trajectory and geometry as above, but with __much__ more thermally-conductive __6061 Aluminum__ as the Wall Material:
 
