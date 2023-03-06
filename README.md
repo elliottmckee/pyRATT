@@ -12,6 +12,12 @@ This is currently in what I am humbly going to call a "Pre-Release" state. There
 
 Please do let me know if you run into any issues with any part of it, or have any questions. This helps me know what to fix, where to add additional information, etc. 
 
+The best places to check for information are:
+- This readme
+- The header of `nogui_run.py`
+- The comments/docstrings of the Objects/Functions .py files in `.src` themselves
+- Asking me (elliottmckee)
+
 
 # Demonstrations
 
@@ -127,7 +133,7 @@ If you're new to python, and on Windows (maybe the others, this is just what I u
 
 
 
-## Running with the GUI
+## Running with the GUI: `gui_run.py`
 
 ### Running Simulations
 
@@ -142,7 +148,7 @@ If you're new to python, and on Windows (maybe the others, this is just what I u
 
 ![alt text](https://github.com/elliottmckee/pyRATT/blob/main/images/gui_run_example.PNG?raw=true)
 
-- Hit Run
+- Hit "Run"
  - The simulation should run. You check by looking at your terminal, where it will print the simulation progress as it goes:
  ```bash
 Initializing Simulation1:
@@ -160,7 +166,7 @@ Done!
 * When the simulation is finished, close the window.
 
 
-### Viewing Simulation Data
+### Viewing Simulation Data: `gui_post.py`
 
 * From the main `\pyratt` directory, run `gui_post.py`
 * It'll look something like below. There are additional instructions in the GUI, but here's where you'll select which variables you want to plot
@@ -169,10 +175,47 @@ Done!
 ![alt text](https://github.com/elliottmckee/pyRATT/blob/main/images/gui_post_example.PNG?raw=true)
 * Plot and Save whatever you want. The GUI will remain up to make as many plots until you close it.
 
+You can also make your own postprocessing scripts and either use the .csv or load in the pickled .sim file (more data/functionality).
+
 
 
 
 ## Running without the GUI
+
+An example script for running a standalone simulation, without the GUI, can be found here: `pyratt/nogui_run.py`. This example closely mirrors the nosecone example discussed previously (and below), and contains some additional commentary/information in the header.
+
+The high-level flow for running a simulation is relatively straightforward, and looks something like:
+
+
+
+```python
+    # Define Wall
+    AeroSurf = WallStack(materials="ALU6061", thicknesses=0.02, node_counts = 15)
+
+    # Point to Trajectory Data CSV
+    Flight    = FlightProfile( os.path.join(os.getcwd(), "example_files", "example_ascent_traj_M2245_to_M1378.csv") )
+    
+    # Define Simulation Object
+    MySimulation= Thermal_Sim_1D(AeroSurf, Flight, AirModel(),
+                                x_location = 0.2, 
+                                deflection_angle_deg = 7.0, 
+                                t_end = 30.0,
+                                t_step = 0.0050,
+                                boundary_layer_model = 'transition')
+
+    #Run Simulation
+    MySimulation.run()
+
+
+    #Export to CSV
+    MySimulation.export_data_to_csv()
+
+    #Export via Pickle
+    with open("animtest_2material.sim", "wb") as f: pickle.dump(MySimulation, f)
+```
+
+
+
 
 ## Code Examples
 
