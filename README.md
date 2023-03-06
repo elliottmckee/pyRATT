@@ -48,7 +48,7 @@ And here's the same trajectory and geometry as above, but with __much__ more the
 
 
 
-_These 25-second simulation ran in ~10 seconds on a 1.8Ghz i5-8250U using Conda Python 3.9.7_
+_These 25-second simulations each ran in ~10 seconds on a 1.8Ghz i5-8250U using Conda Python 3.9.7_
 
 
 
