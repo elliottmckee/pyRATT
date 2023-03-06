@@ -40,7 +40,7 @@ A location/station 20 cm downstream of the nosecone tip was analyzed, using the 
 
 
 
-And here's the same trajectory and geometry as above, but with much more thermally-conductive **6061 Aluminum** as the Wall Material:
+And here's the same trajectory and geometry as above, but with __much__ more thermally-conductive __6061 Aluminum__ as the Wall Material:
 
 ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_ALU.gif?raw=true)  |  ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_ALU.jpg?raw=true)
 :-------------------------:|:-------------------------:
@@ -48,7 +48,7 @@ And here's the same trajectory and geometry as above, but with much more thermal
 
 
 
-These 25-second simulation ran in ~10 seconds on a 1.8Ghz i5-8250U using Conda Python 3.9.7
+_These 25-second simulation ran in ~10 seconds on a 1.8Ghz i5-8250U using Conda Python 3.9.7_
 
 
 
@@ -74,13 +74,22 @@ A location/station 10 cm downstream of the fin leading edge was analyzed, using 
 
 ## Multi-Component Nosecone HeatingL `pyratt/example_files/example_multi_component_nosecone.py`
 
+pyRATT can handle walls made up of multiple materials. For example, if you have a TPS material layer on top of a structural one. 
+
+As a kinda goofy demonstration of this functionality, the following example is the same Aluminum nosecone from the first example, but where the inner 2/3rds is replaced with Carbon Fiber, as opposed to being 100% Al.
+
+
+ - Wall Composition: 0.66cm of Carbon Fiber, then 0.33 cm of Aluminum 6061
+
+
+In the below figure I have marked where the material transition occurs. 
+
+The below figure shows just how bad traditional composite materials are at conducting heat- and because we are effectively removing a bunch of high-thermal-mass aluminum and not allowing the heat to go anywhere, it gets nice and toasty. 
 
 
 
 ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_multi_material_nc.gif?raw=true) | ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_multi_material_nc.jpg?raw=true)
 :-------------------------:|:-------------------------:
-
-
 
 
 
