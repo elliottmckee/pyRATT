@@ -244,6 +244,8 @@ Comparison between the Wall surface temperatures from the flight data presented 
 
 
 
+![alt text](https://github.com/elliottmckee/pyRATT/blob/main/images/hifire_5.png?raw=true)
+
 
 
 
@@ -257,6 +259,8 @@ Unfortunately, however, temperature data througout the entire flight trajecory i
 However, this still serves as an interesting validation case, firstly, due to the very-high Mach numbers (high 7's), as well as the data highlighting the transition to turbulence. 
 
 
+![alt text](https://github.com/elliottmckee/pyRATT/blob/main/images/hifire_5b.png?raw=true)
+
 
 
 
@@ -268,6 +272,8 @@ In order to simulate the semi-infinite plate, the wall was just made very long, 
 
 
 
+![alt text](https://github.com/elliottmckee/pyRATT/blob/main/images/trans_cond_settemp.png?raw=true) | ![alt text](https://github.com/elliottmckee/pyRATT/blob/main/images/trans_cond_setq.png?raw=true)
+:-------------------------:|:-------------------------:
 
 
 
