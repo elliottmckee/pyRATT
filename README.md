@@ -129,6 +129,8 @@ If you're new to python, and on Windows (maybe the others, this is just what I u
 
 ## Running with the GUI
 
+### Running Simulations
+
  Navigate to wherever you cloned this repo to, and enter the main `/pyratt` directory. You should see `gui_run.py` and `gui_post.py`, among other things here. 
  
  To open the Simulation-Run GUI: `python3 gui_run.py`
@@ -156,6 +158,17 @@ Done!
 ```
 * There will be 2 output files. `mysimulation.csv` will be a .csv file with your simulation data, and `mysimulation.sim` is a pickled/serialized version of the Thermal_Sim_1D Object that was used to run the sim, which can be read back into other python scripts for further data processing, etc. (this is what the post-gui uses)
 * When the simulation is finished, close the window.
+
+
+### Viewing Simulation Data
+
+* From the main `\pyratt` directory, run `gui_post.py`
+* It'll look something like below. There are additional instructions in the GUI, but here's where you'll select which variables you want to plot
+ * **NOT ALL THE VARIABLES AVAILABLE WILL WORK WHEN PLOTTED. I just need to filter out the things that are and aren't data. Worst thing that'll happen if you plot something you shouldn't is that the GUI will crash lol.
+* Here's an example of inputs showing how to plot the surface wall temperatures on the left Y-axis, and Mach on the right, both vs. Time.
+[IMAGE HERE]
+* Plot and Save whatever you want. The GUI will remain up to make as many plots until you close it.
+
 
 
 
