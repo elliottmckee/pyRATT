@@ -133,9 +133,9 @@ If you're new to python, and on Windows (maybe the others, this is just what I u
  
  To open the Simulation-Run GUI: `python3 gui_run.py`
  
- - It'll look something like the image below
- - There is an example flight trajectory here: `example_files/example_ascent_traj_M2245_to_M1378.csv`. 
-  - If this wasn't an example, this is where you would normally input your own RASAeroII flight trajectory output file. The instructions on how to do that are at the top of the GUI window.
+ * It'll look something like the image below
+ * There is an example flight trajectory here: `example_files/example_ascent_traj_M2245_to_M1378.csv`. 
+   * If this wasn't an example, this is where you would normally input your own RASAeroII flight trajectory output file. The instructions on how to do that are at the top of the GUI window.
 - Enter your simulation properties. The GUI has explanations of all of the inputs:
 
 [IMAGE HERE]
