@@ -23,6 +23,7 @@ The best places to check for information are:
 - Asking me (elliottmckee)
 
 
+<br/>
 
 # Demos
 
@@ -108,6 +109,7 @@ The below figure shows just how bad traditional composite materials are at condu
 
 
 
+<br/>
 
 
 # Functionality
@@ -117,6 +119,7 @@ The below figure shows just how bad traditional composite materials are at condu
 ## Planned
 
 
+<br/>
 
 
 
@@ -226,6 +229,8 @@ Example driver scripts can be found in the `pyratt/example_files` directory. The
 
 
 
+<br/>
+
 
 # Validation Cases
 
@@ -286,6 +291,9 @@ In order to simulate the semi-infinite plate, the wall was just made very long, 
 
 
 The agreement for the instantaneous-surface-temperature case is nearly perfect for all timesteps seen. There is a small lag for the simulated data in the instananeous-set-heatflux case, and since it occurs at all timesteps, I think there is likely something going on at the first time-step with how I am imparting the boundary conditions. But overall, still good agreement. 
+
+
+<br/>
 
 
 # References
