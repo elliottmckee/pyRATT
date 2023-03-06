@@ -114,14 +114,50 @@ The below figure shows just how bad traditional composite materials are at condu
 
 # Quickstart Guide
 
-# Installation/Requirements
+## Installation/Requirements
 
-This requires 
+pyRATT requires Python 3. Just for reference, I am currently developing it on 3.9.7. 
+
+The required packages to install can be found in the `requirements.txt` file in the repo base directory.
+- Running `pip install -r requirements.txt` from this folder should install them all automatically.
+
+If you're new to python, and on Windows (maybe the others, this is just what I use) The plotting/GUI portions of this tool require some way of interacting with Linux graphical appications. So if plots and GUI's dont show up, you'll also need a Display Server or something, idk, see [here](https://devpress.csdn.net/python/62fd06487e6682346619136c.html "here").
+
 
 
 
 
 ## Running with the GUI
+
+ Navigate to wherever you cloned this repo to, and enter the main `/pyratt` directory. You should see `gui_run.py` and `gui_post.py`, among other things here. 
+ 
+ To open the Simulation-Run GUI: `python3 gui_run.py`
+ 
+ - It'll look something like the image below
+ - There is an example flight trajectory here: `example_files/example_ascent_traj_M2245_to_M1378.csv`. 
+  - If this wasn't an example, this is where you would normally input your own RASAeroII flight trajectory output file. The instructions on how to do that are at the top of the GUI window.
+- Enter your simulation properties. The GUI has explanations of all of the inputs:
+
+[IMAGE HERE]
+
+- Hit Run
+ - The simulation should run. You check by looking at your terminal, where it will print the simulation progress as it goes:
+ ```bash
+Initializing Simulation1:
+Running Simulation...
+Simulation Progress (in sim-time):
+0.0  seconds...
+5.0  seconds...
+10.0  seconds...
+...
+Time to Simulate:  27.074697971343994
+Exporting Data...
+Done!
+```
+- There will be 2 output files. `mysimulation.csv` will be a .csv file with your simulation data, and `mysimulation.sim` is a pickled/serialized version of the Thermal_Sim_1D Object that was used to run the sim, which can be read back into other python scripts for further data processing, etc. 
+- When the simulation is finished, close the window.
+
+
 
 ## Running without the GUI
 
