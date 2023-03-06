@@ -154,7 +154,7 @@ Time to Simulate:  27.074697971343994
 Exporting Data...
 Done!
 ```
-- There will be 2 output files. `mysimulation.csv` will be a .csv file with your simulation data, and `mysimulation.sim` is a pickled/serialized version of the Thermal_Sim_1D Object that was used to run the sim, which can be read back into other python scripts for further data processing, etc. 
+- There will be 2 output files. `mysimulation.csv` will be a .csv file with your simulation data, and `mysimulation.sim` is a pickled/serialized version of the Thermal_Sim_1D Object that was used to run the sim, which can be read back into other python scripts for further data processing, etc. (this is what the post-gui uses)
 - When the simulation is finished, close the window.
 
 
