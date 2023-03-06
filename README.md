@@ -49,15 +49,14 @@ A location/station 20 cm downstream of the nosecone tip was analyzed, using the 
 
 ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.gif?raw=true)    
 
-![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.jpg?raw=true)
-
 <img src="https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.jpg?raw=true" width="650" height="450">
 
 
 And here's the same trajectory and geometry as above, but with __much__ more thermally-conductive __6061 Aluminum__ as the Wall Material:
 
-![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_ALU.gif?raw=true)  |  ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_ALU.jpg?raw=true)
-:-------------------------:|:-------------------------:
+![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_ALU.gif?raw=true) 
+
+<img src="https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_ALU.jpg?raw=true" width="650" height="450">
 
 
 
@@ -82,8 +81,9 @@ A location/station 10 cm downstream of the fin leading edge was analyzed, using 
 
 
 
-![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_fin_SS.gif?raw=true) | ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_fin_SS.jpg?raw=true)
-:-------------------------:|:-------------------------:
+![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_fin_SS.gif?raw=true)
+
+<img src="https://github.com/elliottmckee/stata_mater/blob/main/images/example_fin_SS.jpg?raw=true" width="650" height="450">
 
 
 ## Multi-Component Nosecone Heating: `pyratt/example_files/example_multi_component_nosecone.py`
@@ -102,10 +102,9 @@ The below figure shows just how bad traditional composite materials are at condu
 
 
 
-![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_multi_material_nc.gif?raw=true) | ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_multi_material_nc.jpg?raw=true)
-:-------------------------:|:-------------------------:
+![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_multi_material_nc.gif?raw=true)
 
-
+<img src="https://github.com/elliottmckee/stata_mater/blob/main/images/example_multi_material_nc.jpg?raw=true" width="650" height="450">
 
 
 
