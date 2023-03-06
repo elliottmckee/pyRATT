@@ -24,7 +24,7 @@ The best places to check for information are:
 
 
 
-# Demonstrations
+# Demos
 
 Some examples of the results of the flight-thermal-simulation functionality of the code are shown below. 
 
