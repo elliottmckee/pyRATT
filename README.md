@@ -8,7 +8,8 @@ Secondarily, it aims to be a more general tool for analyzing more general, 1D tr
 
 This work is heavily inspired by the work of Ulsu, Simsek [1]. This paper talks about all the mathematical underpinnings of this tool in a much more succinct/organized way than I would be able to, so I will reccomend those looking for something like a theory-guide, to check out that paper (linked in References below)
 
-<br/>
+<br/><br/>
+
 #  Notices
 This is currently in what I am humbly going to call a "Pre-Release" state. There are definitely still issues (specifically with the GUI's being a bit finicky and not fully polished by any means), but I want to get it out here to gauge interest to see how much I should be developing this for others vs. just myself.
 
