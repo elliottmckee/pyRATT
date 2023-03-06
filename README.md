@@ -264,7 +264,7 @@ However, this still serves as an interesting validation case, firstly, due to th
 
 ![alt text](https://github.com/elliottmckee/pyRATT/blob/main/images/hifire_5b.png?raw=true)
 
-![alt text](https://github.com/elliottmckee/pyRATT/blob/main/images/hifire_5_traj.png?raw=true)
+![alt text](https://github.com/elliottmckee/pyRATT/blob/main/images/hifire_5b_traj.png?raw=true)
 
 The sharp corners/elbows we see in the pyRATT data above are where the modelled flow state transitions from laminar to turbulent. It is cool seeing that this does appear to match roughly with this flight data. 
 
