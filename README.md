@@ -25,6 +25,11 @@ These example files used to generate these simulations can be found in `pyratt/e
 ## Nosecone Heating
 
 
+
+![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.gif?raw=true)
+
+
+
 ##  Fin Heating
 
 ## Multi-Component Nosecone Heating
