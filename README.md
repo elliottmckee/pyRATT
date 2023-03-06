@@ -2,12 +2,13 @@
 
 pyRATT is an Aero/Thermal Analysis tool aimed at *very* high performance (or high-speed) amateur rockets, or for performing more general 1D Transient Thermal analyses.
 
-Primarily, it performs coupled Aerothermal/Thermal simulations of the temperature response of structural components like nosecone walls and fins, given a flight profile, material properties, geometric parameters, etc. This functionality aims to be as approachable and easy-to-use as possible, with GUIs both for running simulations, as well as plotting results. Even without the GUI's, running from a standalone script is only a handful of lines of code (see below).
+Primarily, it performs coupled Aerothermal/Thermal simulations of the temperature response of structural components like nosecone walls and fins, given a flight profile, material properties, geometric parameters, etc. This functionality aims to be as approachable and easy-to-use as possible, with GUIs both for running simulations, as well as plotting results. Even without the GUI's, running from a standalone script is only a handful of lines of code (see example code below).
 
 Secondarily, it aims to be a more general tool for analyzing more general, 1D transient thermal behavior, with a ton of flexibility in being able to handle varied/mixed wall material types, wall thermal boundary conditions etc. 
 
 This work is heavily inspired by the work of Ulsu, Simsek [1]. This paper talks about all the mathematical underpinnings of this tool in a much more succinct/organized way than I would be able to, so I will reccomend those looking for something like a theory-guide, to check out that paper (linked in References below)
 
+<br/>
 
 #  Notices
 This is currently in what I am humbly going to call a "Pre-Release" state. There are definitely still issues (specifically with the GUI's being a bit finicky and not fully polished by any means), but I want to get it out here to gauge interest to see how much I should be developing this for others vs. just myself.
@@ -17,10 +18,12 @@ Please do let me know if you run into any issues with any part of it, or have an
 The best places to check for information are:
 - This readme
 - The header of `nogui_run.py`
+- The Ulsu-Simsek Paper [1]
 - The comments/docstrings of the Objects/Functions .py files in `.src` themselves
 - Asking me (elliottmckee)
 
 
+<br/>
 
 # Demos
 
@@ -44,15 +47,17 @@ A location/station 20 cm downstream of the nosecone tip was analyzed, using the 
  The second figure shows the hot-wall (outer surface) and cold-wall (inner surface) temperatures seen throughout the flight. 
 
 
-![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.gif?raw=true)  |  ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.jpg?raw=true)
-:-------------------------:|:-------------------------:
+![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.gif?raw=true)    
 
+<img src="https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.jpg?raw=true" width="650" height="450">
 
+<br/>
 
 And here's the same trajectory and geometry as above, but with __much__ more thermally-conductive __6061 Aluminum__ as the Wall Material:
 
-![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_ALU.gif?raw=true)  |  ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_ALU.jpg?raw=true)
-:-------------------------:|:-------------------------:
+![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_ALU.gif?raw=true) 
+
+<img src="https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_ALU.jpg?raw=true" width="650" height="450">
 
 
 
@@ -71,14 +76,15 @@ A location/station 10 cm downstream of the fin leading edge was analyzed, using 
  - Fin Material: 316 Stainless
  - Fin Chamfer Angle: 10 degrees
  
- The first figure shows an animation of the through-wall temperature distribution in the through-wall direction, throughout flight, in real-time, alongside the flight trajectory. 
+ The first figure shows an animation of the temperature distribution in the through-wall direction, throughout flight, in real-time, alongside the flight trajectory. 
  
  The second figure shows the hot-wall (outer surface) and centerline temperatures seen throughout the flight. 
 
 
 
-![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_fin_SS.gif?raw=true) | ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_fin_SS.jpg?raw=true)
-:-------------------------:|:-------------------------:
+![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_fin_SS.gif?raw=true)
+
+<img src="https://github.com/elliottmckee/stata_mater/blob/main/images/example_fin_SS.jpg?raw=true" width="650" height="450">
 
 
 ## Multi-Component Nosecone Heating: `pyratt/example_files/example_multi_component_nosecone.py`
@@ -97,15 +103,15 @@ The below figure shows just how bad traditional composite materials are at condu
 
 
 
-![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_multi_material_nc.gif?raw=true) | ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_multi_material_nc.jpg?raw=true)
-:-------------------------:|:-------------------------:
+![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_multi_material_nc.gif?raw=true)
+
+<img src="https://github.com/elliottmckee/stata_mater/blob/main/images/example_multi_material_nc.jpg?raw=true" width="650" height="450">
 
 
 
 
 
-
-
+<br/>
 
 
 # Functionality
@@ -115,6 +121,7 @@ The below figure shows just how bad traditional composite materials are at condu
 ## Planned
 
 
+<br/>
 
 
 
@@ -224,6 +231,8 @@ Example driver scripts can be found in the `pyratt/example_files` directory. The
 
 
 
+<br/>
+
 
 # Validation Cases
 
@@ -246,12 +255,13 @@ Comparison between the Wall surface temperatures from the flight data presented 
 
 ![alt text](https://github.com/elliottmckee/pyRATT/blob/main/images/hifire_5.png?raw=true)
 
+<img src="https://github.com/elliottmckee/pyRATT/blob/main/images/hifire_5_traj.png?raw=true" width="650" height="450">
 
 We see relatively strong agreement with the exception of the knuckle or elbow at ~30 seconds. It should be noted that the hitch/spike in the pyRATT data at this point is where the flow transitions back to laminar from turbulence, so it is likely that the inherently coarse transition model could be contributing.  
 
 
 
-## [5] Hifire-5B:  `pyratt/validation_cases/hifire_5b.py`
+## Hifire-5B:  `pyratt/validation_cases/hifire_5b.py`
 
 The HiFire-5B [5] flight vehicle was equivalent to that of the HiFire-5 vehicle, except for the 2nd stage did successfully light. 
 
@@ -262,6 +272,7 @@ However, this still serves as an interesting validation case, firstly, due to th
 
 ![alt text](https://github.com/elliottmckee/pyRATT/blob/main/images/hifire_5b.png?raw=true)
 
+<img src="https://github.com/elliottmckee/pyRATT/blob/main/images/hifire_5b_traj.png?raw=true" width="650" height="450">
 
 The sharp corners/elbows we see in the pyRATT data above are where the modelled flow state transitions from laminar to turbulent. It is cool seeing that this does appear to match roughly with this flight data. 
 
@@ -270,7 +281,7 @@ The heating appears to be over-predicted by pyRATT in this case- At Mach 7+ thou
 
 
 
-## [6] Semi-Infinite Wall Analytical Solutions:  `pyratt/validation_cases/transient_cond.py`
+## Semi-Infinite Wall Analytical Solutions:  `pyratt/validation_cases/transient_cond.py`
 
 The thermal conduction model along was verified using the analytical solutions for the transient conduction in a semi-infinite plate presented by Incopera [6].
 
@@ -282,6 +293,9 @@ In order to simulate the semi-infinite plate, the wall was just made very long, 
 
 
 The agreement for the instantaneous-surface-temperature case is nearly perfect for all timesteps seen. There is a small lag for the simulated data in the instananeous-set-heatflux case, and since it occurs at all timesteps, I think there is likely something going on at the first time-step with how I am imparting the boundary conditions. But overall, still good agreement. 
+
+
+<br/>
 
 
 # References
