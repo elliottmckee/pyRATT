@@ -110,10 +110,11 @@ The below figure shows just how bad traditional composite materials are at condu
 
 
 
-# Core Functionality
+# Functionality
 
+## Core
 
-# Planned Functionality
+## Planned
 
 
 
