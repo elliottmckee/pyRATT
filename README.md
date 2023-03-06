@@ -28,7 +28,7 @@ This is a 1D Transient Thermal/Aerothermal simulation of a nosecone along a flig
 
 A location/station 20 cm downstream of the nosecone tip was analyzed, using the following geometric properties:
  - Wall Thickness: 1.0 cm
- - Wall Material: 316 Stainless
+ - Wall Material: **316 Stainless**
  
  The first figure shows an animation of the temperature distribution in the through-wall direction, throughout flight, in real-time, alongside the flight trajectory. 
  
@@ -40,7 +40,7 @@ A location/station 20 cm downstream of the nosecone tip was analyzed, using the 
 
 
 
-And here's the same trajectory and geometry as above, but with 6061 Aluminum as the Wall Material:
+And here's the same trajectory and geometry as above, but with much more thermally-conductive **6061 Aluminum** as the Wall Material:
 
 ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_ALU.gif?raw=true)  |  ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_ALU.jpg?raw=true)
 :-------------------------:|:-------------------------:
