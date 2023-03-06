@@ -72,7 +72,7 @@ A location/station 10 cm downstream of the fin leading edge was analyzed, using 
  - Fin Material: 316 Stainless
  - Fin Chamfer Angle: 10 degrees
  
- The first figure shows an animation of the through-wall temperature distribution in the through-wall direction, throughout flight, in real-time, alongside the flight trajectory. 
+ The first figure shows an animation of the temperature distribution in the through-wall direction, throughout flight, in real-time, alongside the flight trajectory. 
  
  The second figure shows the hot-wall (outer surface) and centerline temperatures seen throughout the flight. 
 
