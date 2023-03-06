@@ -47,8 +47,10 @@ A location/station 20 cm downstream of the nosecone tip was analyzed, using the 
  The second figure shows the hot-wall (outer surface) and cold-wall (inner surface) temperatures seen throughout the flight. 
 
 
-![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.gif?raw=true)  |  ![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.jpg?raw=true)
-:-------------------------:|:-------------------------:
+![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.gif?raw=true)    
+
+![alt text](https://github.com/elliottmckee/stata_mater/blob/main/images/example_nosecone_SS.jpg?raw=true)
+
 
 
 
