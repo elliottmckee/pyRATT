@@ -204,7 +204,11 @@ You can also make your own postprocessing scripts and either use the .csv or loa
 
 ## Running without the GUI
 
-An example script for running a standalone simulation, without the GUI, can be found here: `pyratt/nogui_run.py`. This example closely mirrors the nosecone example discussed previously (and below), and contains some additional commentary/information in the header.
+An example script for running a standalone simulation, without the GUI, can be found here: `pyratt/nogui_run.py`. 
+
+This is a pretty basic nosecone example, and contains some additional commentary/information in the header.
+
+To run, simply run `python3 nogui_run.py` from the main pyratt directiory.
 
 The high-level flow for running a simulation is relatively straightforward, and looks something like:
 
