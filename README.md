@@ -11,9 +11,11 @@ This work is heavily inspired by the work of Ulsu, Simsek [1]. This paper talks 
 <br/>
 
 #  Notices
-This is currently in what I am humbly going to call a "Pre-Release" state. There are definitely still issues (specifically with the GUI's being a bit finicky and not fully polished by any means), but I want to get it out here to gauge interest to see how much I should be developing this for others vs. just myself.
+This is currently in what I am humbly going to call a "Beta-Release" state. There are definitely still a few bugs (specifically with the GUI's being a bit finicky and not fully polished by any means) I'm working through, but nothing too horrifying.
 
-Please do let me know if you run into any issues with any part of it, or have any questions. This helps me know what to fix, where to add additional information, etc.  
+I am actively looking for feedback on this. I made the GUI's and whatnot to try and make things easy to pick-up and use, so please let me know if you don't find this the case. More broadly, let me know if you run into any issues with any part of it, or have any questions. This helps me know what to fix, where to add additional information, etc.  
+
+I wanted to get this out here to gauge interest to see how much I should be developing this for others vs. just myself. The more people interact with it, the more energy i'll put into making it accessible. 
 
 The best places to check for information are:
 - This readme
