@@ -44,7 +44,7 @@ A location/station 20 cm downstream of the nosecone tip was analyzed, using the 
  - Wall Thickness: 1.0 cm
  - Wall Material: **316 Stainless**
  
- The first figure shows an animation of the temperature distribution in the through-wall direction, throughout flight, in real-time, alongside the flight trajectory. 
+ The first figure shows an animation of the temperature distribution in the through-wall direction, throughout flight, in real-time, alongside the flight trajectory. The left side (x=0.0) of the temperature plot corresponds to the inner surface of the nosecone, and the right (x=0.01) corresponds to the fin outer/exposed surface. 
  
  The second figure shows the hot-wall (outer surface) and cold-wall (inner surface) temperatures seen throughout the flight. 
 
