@@ -91,6 +91,11 @@ if __name__ == "__main__":
     MySimulation.run()
 
 
+    # Plot Results (can also use GUI)
+    # --------------
+    Post.plot_results(MySimulation)
+
+
     # Export Data back into Examples folder
     # --------------
     

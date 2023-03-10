@@ -165,8 +165,12 @@ if __name__ == "__main__":
     MySimulation.run()
 
 
-    #Export to CSV
-    MySimulation.export_data_to_csv()
-
+    #Export
+    # To CSV
+    MySimulation.export_data_to_csv("mysimulation.csv")
     #Export via Pickle
-    with open("animtest_2material.sim", "wb") as f: pickle.dump(MySimulation, f)
+    with open("mysimulation.sim", "wb") as f: pickle.dump(MySimulation, f)
+
+
+    # Plot Results (can also use GUI)
+    Post.plot_results(MySimulation)

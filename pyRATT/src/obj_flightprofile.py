@@ -110,49 +110,6 @@ class FlightProfile:
 
 
 
-def convert_AVA_traj_to_RAS(AVA_traj_filepath, out_filepath):
-    """Standalone function to convert the AVA flight data format into a format that will work in FlightData"""
-
-    # This is not very general and needs review next time I need to use it
-
-    # Parse the Trajectory CSV file for Mach, Alt, Time, etc. into a Pandas Dataframe
-    #df = pandas.read_csv( AVA_traj_filepath, header=0, skiprows=range(1, 269), usecols=['Flight Time(s)', ' Pos xi(m)', 'Vel xi(m/s)'])
-    #df = pandas.read_csv( AVA_traj_filepath, header=0, skiprows=range(1, 269), usecols=['time', 'altitude', 'speed'])
-    
-    print("THIS IS A ONE-OFF SCRIPT I MADE, DO NOT USE THIS IF I FORGET TO REMOVE IT")
-
-    # Convert Pandas Dataframe Object to a Numpy Array
-    df = df.dropna()
-    df = df.to_numpy()
-
-    # Offset Altitude
-    print("Offsetting Altitude using FAR altitude: 609.6m, converting to feet")
-
-    alt = (df[:,2] + 609.6) / constants.FT2M
-
-    # Pre-Allocate Mach Array
-    mach = np.zeros(np.shape(alt))
-
-    #Get Current Atmosphere State   
-    for i in range(np.size(mach)):   
-
-        a = sqrt(1.4 * 287.0 * Atmosphere([alt[i]]).temperature)
-        mach[i] = df[i,1] / a
-    
-
-    #from scipy.signal import savgol_filter
-    alt = scipy.signal.savgol_filter(alt, window_length=61, polyorder=3, mode="nearest")
-    mach = scipy.signal.savgol_filter(mach, window_length=41, polyorder=3, mode="nearest") 
-    mach = np.clip(mach, a_min = 0.0, a_max = 5.0)
-    
-    d = {'Time (sec)': df[:,0], 'Mach Number': mach, 'Altitude (ft)': alt}
-
-    out_df = pd.DataFrame(data=d)
-    out_df.to_csv(out_filepath, sep=',', index=False)
-
-    return 
-
-
 
 
 
