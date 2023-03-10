@@ -118,7 +118,20 @@ The below figure shows just how bad traditional composite materials are at condu
 
 ## Core
 
+- 1D Transient Thermal Heat Conduction of walls with varied/mixed material properties
+- Aerothermal Models for Coupled Transient Aero/Thermal Simulations 
+- Shock Modelling for specifying boundary layer edge conditions in Aerothermal cases
+- Tie-ins with RASAero flight trajectory files
+- Material Database
+- GUI's to perform the primary flight trajectory analysis capability
+
 ## Planned
+- Ablation Modelling
+- Thermal Interface Resistances
+- Stagnation Point Heating
+- Lumped Mass/Capacitance Analyses
+- Stagnation Point Heating
+- Build High-temperature Air Model (CEA?)
 
 
 <br/>
