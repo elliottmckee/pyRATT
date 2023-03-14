@@ -96,8 +96,6 @@ class FlightProfile:
             print("Warning in class FlightData - get_atmospheric_properties(): Max (or Min) Altitude of Atmosphere Model Exceeded- Clipping to -5004 to 81020 m")
             alt = np.clip(alt, -5004, 81020)
         
-        #Pull atmosphere values at each altitude (redundant?)
-        #atmos = Atmosphere(alt)
 
         return mach, alt
 

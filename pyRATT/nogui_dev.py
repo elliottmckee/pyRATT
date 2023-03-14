@@ -102,7 +102,6 @@ NOTES:
 TODO : 
 - Add additional Hifire heatflux comparison plots
 - Add Thermal Interface Resistances
-- Add Arbitrary/Shock Freestream Definitions
 - Ablation Modelling
 - Expand Fin/Root Heating
 - Stagnation Point Heating
@@ -140,36 +139,95 @@ from src.materials_gas import AirModel
 import src.tools_postproc as Post
 
 
+from src.materials_ablative import ABLATIVE_DICT
+
+
 
 if __name__ == "__main__":
 
 
 
-    # Define Wall
-    AeroSurf = WallStack(materials="ALU6061", thicknesses=0.1, element_counts =15)
-    #AeroSurf = WallStack(materials=["ALU6061","ALU6061"] , thicknesses=[0.1,0.1], element_counts =[10,5])
+    #AeroSurf = WallStack(materials="ALU6061", thicknesses=0.01, element_counts =10)
+    AeroSurf = WallStack(materials="PICA", thicknesses=0.0274, element_counts =20)
+    #AeroSurf = WallStack(materials=["ALU6061", "SS316"], thicknesses=[0.1, 0.1], element_counts =[10, 5])
+
+
+    # # Define Wall
+    # # AeroSurf = WallStack(materials="ALU6061", thicknesses=0.1, element_counts =10)
+    # AeroSurf = WallStack(materials=["ALU6061","ALU6061"] , thicknesses=[0.1,0.1], element_counts =[10,5])
 
     # Point to Trajectory Data CSV
     Flight    = FlightProfile( os.path.join(os.getcwd(), "example_files", "example_ascent_traj_M2245_to_M1378.csv") )
     
-    # Define Simulation Object
+
     MySimulation= Thermal_Sim_1D(AeroSurf, Flight, AirModel(),
                                 x_location = 0.2, 
                                 deflection_angle_deg = 7.0, 
-                                t_end = 30.0,
-                                t_step = 0.0050,
-                                boundary_layer_model = 'transition')
+                                t_end = 15.0,
+                                t_step = 0.005,
+                                aerothermal_model="covingtonArcJet",
+                                nose_radius = 0.002)
+
+
+
+
+
+
+    # # Define Simulation Object
+    # MySimulation= Thermal_Sim_1D(AeroSurf, Flight, AirModel(),
+    #                             x_location = 0.2, 
+    #                             deflection_angle_deg = 7.0, 
+    #                             t_end = 30.0,
+    #                             t_step = 0.0050,
+    #                             boundary_layer_model = 'transition')
 
     #Run Simulation
     MySimulation.run()
 
 
-    #Export
-    # To CSV
-    MySimulation.export_data_to_csv("mysimulation.csv")
-    #Export via Pickle
-    with open("mysimulation.sim", "wb") as f: pickle.dump(MySimulation, f)
+    # #Export
+    # # To CSV
+    # MySimulation.export_data_to_csv("mysimulation.csv")
+    # #Export via Pickle
+    # with open("mysimulation.sim", "wb") as f: pickle.dump(MySimulation, f)
 
 
-    # Plot Results (can also use GUI)
+
+    # print("Recession: ", 0.0274 - AeroSurf.get_ablative_thickness() )
+
+
+    # Idx_15 = np.where( np.isclose(MySimulation.t_vec, 15.0))[0]
+
+    # print(Idx_15)
+
+    # plt.figure()
+
+    # plt.plot(MySimulation.Aerosurface.y_coords, MySimulation.wall_temps[:,Idx_15],    marker='o',  label = "Temperature Distribution",  color='red') 
+
+    # plt.legend()
+    # plt.xlabel("Through-Wall Coordinate (m)")
+    # plt.ylabel("Temeperature, K")
+    # plt.title("Through-Wall Temperature Distribution at T=15.0")
+
+    
+    
+    # plt.figure()
+
+    # plt.plot(MySimulation.Aerosurface.y_coords, MySimulation.wall_dens[:,Idx_15],    marker='o',  label = "Density Distribution",  color='red') 
+
+    # plt.legend()
+    # plt.xlabel("Through-Wall Coordinate (m)")
+    # plt.ylabel("Density, Kg/m3")
+    # plt.title("Through-Wall Density Distribution at T=15.0")
+
+
+    # plt.show()
+
+
+
+
+
+
+
+    # # Plot Results (can also use GUI)
     Post.plot_results(MySimulation)

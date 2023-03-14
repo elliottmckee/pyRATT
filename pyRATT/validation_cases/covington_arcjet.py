@@ -102,7 +102,6 @@ NOTES:
 TODO : 
 - Add additional Hifire heatflux comparison plots
 - Add Thermal Interface Resistances
-- Add Arbitrary/Shock Freestream Definitions
 - Ablation Modelling
 - Expand Fin/Root Heating
 - Stagnation Point Heating
@@ -133,11 +132,25 @@ import time
 import pickle
 
 #Internal Modules
-from src.obj_simulation import Thermal_Sim_1D
-from src.obj_flightprofile import FlightProfile
-from src.obj_wallcomponents import WallStack
-from src.materials_gas import AirModel
-import src.tools_postproc as Post
+
+#todo: this is super goofy- find better way to do this
+sys.path.append(os.path.dirname(os.getcwd()))
+
+try:
+    from pyRATT.src.obj_simulation import Thermal_Sim_1D
+    from pyRATT.src.obj_flightprofile import FlightProfile
+    from pyRATT.src.obj_wallcomponents import WallStack
+    from pyRATT.src.materials_gas import AirModel
+    from pyRATT.src.materials_ablative import ABLATIVE_DICT
+
+except:
+    print("\n Run this script from the main pyRATT directory using 'python3 validation_cases/hifire_5.py")
+    quit()
+
+
+
+
+
 
 
 
@@ -145,31 +158,132 @@ if __name__ == "__main__":
 
 
 
-    # Define Wall
-    AeroSurf = WallStack(materials="ALU6061", thicknesses=0.1, element_counts =15)
-    #AeroSurf = WallStack(materials=["ALU6061","ALU6061"] , thicknesses=[0.1,0.1], element_counts =[10,5])
+    # Define Ablative Wall
+    AeroSurf = WallStack(materials="PICA", thicknesses=0.0274, element_counts =25)
 
-    # Point to Trajectory Data CSV
+    # Point to Trajectory Data CSV (not utilized, but currently breaks if you don't point to one)
     Flight    = FlightProfile( os.path.join(os.getcwd(), "example_files", "example_ascent_traj_M2245_to_M1378.csv") )
     
-    # Define Simulation Object
+
     MySimulation= Thermal_Sim_1D(AeroSurf, Flight, AirModel(),
-                                x_location = 0.2, 
-                                deflection_angle_deg = 7.0, 
-                                t_end = 30.0,
-                                t_step = 0.0050,
-                                boundary_layer_model = 'transition')
+                                t_step = 0.001,
+                                t_end = 30,
+                                aerothermal_model="covingtonArcJet")
+
+
+
 
     #Run Simulation
     MySimulation.run()
 
-
-    #Export
-    # To CSV
-    MySimulation.export_data_to_csv("mysimulation.csv")
-    #Export via Pickle
-    with open("mysimulation.sim", "wb") as f: pickle.dump(MySimulation, f)
+    #Calculate Recession:
+    print(f"Recession: {(0.0274 - AeroSurf.get_ablative_thickness())[0] * 1000} mm" )
 
 
-    # Plot Results (can also use GUI)
-    Post.plot_results(MySimulation)
+    # #Export
+    # # To CSV
+    # MySimulation.export_data_to_csv("mysimulation.csv")
+    # #Export via Pickle
+    # with open("mysimulation.sim", "wb") as f: pickle.dump(MySimulation, f)
+
+
+
+
+    
+    #################################### PLOTTING ####################
+
+    # Load in validation Data
+    valData_tempTime = pd.read_csv( os.path.join(os.getcwd(), "validation_cases", "resources", "covington_arcjet", "verify_TempVTime.csv"),
+                                header = 1, names=['PyroX','PyroY','Cov2004X','Cov2004Y','UsluX','UsluY'])
+
+    valData_T_dist = pd.read_csv( os.path.join(os.getcwd(), "validation_cases", "resources", "covington_arcjet", "verify_TempDist.csv"),
+                                header = 0, names=['UlsuX','UlsuY'])
+
+    valData_rho_dist = pd.read_csv( os.path.join(os.getcwd(), "validation_cases", "resources", "covington_arcjet", "verify_DensityDist.csv"),
+                                header = 0, names=['UlsuX','UlsuY'])
+
+
+    # valData_covington_dist = pd.read_csv( os.path.join(os.getcwd(), "validation_cases", "resources", "covington_arcjet", "CovingtonDataDist.csv"),
+    #                             header = 0, names=['TC1-.52cm',,'TC2-1.02cm',,'TC3-1.76cm',,'FIAT-.52cm',,'FIAT-1.02cm',,'FIAT-1.76cm',])
+
+
+
+
+    ########## Temperature vs. Time Plot
+    plt.figure()
+
+    plt.plot(MySimulation.t_vec, MySimulation.wall_temps[0,:] - 273.15,      label = "pyRATT", linestyle="-", color='red') 
+
+    plt.plot(valData_tempTime["PyroX"], valData_tempTime["PyroY"],    label = "Pyrometer", linestyle="-", color='maroon')
+    plt.plot(valData_tempTime["Cov2004X"], valData_tempTime["Cov2004Y"],    label = "Covington2004", linestyle="-", color='maroon')
+    plt.plot(valData_tempTime["UsluX"], valData_tempTime["UsluY"],    label = "Ulsu", linestyle="-", color='blue')
+
+
+    plt.plot((15, 15),(-10000, 10000), "k--")
+
+    plt.xlabel("Time (s)")
+    plt.ylabel("Temperature (C)")
+    plt.title("Covington 2004 Arcjet Ablative Verification")
+
+    plt.legend()
+
+    plt.xlim( 0.0, 30.0)
+    plt.ylim( 500.0, 3000.0)
+        
+
+
+    ######### Through-Wall Temperature Distribution Plot
+    
+    # Get Index corresponding to 15 seconds
+    Idx_15 = np.where( np.isclose(MySimulation.t_vec, 15.0))[0]
+    
+    # Create New Figure
+    fig, ax1 = plt.subplots()
+
+    # Create righthand Y axis
+    ax2 = ax1.twinx()
+
+
+
+    ### Temperature Plot
+    color = 'tab:red'
+
+    ax1.plot(MySimulation.Aerosurface.y_coords, MySimulation.wall_temps[:,Idx_15] - 273.15, marker='o',  label = "pyRATT", color=color)
+
+    ax1.plot(valData_T_dist["UlsuX"]/1000, valData_T_dist["UlsuY"],    label = "Ulsu", linestyle="-", color='maroon')
+
+
+    ax1.set_xlabel('Through-Wall Location (m)')
+    ax1.set_ylabel('Temperature (C)', color=color)
+    ax1.tick_params(axis='y', labelcolor=color)
+
+
+
+    ### Density Plot
+    color = 'tab:blue'
+    
+    ax2.plot(MySimulation.Aerosurface.y_coords, MySimulation.wall_dens[:,Idx_15], marker='o',  label = "pyRATT", color=color)
+
+    ax2.plot(valData_rho_dist["UlsuX"]/1000, valData_rho_dist["UlsuY"],    label = "Ulsu", linestyle="-", color='maroon')
+
+    
+
+    ax2.set_ylabel('Density (kg/m^3)', color=color)
+    ax2.tick_params(axis='y', labelcolor=color)
+    
+    
+
+    plt.title("Temperature and Density Distribution at T=15.0s")
+    #fig.tight_layout()
+
+
+    plt.show()
+
+
+
+
+
+
+
+    # # Plot Results (can also use GUI)
+    #Post.plot_results(MySimulation)

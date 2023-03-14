@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
    
     # Define Wall
-    AeroSurf = WallStack(materials="ALU6061", thicknesses=0.02, node_counts = 26)
+    AeroSurf = WallStack(materials="ALU6061", thicknesses=0.02, element_counts = 26)
 
     # Point to Flight Trajectory
     MyFlight    = FlightProfile( os.path.join(os.getcwd(), "validation_cases", "resources", "hifire_5b", "hifire_5b_flight_profile.csv") )

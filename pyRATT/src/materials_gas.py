@@ -57,7 +57,7 @@ class AirModel:
         df = df.to_numpy()
 
         # Create Scipy Interpolation Object
-        self.Cp_interp = scipy.interpolate.interp1d(df[:,0], df[:,1], kind='linear')
+        self.Cp_interp = scipy.interpolate.interp1d(df[:,0], df[:,1], kind='linear', fill_value=(min(df[:,1]), max(df[:,1])), bounds_error=False)
 
 
     def specific_heat(self, T):

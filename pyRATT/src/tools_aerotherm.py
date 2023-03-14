@@ -6,7 +6,7 @@ portions of thermal heat transfer.
 
 # Standard Modules
 import numpy as np
-from math import pow, sqrt, log10
+from math import pow, sqrt, log10, isnan
 
 #Internal Modules
 from . import constants
@@ -88,10 +88,16 @@ def aerothermal_heatflux(Sim, i):
     # paywalls trying to find original source because I am not a student anymore, I give up. Fuck publishers.
 
     # Dictionary containing all models and their corresponding function calls
-    aerothermal_model_dict = {  "default": ulsu_simsek_heating(Sim, i) }
+    valid_aerothermal_models     = ["default", "fay_riddell","covingtonArcJet"]
 
-    if Sim.aerothermal_model not in aerothermal_model_dict.keys():
-        raise ValueError("Error in Aerothermal Model Specification")
+    if Sim.aerothermal_model not in valid_aerothermal_models:
+        raise ValueError("Error in aerothermal_model Specification")
+
+    # aerothermal_model_dict = {  "default": ulsu_simsek_heating(Sim, i),
+    #                             "covingtonArcJet": covington_pyro(Sim, i) }
+
+    # if Sim.aerothermal_model not in aerothermal_model_dict.keys():
+    #     raise ValueError("Error in Aerothermal Model Specification")
 
     
     # Implemented Boundary Layer Models
@@ -111,9 +117,92 @@ def aerothermal_heatflux(Sim, i):
 
     # Call Aerothermal Model
     # ------------------------------
-    q_conv = aerothermal_model_dict[Sim.aerothermal_model]
+    if Sim.aerothermal_model == "default":
+        q_conv = ulsu_simsek_heating(Sim, i)
+
+    elif Sim.aerothermal_model == "fay_riddell":
+        q_conv =  fay_riddell_stagnation_heating(Sim , i) #aerothermal_model_dict[Sim.aerothermal_model]
+
+    elif Sim.aerothermal_model == "covingtonArcJet":
+        q_conv = covington_pyro(Sim, i) #aerothermal_model_dict[Sim.aerothermal_model]
 
     return q_conv
+
+
+
+
+def covington_pyro(Sim, i):
+
+
+    lam=0.4
+
+    
+    # Calculate Unblown Convective Flux
+    q_unblown = arcjet_flux(Sim, i, 1.0)
+
+
+    # Get boundary layer injection  pyrolysis gas generation (updates ablative densities)
+    mDot_pyro = get_pyrolysis_mdot(Sim, i)
+
+    # Get boundary layer injection from surface recession rate 
+    mDot_recess, delta_recess = get_recession_mdot(Sim, i, q_unblown)
+
+    mDot_tot = mDot_pyro + mDot_recess
+
+
+    # Calculate Adiabatic-Wall and Wall Enthalpy
+    # Assuming Adiabatic Wall Enthalpy == Total Enthalpy
+    h_aw = 29.5e6
+
+
+    #Air Enthalpy Evaluated at Wall Temp Mean of data is default if out or range interpolation
+    # h_w = interp1(Sim.hLUTair.T,Sim.hLUTair.h, TVec(1),'spline', mean(Sim.hLUTair.h));
+    # h_w = interp1(Sim.hLUT(:,1), Sim.hLUT(:,2), Abl.TVec(1,i),'linear', 'extrap');
+    h_w = 1396000 #[J/Kg], just ballparking this from https://www.engineeringtoolbox.com/air-properties-d_1257.html
+
+    # Phi
+    Phi = (2*lam*mDot_tot*(h_aw - h_w)) / q_unblown
+
+
+    # Blowing Factor
+    eta = Phi / (np.exp(Phi) - 1)
+
+
+
+    if Sim.t_vec[i] < 15.0:
+        q_flux = arcjet_flux(Sim, i, eta)
+    else:
+        q_flux = 0
+
+
+    #Update Wall thicknesses
+    Sim.Aerosurface.update_thicknesses(delta_recess)
+
+
+    return q_flux
+
+
+
+
+def arcjet_flux(Sim, i, eta):
+
+    #Constants
+    Q_CW = 5.8e6 #[W/M2]
+    H_TOT = 29.5e6 #[W/M2]
+    PRES = 45596.25 #[PA], 0.45 Atm to Pa
+
+    T_INF = 290.0 #[K], ASSUMPTION
+
+    CP_AIR = 1200.0 #[J/KgK], No idea if this is what it means by Cp
+
+    #Surface Temperature
+    T_w = Sim.wall_temps[0,i]
+
+
+    #Return Convective Flux
+    return eta*Q_CW * (1 - (CP_AIR * T_w)/H_TOT)
+
+
 
 
 
@@ -166,8 +255,31 @@ def ulsu_simsek_heating(Sim, i):
     # Get complete fluid properties evaluated at reference temperature
     rho_ref, cp_ref, k_ref, mu_ref, pr_ref, Re_ref = tools_aero.complete_aero_state( p_e, T_ref, u_e, Sim.x_location, Sim.AirModel)
 
-    # Flat Plate Heating Model, properties evaluated at reference temperature
-    q_conv, h = flat_plate_heat_transfer(Sim.x_location, T_w, T_r, k_ref, Re_ref, pr_ref, bl_state)
+
+    # Flat Plate Heating Model WITHOUT BLOWING CORRECTION, properties evaluated at reference temperature
+    q_conv_unblown, h_unblown, lambda_fac = flat_plate_heat_transfer(Sim.x_location, T_w, T_r, k_ref, Re_ref, pr_ref, bl_state)
+
+
+    
+    eta = ablation_model(Sim, i, q_conv_unblown, h_unblown, lambda_fac)
+
+
+    # # Get boundary layer injection  pyrolysis gas generation (updates ablative densities)
+    # mDot_pyro = get_pyrolysis_mdot(Sim, i)
+
+    # # Get boundary layer injection from surface recession rate 
+    # mDot_recess = get_recession_mdot(Sim, i, q_conv_unblown)
+
+    # mDot_tot = mDot_pyro + mDot_recess 
+
+
+    # # Correct Heat flux for ablation
+    # eta = convective_blowing_correction(Sim, i, h_unblown, lambda_fac, mDot_tot)
+
+
+    # Re-Calculate Convective Heat Flux
+    h_corrected = eta * h_unblown 
+    q_conv_corrected = h_corrected*(T_r - T_w)
 
 
     # Update/Pass values out of sim
@@ -181,10 +293,10 @@ def ulsu_simsek_heating(Sim, i):
     Sim.T_e[i] = T_e
     Sim.T_te[i] = T_te
     Sim.T_recovery[i] = T_r
-    Sim.h_coeff[i] = h
+    Sim.h_coeff[i] = h_corrected
     
 
-    return q_conv
+    return q_conv_corrected
 
     
 
@@ -242,21 +354,90 @@ def flat_plate_heat_transfer(x, T_w, T_r, k_ref, Re_ref, pr_ref, isTurbulent):
     if isTurbulent:
         #Turbulent Heat Transfer Coeff
         h =  (k_ref/x) * 0.02914 * pow(Re_ref, 4.0/5.0) * pow(pr_ref, 1.0/3.0)
-        #lambda = .4;
+        lambda_fac = .4
     else:
         #Laminar Heat Transfer Coeff
         h = (k_ref/x) * 0.33206 * pow(Re_ref, 1.0/2.0) * pow(pr_ref, 1.0/3.0)
-        #lambda = .5;
+        lambda_fac = .5
         
     # Heat Flux
     q_conv = h*(T_r - T_w)
 
-    return q_conv, h 
+    return q_conv, h, lambda_fac 
+
+
+
+
+def fay_riddell_stagnation_heating(Sim , i):
+    """
+    TODO: Work through example with this 
+    """
+
+    # Override Shock Type
+    if Sim.shock_type != "normal":
+        print("Overwriting shock_type to 'normal'")
+        Sim.shock_type = "normal"
+
+
+    # alias exposed hot-wall surface temperature
+    T_w = Sim.wall_temps[0,i]
+
+    # Get Freestream Properties
+    p_inf, T_inf, u_inf, m_inf, rho_inf, cp_inf, k_inf, mu_inf, pr_inf, Re_inf = tools_aero.get_freestream_complete(Sim, i)
+
+    # calculate boundary layer edge properties (post-shock)
+    p_e, rho_e, T_e, T_te, m_e, u_e, cp_e, k_e, mu_e, pr_e, Re_e = tools_aero.get_edge_state(p_inf, T_inf, m_inf, Sim)
+
+    # Additional Properties
+    rho_w = p_e / (Sim.AirModel.R * T_w)
+    mu_w = Sim.AirModel.thermal_conductivity(T_w)
+    h_0_e = Sim.AirModel.specific_heat(T_e) * T_e + (u_e**2) / 2.0
+    h_w = Sim.AirModel.specific_heat(T_w) * T_w
+
+
+    # Calculate Heat Flux
+    q_w = fay_riddell_stagnation_flux( Sim.nose_radius, p_e, p_inf, rho_e, mu_e, rho_w, mu_w, h_0_e, h_w)
+
+    return q_w
+
 
 
 #Fay-Riddell Stagnation Point Heating
-def fay_riddell_stagnation_point_heating():
-    pass
+def fay_riddell_stagnation_flux( Rn, p_e, p_inf, rho_e, mu_e, rho_w, mu_w, h_0_e, h_w):
+    """
+
+    ASSUMING DISASSOCIATION SMALL, SO F = 1
+    """
+    F = 1
+
+    # Get Velocity Gradient from Nose Radius
+    dUe_dx = (1/Rn) * sqrt( 2 * (p_e - p_inf) / rho_e) 
+
+
+    # Convective Heatflux
+    q_w = 0.763 * (rho_e * mu_e)**0.4 * (rho_w * mu_w)**0.1 * (h_0_e - h_w) * sqrt( dUe_dx )
+
+
+    return q_w
+
+
+
+
+
+
+
+def sutton_graves(V, rho, Rn):
+    """
+    I'm really lazy so i/m just pulling values from here:
+    https://tfaws.nasa.gov/TFAWS12/Proceedings/Aerothermodynamics%20Course.pdf
+    """
+
+    k = 1.7415e-4
+
+
+    q_s = k * sqrt(rho/Rn) * V**3
+
+
 
 #Flat-Plate Heating Correlations
 def tauber_flat_plate_heating():
@@ -266,31 +447,131 @@ def tauber_cone_heating():
     pass
 
 
-#Incopera Flat-Plate Heating Correlations
-def incopera_heating_correlations():
-    # Source:  Bergman, T. L., & Incropera, F. P.. Fundamentals of heat and mass transfer (Sixth edition.). Wiley. 
-    # Page: 455, Summary of Convection Heat Transfer Correlations for External Flow
 
-    # THERE ARE ALSO AVERAGE NUSSELT NUMBER CORRELATIONS - POSSIBLY USEFUL FOR LUMPED SUM?
 
-    # These are so close to the Ulsu simsek flat plate heating values lol, i dont need to implement
+def ablation_model(Sim, i, q_conv_unblown, h_unblown, lambda_fac):
 
-    raise NotImplementedError()
 
-    #Nusselt Number Correlations
-    if "flat_plate":
+    # Check if exposed element is ablative. If not, return one
+    if Sim.Aerosurface.elements[0].type != "ablative":
+        return 1.0
+
+
+    # Pyrolysis Analysis
+    mDot_pyro = get_pyrolysis_mdot(Sim, i)
+
+
+    # Surface Recession Mass Exchange
+    mDot_recess, delta_recess = get_recession_mdot(Sim, i, q_conv_unblown)
+
+
+    # Total Mass Injection
+    mDot_tot = mDot_pyro + mDot_recess
+
+
+    # Get Blowing Factor
+    return convective_blowing_correction(Sim, i, h_unblown, lambda_fac, mDot_tot)
+
+
+
+
+
+
+
+
+
+
+
+
+
+def get_pyrolysis_mdot(Sim, i):
+
+    mDot_pyro = 0.0
+
+    for j, elem in enumerate(Sim.Aerosurface.elements):
+
+        #If ablative component
+        if elem.type == "ablative":
+            mDot_pyro += elem.arrhenious_decomp( Sim.wall_temps[j, i], Sim.t_step)[0]
+
+    return mDot_pyro
+
+
+
+def get_recession_mdot(Sim, i, q_conv_no_blowing):
+
+    # Get Surface Element
+    surf_el = Sim.Aerosurface.elements[0]
+
+    #Update QStar value based on non-blowing q_flux
+    surf_el.update_Qstar(q_conv_no_blowing)
+
+
+    # Calculate Surface Recession
+    if  Sim.wall_temps[0, i] > surf_el.ablation_temp_threshold:
+        #Get Surface Recession
+        sDot = -q_conv_no_blowing/(surf_el.rho * surf_el.Qstar)
+    else:
+        sDot = 0
+
+    #Make sure you don't get un-recession 
+    if sDot > 0:
+        print('Warning: Negative Recession Rate Calculated')
+        sDot = 0
         
-        if "laminar":
-            Nu_x = 0.332 * pow(Re_x, 1.0/2.0) * pow(Pr, 1.0/3.0)
-        if "turbulent":
-            Nu_x = 0.0296 * pow(Re_x, 4.0/5.0) * pow(Pr, 1.0/3.0)
-    if "cylinder":
-        #This is just a reminder that these are in the Incopera tables referenced, if we want them for body tube heating
-        pass
+        
+    # Amount of Recession at Timestep
+    delta_recess = -sDot * Sim.t_step
+
+    # Rate that mass is recessing
+    mDot_recess = -surf_el.rho*sDot 
+
+    return mDot_recess, delta_recess
+
+ 
+
+def convective_blowing_correction(Sim, i, h_unblown, lambda_fac, mDot_tot):
+
+    # Phi
+    Phi = (2.0*lambda_fac*mDot_tot) / h_unblown
+
+    # Blowing Factor
+    eta = Phi / (np.exp(Phi) - 1)
+
+    # stupid indeterminate forms or something
+    if isnan(eta):
+        eta = 1
+
+    return eta
 
 
 
 
 
+
+
+
+
+# #Incopera Flat-Plate Heating Correlations
+# def incopera_heating_correlations():
+#     # Source:  Bergman, T. L., & Incropera, F. P.. Fundamentals of heat and mass transfer (Sixth edition.). Wiley. 
+#     # Page: 455, Summary of Convection Heat Transfer Correlations for External Flow
+
+#     # THERE ARE ALSO AVERAGE NUSSELT NUMBER CORRELATIONS - POSSIBLY USEFUL FOR LUMPED SUM?
+
+#     # These are so close to the Ulsu simsek flat plate heating values lol, i dont need to implement
+
+#     raise NotImplementedError()
+
+#     #Nusselt Number Correlations
+#     if "flat_plate":
+        
+#         if "laminar":
+#             Nu_x = 0.332 * pow(Re_x, 1.0/2.0) * pow(Pr, 1.0/3.0)
+#         if "turbulent":
+#             Nu_x = 0.0296 * pow(Re_x, 4.0/5.0) * pow(Pr, 1.0/3.0)
+#     if "cylinder":
+#         #This is just a reminder that these are in the Incopera tables referenced, if we want them for body tube heating
+#         pass
 
 

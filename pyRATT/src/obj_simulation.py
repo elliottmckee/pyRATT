@@ -123,16 +123,17 @@ class Thermal_Sim_1D:
         Aerosurface,
         Flight,
         AirModel,
-        x_location,
-        deflection_angle_deg,
         t_step,
+        x_location = None,
+        deflection_angle_deg = None,
         t_start = 0.0,
         t_end = None,
         initial_temp = 290.0,
         aerothermal_model = 'default',
         boundary_layer_model = 'turbulent',
         shock_type = 'oblique',
-        wall_thermal_bcs = ["q_in_aerothermal","adiabatic"]
+        wall_thermal_bcs = ["q_conv", "adiabatic"],
+        nose_radius = None
         #gas_model = 'air_standard'
     ):
         
@@ -142,7 +143,7 @@ class Thermal_Sim_1D:
         self.AirModel               = AirModel
         self.x_location             = x_location
         self.deflection_angle_deg   = deflection_angle_deg 
-        self.deflection_angle_rad   = deflection_angle_deg*constants.DEG2RAD
+
         self.t_step                 = t_step
         self.t_start                = t_start
         self.t_end                  = t_end
@@ -151,10 +152,14 @@ class Thermal_Sim_1D:
         self.bound_layer_model      = boundary_layer_model
         self.shock_type             = shock_type
         self.wall_thermal_bcs       = wall_thermal_bcs
+        self.nose_radius            = nose_radius
         #self.gas_model          = gas_model
 
+        if self.deflection_angle_deg: 
+            self.deflection_angle_rad   = deflection_angle_deg*constants.DEG2RAD
+
         #Get Vector of Wall Nodal Coordinates
-        self.y_coords               = Aerosurface.get_wall_coords() 
+        #self.y_coords               = Aerosurface.get_wall_coords() 
 
         #Initialize Simulation 
         self.sim_initialize()
@@ -206,11 +211,18 @@ class Thermal_Sim_1D:
         self.T_recovery = np.zeros((self.t_vec_size,), dtype=float) # Recovery Temperature
         
 
-        # Vector Quantities vs. Time
-        self.wall_temps = np.zeros((self.Aerosurface.n_tot,self.t_vec_size), dtype=float)
 
+        # Vector Quantities vs. Time
+        
+        self.wall_temps = np.zeros((self.Aerosurface.elem_tot,self.t_vec_size), dtype=float)
         #Set Initial Values for Wall Temperature at First Step
         self.wall_temps[:,0] = self.initial_temp
+
+        self.wall_dens = np.zeros((self.Aerosurface.elem_tot,self.t_vec_size), dtype=float)
+        #Set Initial Values for Wall Temperature at First Step
+        self.wall_dens[:,0] = self.Aerosurface.get_densities()
+
+
 
 
         # Pre-interpolate Mach, Altitude, and Atmospheric Properties to the discrete Sim-time points 
@@ -246,10 +258,22 @@ class Thermal_Sim_1D:
             # Get New Wall Temperatures
             get_new_wall_temps(self, i)
 
+
+            # Pass Wall Densities Out
+            self.wall_dens[:,i+1] = self.Aerosurface.get_densities()
+
+            # Update Thermal Properties of the Wall
+            self.Aerosurface.update_thermal_props(self.wall_temps[:,i+1])
+            
+
+
             # Update screen every 5 seconds in sim-time
             if self.t_vec[i] > time_progress_marker:  
                 print(time_progress_marker, " seconds...")
                 time_progress_marker += 5.0 
+
+        #Update Coordinate at end of simulation, (only matters if ablating)
+        self.Aerosurface.update_wall_coords()
   
                 
 
@@ -258,7 +282,7 @@ class Thermal_Sim_1D:
         """
         Creates .csv of that has, at each timestep:
             - Simulation variables (mach, alt, q_conv, q_rad, etc.)
-            - Node Temperatures, labelled by their location/depth into the wall
+            - Element Temperatures, labelled by their location/depth into the wall
 
         Inputs:
             out_filename: str, output filename. duy
@@ -285,9 +309,9 @@ class Thermal_Sim_1D:
             out_data[var] =  getattr(self, var)
 
         # For each element, append the time history of wall temperatures
-        for i in range(self.Aerosurface.n_tot):
+        for i in range(self.Aerosurface.elem_tot):
             
-            col_name = f"T_wall:y={self.Aerosurface.elements[i].y:.4f}"
+            col_name = f"T_wall:y={self.Aerosurface.y_coords[i]:.4f}"
             out_data[col_name] =   self.wall_temps[i,:]
     
         #Export CSV 

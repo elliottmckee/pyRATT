@@ -54,7 +54,7 @@ def gui_run_simulation(values):
     #Im kinda just wrapping things in additional brackets because weird things happen below if not
     inFiles         = [values["_INFILES_"]]
     outFiles        = [values["_OUTFILES_"]]
-    n_nodes         = [int(i) for i in [values["-n_nodes-"]]]
+    n_elements         = [int(i) for i in [values["-n_elements-"]]]
     t_step          = [float(i) for i in [values["-t_step-"]]]
     try:
         t_end       = [float(i) for i in [values["-t_end-"]]]
@@ -76,7 +76,7 @@ def gui_run_simulation(values):
         print(f"Initializing Simulation{i+1}: ")
 
         #Define Aerosurface Object
-        AeroSurf = WallStack(materials=wallmaterial[i], thicknesses=wallthick[i], node_counts = n_nodes[i])
+        AeroSurf = WallStack(materials=wallmaterial[i], thicknesses=wallthick[i], element_counts = n_elements[i])
 
         #Get RAS Flight Data
         Flight    = FlightProfile( inFiles[i] )
@@ -182,14 +182,14 @@ Instructions:
         - Long story short, it requires discretizations of both the wall structure (number of discrete elements in the through-wall direction), and time (timestep). 
     - Solver Instability: Due to unfortunate consequences of math, discretization, etc., there are criterion that need to be satisfied for the solver to be stable and not blow up. A warning will be 
     thrown and the current simulation might break if such instability occurs, but the data will be junk regardless lol
-        *** If you are running into solver stability issues, try decreasing the number of wall nodes, and/or decreasing the simulation timestep. ***"""
+        *** If you are running into solver stability issues, try decreasing the number of wall elements, and/or decreasing the simulation timestep. ***"""
 
     aerosurf_type_instructions = """- This selects what type of physical geometry you're simulating. Only Nosecones and Fins supported right now. """
 
     time_instructions = """- Smaller timesteps are more accurate, theoretically, but will take longer to simulate. Values that are too high will cause instabilities in the solver.
-        - Values in the ballpark of 0.001-0.005 seconds are what i've used, but this depends pretty strongly on wall nodes/spacing and total wall thickness."""
+        - Values in the ballpark of 0.001-0.005 seconds are what i've used, but this depends pretty strongly on wall elements/spacing and total wall thickness."""
 
-    wallnode_instructions = """- Number of nodes that the wall is divided into, in the through-wall direction. More nodes == more resolution, but longer sim times, and possibly instability.
+    wallelem_instructions = """- Number of elements that the wall is divided into, in the through-wall direction. More elements == more resolution, but longer sim times, and possibly instability.
         - Very roughly, I tend to keep this around 10-20ish, but play with this as needed."""
 
     simulation_endtime_instructions = """- By default, the simulation will go until the end of the trajectory file. Use this if you want to cut the simulation short (i.e. only simulate ascent)"""
@@ -243,8 +243,8 @@ Instructions:
                 [sg.Text('Aerosurface Type:'), sg.InputCombo(values=["Nosecone","Fin"], default_value='Nosecone', size=(20, 1), key=f'-aerosurf_type-'), sg.Text(aerosurf_type_instructions)],
                 
 
-                #Wall Node Count
-                [sg.Text('Node Count (integer): ') , sg.InputText("20", s=8, key='-n_nodes-'), sg.Text(wallnode_instructions)],
+                #Wall Element Count
+                [sg.Text('Element Count (integer): ') , sg.InputText("20", s=8, key='-n_elements-'), sg.Text(wallelem_instructions)],
 
                 #Timestep Size
                 [sg.Text('Timestep Size (s): ') , sg.InputText("0.001", s=8, key='-t_step-'), sg.Text(time_instructions)],

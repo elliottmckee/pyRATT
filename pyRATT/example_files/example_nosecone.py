@@ -45,7 +45,7 @@ if __name__ == "__main__":
     # Define Wall
     AeroSurf = WallStack(materials="SS316", 
                         thicknesses=0.01, 
-                        node_counts = 10)
+                        element_counts = 10)
 
     # Point to Trajectory Data CSV
     Flight    = FlightProfile( "example_files/example_ascent_traj_M2245_to_M1378.csv" )

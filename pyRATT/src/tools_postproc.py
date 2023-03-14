@@ -75,7 +75,7 @@ def plot_wall_temp_dist_at_maxtemp(Sim, sim_name="Sim"):
 
     plt.figure()
 
-    plt.plot(Sim.y_coords, Sim.wall_temps[:,maxtemp_Idx],      label = sim_name + "Temperature Distribution",  color='red') 
+    plt.plot(Sim.Aerosurface.y_coords, Sim.wall_temps[:,maxtemp_Idx],      label = sim_name + "Temperature Distribution",  color='red') 
 
     plt.legend()
     plt.xlabel("Through-Wall Coordinate (m)")

@@ -81,7 +81,7 @@ def draw_plot(SimList, SimNames, values, MAXPLOTS):
                 # If Vector data, need to get Wall Y location index
                 if values[f'-yvar{i}-'] == "wall_temps":
 
-                    y_index = SimList[j].y_coords.index(values[f'-yloc{i}-'])
+                    y_index = SimList[j].Aerosurface.y_e.index(values[f'-yloc{i}-'])
 
                     plot_yvar = getattr(SimList[j], values[f'-yvar{i}-'])[y_index, :]
 
@@ -124,7 +124,7 @@ def load_sim_files(FILES):
     -Uses first Sim object to get names. Assumes all else have corresponding variables. 
 
     """
-    print("Note - in load_sim_files: Rounding Y data to 4 digits of precision. This shouldn't cause issues but just letting ya know.")
+    #print("Note - in load_sim_files: Rounding Y data to 4 digits of precision. This shouldn't cause issues but just letting ya know.")
     
     #List of Simulation Objects
     SimList = []
@@ -142,7 +142,7 @@ def load_sim_files(FILES):
             Sim = pickle.load(f)
 
         #Round Y location data to 4 sig figs
-        Sim.y_coords = [round(num, 4) for num in Sim.y_coords]
+        #Sim.y_coords = [round(num, 4) for num in Sim.y_coords]
         
         #Append SimList
         SimList.append(Sim)
@@ -324,7 +324,7 @@ if __name__ == "__main__":
                 window[f'-xvar{i}-'].update(value="t_vec")
                 window[f'-yvar{i}-'].update(values=plotVars)
                 #Update Coordinates
-                window[f'-yloc{i}-'].update(values=SimList[0].y_coords)
+                window[f'-yloc{i}-'].update(values=SimList[0].Aerosurface.y_e)
 
 
         # NEW VARIABLE SELECTED (used to enable the y-location Combo box)

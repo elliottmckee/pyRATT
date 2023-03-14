@@ -27,7 +27,7 @@ def get_new_wall_temps(Sim, i):
         if j == 0:
 
             #Parse Boundary Condition Types
-            if Sim.wall_thermal_bcs[0] == "q_in_aerothermal":
+            if Sim.wall_thermal_bcs[0] == "q_conv":
                 dT_dt[j] = 1 / (e.dy*e.rho*e.cp) * (q_net_in + e.k*(Tvec_wall[1] - Tvec_wall[0]) / e.dy)
             else:
                 raise Exception('Only "q_in_aerothermal" type supported for first B.C.') 
@@ -36,7 +36,7 @@ def get_new_wall_temps(Sim, i):
         elif j == len(Sim.Aerosurface.elements)-1:
         
             #Parse Boundary Condition Types
-            if Sim.wall_thermal_bcs[1] == "q_in_aerothermal":
+            if Sim.wall_thermal_bcs[1] == "q_conv":
                 dT_dt[j] = 1 / (e.dy*e.rho*e.cp) * (q_net_in + e.k*(Tvec_wall[j-1] - Tvec_wall[j]) / e.dy)
             elif Sim.wall_thermal_bcs[1] == "adiabatic":
                 # No heat-flux. Accomplish by forcing the "internal" (i.e. inside the nosecone) temperature
@@ -55,6 +55,9 @@ def get_new_wall_temps(Sim, i):
 
     # Update Temperatures
     Sim.wall_temps[:,i+1] = Tvec_wall + dT_dt*Sim.t_step
+
+            
+
 
 
 
@@ -94,6 +97,8 @@ def stability_criterion_check(Sim, i):
     # Perform Stability Check 
     F_0 = (SurfE.k * dt) / (SurfE.rho * SurfE.cp * SurfE.dy**2)
     Bi = (h * SurfE.dy) / SurfE.k
+
+
 
     if ( F_0*(1+Bi) > .5):
         print('~~WARNING~~: Stability Criterion not met. Consider decreasing timestep or number of wall nodes)')

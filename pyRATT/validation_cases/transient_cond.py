@@ -107,7 +107,7 @@ class Transient_Cond_Sim:
         self.wall_thermal_bcs       = wall_thermal_bcs
 
         #Get Vector of Wall Nodal Coordinates
-        self.y_coords               = Aerosurface.get_wall_coords() 
+        #self.y_coords               = Aerosurface.get_wall_coords() 
 
         #Initialize Simulation 
         self.sim_initialize()
@@ -126,7 +126,7 @@ class Transient_Cond_Sim:
         self.q_net     = self.set_q0 * np.ones((self.t_vec_size,), dtype=float) # Convective Heat Flux [w/m^2]
         
         # Vector Quantities vs. Time
-        self.wall_temps = np.zeros((self.Aerosurface.n_tot,self.t_vec_size), dtype=float)
+        self.wall_temps = np.zeros((self.Aerosurface.elem_tot,self.t_vec_size), dtype=float)
 
         #Set Initial Values for Wall Temperature at First Step
         self.wall_temps[:,0] = self.initial_temp
@@ -200,7 +200,7 @@ if __name__ == "__main__":
     ##### SETUP AND SIMULATIONS #######
     
     # Create Wall Object
-    Wall = WallStack(materials="ALU6061", thicknesses=0.5, node_counts = 400)
+    Wall = WallStack(materials="ALU6061", thicknesses=0.5, element_counts = 400)
     #Get coordinate data from wall
     sim_x = Wall.get_wall_coords()
 

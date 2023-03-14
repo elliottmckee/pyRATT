@@ -64,7 +64,7 @@ if __name__ == "__main__":
     # Define Wall
     AeroSurf = WallStack(materials="SS316", 
                         thicknesses=0.0127, 
-                        node_counts = 11)
+                        element_counts = 11)
 
     # Point to Trajectory Data CSV
     Flight    = FlightProfile( "example_files/example_ascent_traj_M2245_to_M1378.csv" )
@@ -77,7 +77,7 @@ if __name__ == "__main__":
                                 t_end = 25.1,
                                 initial_temp = 281.25,
                                 boundary_layer_model = 'transition',
-                                wall_thermal_bcs = ["q_in_aerothermal","q_in_aerothermal"]
+                                wall_thermal_bcs = ["q_conv","q_conv"]
                                 )
 
 
