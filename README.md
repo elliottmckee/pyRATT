@@ -127,7 +127,7 @@ The below figure shows just how bad traditional composite materials are at condu
 - Material Database
 - GUI's to perform the primary flight trajectory analysis capability
 
-## Planned
+## In-Development
 - Ablation Modelling
 - Thermal Interface Resistances
 - Stagnation Point Heating
@@ -236,7 +236,7 @@ The high-level flow for running a simulation is relatively straightforward, and 
 ```
 
 
-While straightforward, there are a good few arguments and things you can/need to pass to WallStack and Therml_Sim_1D(). I reccomend checking out the examples provided first, and the docstrings for those objects themselves. 
+While straightforward, there are a good few arguments and things you can/need to pass to WallStack and Thermal_Sim_1D(). I reccomend checking out the examples provided first, and the docstrings for those objects themselves. 
 
 
 
