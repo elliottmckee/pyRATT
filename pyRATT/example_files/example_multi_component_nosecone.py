@@ -66,13 +66,14 @@ if __name__ == "__main__":
     # (!!! REMOVE IF RUNNING SCRIPT FROM MAIN DIRECTORY!!!) #
 
     
-    # Define Wall Stack
-    AeroSurf = WallStack(   materials = ["CARBONFIBER", "ALU6061"], 
-                            thicknesses = [0.0066, 0.0033], 
-                            element_counts = [15, 10])
+    # Define Walls
+    
+    AeroSurf = WallStack( materials = ["CARBONFIBER", "ALU6061"], 
+                                thicknesses = [0.0066, 0.0033], 
+                                element_counts = [15, 6])
 
     # Point to Trajectory Data CSV
-    Flight    = FlightProfile( "example_ascent_traj_M2245_to_M1378.csv" )
+    Flight    = FlightProfile( "example_files/example_ascent_traj_M2245_to_M1378.csv" )
 
     # Define Simulation Object
     MySimulation = Thermal_Sim_1D(AeroSurf, Flight, AirModel(),
@@ -81,11 +82,10 @@ if __name__ == "__main__":
                                 t_step = 0.002,
                                 t_end = 25.1,
                                 initial_temp = 281.25,
-                                shock_type = "oblique",
-                                aerothermal_model = "flat_plate"
                                 boundary_layer_model = 'transition')
 
-    # Run Simulation
+    # Run Simulations
+    # --------------
     MySimulation.run()
 
 

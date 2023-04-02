@@ -108,6 +108,16 @@ MATERIALS_DICT = {
     },
 
 
+    # Non-Ablative Cork Model (Reccomended, honestly)
+    'CORK-NONABLATING': {
+        # Source: https://www.amorimasia.com/uploads/4/8/0/0/48004771/tps_pp_04_07_2008ac.pdf
+        'rho':  480.0, #[kg/m^3] Density
+        'cp':   2100.0,  #[J/KgC] Specific Heat
+        'k':    0.07,   #[W/mK]Thermal Conductivity,
+        'emis': 0.8     #[] I Guessed
+    },
+
+
     
 
 

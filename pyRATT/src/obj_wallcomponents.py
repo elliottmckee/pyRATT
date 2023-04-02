@@ -18,6 +18,47 @@ from math import isnan
 import copy
 
 
+class LumpedMass:
+
+
+    def __init__(self, material, mass, heating_areas):
+
+
+        # Pull material properties from Solid Material Database
+        self.rho    = MATERIALS_DICT[material]["rho"]
+        self.cp     = MATERIALS_DICT[material]["cp"]
+        #self.k      = MATERIALS_DICT[material]["k"]
+        self.emis   = MATERIALS_DICT[material]["emis"]
+
+        self.heating_areas = heating_areas
+
+        self.thickness_unitarea = mass / self.rho
+
+        self.mass = mass
+
+
+        self.elements = [] 
+        self.elements.append( SolidElement(material, self.thickness_unitarea) )
+        
+
+    def initialize_temp(self, temp):
+        self.temp = [temp]
+
+
+    def update_temps(self, q_net, dt):
+        """
+        Keeping temp as a list as to not break things later
+        """
+
+        self.temp = [ self.temp[0] + dt*q_net/self.mass/self.cp ]
+
+        return self.temp
+
+
+
+
+
+
 class WallStack: 
     """
     Computational representation of a wall stack, which is the combined stack of all wall materials that makes up the 
@@ -304,8 +345,10 @@ class AblativeElement:
                     
 
                 else:
-                    #This just returns the constant Cp Value
-                    setattr(self, prop+"_lookup", lambda T : ABLATIVE_DICT[material][prop] )
+                    #This just returns the constant values for above
+                    print("CONSTANT PROPERTY LOOKUP IS BROKEN")
+                    test = lambda T : ABLATIVE_DICT[material][prop]
+                    setattr(self, prop+"_lookup", test )
 
 
             # Resin Fraction
@@ -314,14 +357,18 @@ class AblativeElement:
             # Total Density
             self.rho    = ABLATIVE_DICT[material]["initial_total_density"]
 
+
             # Initialize Component Densities to Virgin Values
             self.rho_comp = np.copy(ABLATIVE_DICT[material]['virgin_component_densities'])
             
             # Thermal Properties
             self.emis   = ABLATIVE_DICT[material]['emis']
 
-            self.cp     = self.cp_lookup(290.0)
-            self.k      = self.k_lookup(290.0)
+            # self.cp     = self.cp_lookup(290.0)
+            # self.k      = self.k_lookup(290.0)
+
+            self.cp     = 2100.0
+            self.k      = 0.07
 
             # Element Thickness
             self.dy = dy
@@ -342,10 +389,14 @@ class AblativeElement:
 
 
 
+
     def update_thermal_props(self, temp):
         """ This updates the materials properties, Cp, K , etc. """
         self.cp = self.cp_lookup(temp)
         self.k = self.k_lookup(temp)
+
+        self.cp     = 2100.0
+        self.k      = 0.07
 
 
     def update_Qstar(self, q):
@@ -367,13 +418,18 @@ class AblativeElement:
 
                 
         # Total Contribution to Total Density Change
-        dRho_tot = self.resin_frac*(dRho_dt_comp[0] + dRho_dt_comp[1]) + (1.0-self.resin_frac)*dRho_dt_comp[2]
+        if self.num_arr_components == 3.0:
+            dRho_tot = self.resin_frac*(dRho_dt_comp[0] + dRho_dt_comp[1]) + (1.0-self.resin_frac)*dRho_dt_comp[2]
+        elif self.num_arr_components == 2.0:
+            dRho_tot = self.resin_frac*(dRho_dt_comp[0]) + (1.0-self.resin_frac)*dRho_dt_comp[1]
+        else:
+            raise Exception("Unsupported Number of Arrhenious Coeffs")
 
 
         # Update Densities
-        self.rho_comp[0] = self.rho_comp[0] + dRho_dt_comp[0] * dt
-        self.rho_comp[1] = self.rho_comp[1] + dRho_dt_comp[1] * dt
-        self.rho_comp[2] = self.rho_comp[2] + dRho_dt_comp[2] * dt
+        for i in range(self.num_arr_components):
+            self.rho_comp[i] = self.rho_comp[i] + dRho_dt_comp[i] * dt
+ 
 
         self.rho         = self.rho + dRho_tot * dt
         

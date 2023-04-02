@@ -93,7 +93,7 @@ def stability_criterion_check(Sim, i):
     SurfE   = Sim.Aerosurface.elements[0]
     h       = Sim.h_coeff[i] 
     dt      = Sim.t_step
-    
+
     # Perform Stability Check 
     F_0 = (SurfE.k * dt) / (SurfE.rho * SurfE.cp * SurfE.dy**2)
     Bi = (h * SurfE.dy) / SurfE.k

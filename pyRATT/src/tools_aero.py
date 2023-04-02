@@ -121,7 +121,7 @@ def get_freestream_complete(Sim, i):
     return p_inf, T_inf, u_inf, m_inf, rho_inf, cp_inf, k_inf, mu_inf, pr_inf, Re_inf
 
 
-def get_edge_state(p_inf, T_inf, m_inf, Sim):
+def get_edge_state(p_inf, T_inf, m_inf, Sim, shock_override=None):
     """ 
     Returns the flow properties at the boundary layer edge.
 
@@ -144,7 +144,10 @@ def get_edge_state(p_inf, T_inf, m_inf, Sim):
     """
 
     # Get Post-shock state
-    m_e, p_e, T_e = get_post_shock_state(m_inf, p_inf, T_inf, Sim) 
+    if shock_override:
+        m_e, p_e, T_e = get_post_shock_state(m_inf, p_inf, T_inf, Sim, shock_override=shock_override) 
+    else:
+        m_e, p_e, T_e = get_post_shock_state(m_inf, p_inf, T_inf, Sim) 
 
     # Edge Velocity
     u_e = sqrt(Sim.AirModel.gam * Sim.AirModel.R * T_e) * m_e
@@ -219,7 +222,7 @@ def total_temperature(T, M, gam):
 ##########################################################################################
 
 
-def get_post_shock_state(m_inf, p_inf, T_inf, Sim):
+def get_post_shock_state(m_inf, p_inf, T_inf, Sim, shock_override=None):
     """
     High-level driver function to handle the shock models/implementation
 
@@ -239,16 +242,24 @@ def get_post_shock_state(m_inf, p_inf, T_inf, Sim):
     if Sim.shock_type not in  ["normal", "oblique", "conical"]:
         raise NotImplementedError()
 
+
+    if shock_override:
+        print("Overriding Shock")
+        shock = shock_override
+    else:
+        shock = Sim.shock_type
+
+
     # Determine if shock or not
     if m_inf >  1.0:
         # Yes Shock - Shock Relations for Post-Shock Properties
-        if Sim.shock_type == "normal":
+        if shock == "normal":
             m_e, p2op1, _, T2oT1, _, _ =  normal_shock( m_inf, Sim.AirModel.gam)
 
-        if Sim.shock_type == "oblique":
+        if shock == "oblique":
             m_e, p2op1, _, T2oT1, _, _, _ =  oblique_shock( m_inf, Sim.AirModel.gam, Sim.deflection_angle_rad)
 
-        if Sim.shock_type == "conical":
+        if shock == "conical":
             raise Exception("Conical Shocks not implemented yet. Reccomed using Oblique")
             #_, _, M, p2op1, T2oT1, _, _, _ =  conical_shock( m_inf, Sim.AirModel.gam, Sim.deflection_angle_rad)
 

@@ -132,9 +132,9 @@ import time
 import pickle
 
 #Internal Modules
-from src.obj_simulation import Thermal_Sim_1D, Thermal_Sim_0D
+from src.obj_simulation import Thermal_Sim_1D
 from src.obj_flightprofile import FlightProfile
-from src.obj_wallcomponents import WallStack, LumpedMass
+from src.obj_wallcomponents import WallStack
 from src.materials_gas import AirModel
 import src.tools_postproc as Post
 
@@ -146,41 +146,28 @@ from src.materials_ablative import ABLATIVE_DICT
 if __name__ == "__main__":
 
 
-
-    #AeroSurf = WallStack(materials="ALU6061", thicknesses=0.01, element_counts =10)
-    #AeroSurf = WallStack(materials="PICA", thicknesses=0.0274, element_counts =20)
-    #AeroSurf = WallStack(materials=["ALU6061", "SS316"], thicknesses=[0.1, 0.1], element_counts =[10, 5])
-
-
-    #Aluminum Lumped Mass (0.25kg)
-    LumpedMass = LumpedMass("SS316", mass=0.47, heating_areas=[0.015, 0.002])
-
-
     # # Define Wall
-    # # AeroSurf = WallStack(materials="ALU6061", thicknesses=0.1, element_counts =10)
-    # AeroSurf = WallStack(materials=["ALU6061","ALU6061"] , thicknesses=[0.1,0.1], element_counts =[10,5])
+    #AeroSurf = WallStack(materials=["CORK-NONABLATING","FIBERGLASS"], thicknesses=[0.00635,0.003175], element_counts =[20,10])
+    #AeroSurf = WallStack(materials=["CORKP50"], thicknesses=0.00635, element_counts =20)
+    #AeroSurf = WallStack(materials=["CORK-NONABLATING",], thicknesses=0.00635, element_counts =20)
+    AeroSurf = WallStack(materials=["FIBERGLASS",], thicknesses=0.009525, element_counts =15)
+
 
     # Point to Trajectory Data CSV
-    #Flight    = FlightProfile( os.path.join(os.getcwd(), "example_files", "example_ascent_traj_M2245_to_M1378.csv") )
-    Flight    = FlightProfile( os.path.join(os.getcwd(), "Flight Test_No_Recovery.csv") )
+    Flight    = FlightProfile( os.path.join(os.getcwd(), "Flight Test_No_Recovery.CSV") )
     
 
-    # MySimulation= Thermal_Sim_1D(AeroSurf, Flight, AirModel(),
-    #                             x_location = 0.2, 
-    #                             deflection_angle_deg = 7.0, 
-    #                             t_end = 15.0,
-    #                             t_step = 0.005,
-    #                             aerothermal_model="covingtonArcJet",
-    #                             nose_radius = 0.002)
-
-
-    MySimulation= Thermal_Sim_0D(LumpedMass, Flight, AirModel(),
-                                x_location = 0.05, 
-                                deflection_angle_deg = 6.0, 
+    MySimulation= Thermal_Sim_1D(AeroSurf, Flight, AirModel(),
+                                x_location = 0.2, 
+                                deflection_angle_deg = 5.0, 
                                 t_end = 15.0,
                                 t_step = 0.005,
-                                nose_radius = 0.0025,
-                                axisymmetric=False)
+                                shock_type="oblique",
+                                wall_thermal_bcs = ["q_conv", "q_conv"])
+
+
+
+
 
 
     # # Define Simulation Object
@@ -195,70 +182,37 @@ if __name__ == "__main__":
     MySimulation.run()
 
 
+    # #Export
+    # To CSV
+    MySimulation.export_data_to_csv("obsidian.csv")
+    #Export via Pickle
+    #with open("obsidian.sim", "wb") as f: pickle.dump(MySimulation, f)
+
+    #print(MySimulation.wall_dens[0,-1])
+    #print(MySimulation.wall_dens[-1,-1])
+
+
+    Sim = MySimulation
+
+    # Get index where external wall is at its max temp
+    maxtemp_Idx = np.argmax( Sim.wall_temps[0,:] ) 
 
 
     plt.figure()
 
-    plt.plot(MySimulation.t_vec, MySimulation.wall_temps[0,:],      label = "Lumped Leading Edge Temp",  color='red') 
-    #plt.plot(MySimulation.t_vec[:-2], MySimulation.T_t[:-2],      label = "Flow Total Temp",  color='k') 
-    #plt.plot(Sim.t_vec, Sim.wall_temps[-1,:],     label = sim_name + " - y=max(y) Wall", color='cyan')  
+    plt.plot(Sim.Aerosurface.y_coords, Sim.wall_temps[:,maxtemp_Idx],      label = "Temperature Distribution",  color='red') 
+    #plt.plot([0.0063, 0.0063],[-1000, 10000], 'k--')
+
+    #plt.xlim([0.0, 0.01])
+
+    #plt.ylim([250, 800])
 
     plt.legend()
-
-
-
-    plt.xlabel("Time (s)")
+    
+    plt.xlabel("Through-Wall Coordinate (m)")
     plt.ylabel("Temeperature, K")
-    plt.title("Temperature vs. Time Trace")
-
-    plt.grid(linestyle='-', linewidth=0.5)
-
-    plt.show()
-
-
-    # #Export
-    # # To CSV
-    # MySimulation.export_data_to_csv("mysimulation.csv")
-    # #Export via Pickle
-    # with open("mysimulation.sim", "wb") as f: pickle.dump(MySimulation, f)
-
-
-
-    # print("Recession: ", 0.0274 - AeroSurf.get_ablative_thickness() )
-
-
-    # Idx_15 = np.where( np.isclose(MySimulation.t_vec, 15.0))[0]
-
-    # print(Idx_15)
-
-    # plt.figure()
-
-    # plt.plot(MySimulation.Aerosurface.y_coords, MySimulation.wall_temps[:,Idx_15],    marker='o',  label = "Temperature Distribution",  color='red') 
-
-    # plt.legend()
-    # plt.xlabel("Through-Wall Coordinate (m)")
-    # plt.ylabel("Temeperature, K")
-    # plt.title("Through-Wall Temperature Distribution at T=15.0")
-
-    
-    
-    # plt.figure()
-
-    # plt.plot(MySimulation.Aerosurface.y_coords, MySimulation.wall_dens[:,Idx_15],    marker='o',  label = "Density Distribution",  color='red') 
-
-    # plt.legend()
-    # plt.xlabel("Through-Wall Coordinate (m)")
-    # plt.ylabel("Density, Kg/m3")
-    # plt.title("Through-Wall Density Distribution at T=15.0")
-
-
-    # plt.show()
-
-
-
-
-
+    plt.title("Fin Through-Thickness Temperature Distribution Sampled at Max Surface Temp")
 
 
     # # Plot Results (can also use GUI)
-    #Post.plot_results(MySimulation)
+    Post.plot_results(MySimulation)

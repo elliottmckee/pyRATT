@@ -60,7 +60,14 @@ def radiative_heatflux(Sim, i):
     """
 
     # Just the plain ole black body radiation equation. Nothing fancy here. 
-    return constants.SB_CONST * Sim.Aerosurface.elements[0].emis * ((Sim.T_inf[i])**4 - Sim.wall_temps[0,i]**4)
+
+    #Another Workaround here
+    if hasattr(Sim, "LUMPEDMASS"):
+        return constants.SB_CONST * Sim.LumpedMass.elements[0].emis * ((Sim.T_inf[i])**4 - Sim.wall_temps[0,i]**4)
+
+    else:
+        return constants.SB_CONST * Sim.Aerosurface.elements[0].emis * ((Sim.T_inf[i])**4 - Sim.wall_temps[0,i]**4)
+
 
 
 
@@ -260,9 +267,13 @@ def ulsu_simsek_heating(Sim, i):
     q_conv_unblown, h_unblown, lambda_fac = flat_plate_heat_transfer(Sim.x_location, T_w, T_r, k_ref, Re_ref, pr_ref, bl_state)
 
 
-    
-    eta = ablation_model(Sim, i, q_conv_unblown, h_unblown, lambda_fac)
+    # If not a Lumped Mass (workaround)
+    if not hasattr(Sim, "LUMPEDMASS"):
 
+        eta = ablation_model(Sim, i, q_conv_unblown, h_unblown, lambda_fac)
+
+    else:
+        eta = 1.0
 
     # # Get boundary layer injection  pyrolysis gas generation (updates ablative densities)
     # mDot_pyro = get_pyrolysis_mdot(Sim, i)
@@ -386,7 +397,7 @@ def fay_riddell_stagnation_heating(Sim , i):
     p_inf, T_inf, u_inf, m_inf, rho_inf, cp_inf, k_inf, mu_inf, pr_inf, Re_inf = tools_aero.get_freestream_complete(Sim, i)
 
     # calculate boundary layer edge properties (post-shock)
-    p_e, rho_e, T_e, T_te, m_e, u_e, cp_e, k_e, mu_e, pr_e, Re_e = tools_aero.get_edge_state(p_inf, T_inf, m_inf, Sim)
+    p_e, rho_e, T_e, T_te, m_e, u_e, cp_e, k_e, mu_e, pr_e, Re_e = tools_aero.get_edge_state(p_inf, T_inf, m_inf, Sim, shock_override="normal")
 
     # Additional Properties
     rho_w = p_e / (Sim.AirModel.R * T_w)
@@ -396,14 +407,14 @@ def fay_riddell_stagnation_heating(Sim , i):
 
 
     # Calculate Heat Flux
-    q_w = fay_riddell_stagnation_flux( Sim.nose_radius, p_e, p_inf, rho_e, mu_e, rho_w, mu_w, h_0_e, h_w)
+    q_w = fay_riddell_stagnation_flux( Sim.nose_radius, p_e, p_inf, rho_e, mu_e, rho_w, mu_w, h_0_e, h_w, axisymmetric=Sim.axisymmetric)
 
     return q_w
 
 
 
 #Fay-Riddell Stagnation Point Heating
-def fay_riddell_stagnation_flux( Rn, p_e, p_inf, rho_e, mu_e, rho_w, mu_w, h_0_e, h_w):
+def fay_riddell_stagnation_flux( Rn, p_e, p_inf, rho_e, mu_e, rho_w, mu_w, h_0_e, h_w, axisymmetric=True):
     """
 
     ASSUMING DISASSOCIATION SMALL, SO F = 1
@@ -415,7 +426,13 @@ def fay_riddell_stagnation_flux( Rn, p_e, p_inf, rho_e, mu_e, rho_w, mu_w, h_0_e
 
 
     # Convective Heatflux
-    q_w = 0.763 * (rho_e * mu_e)**0.4 * (rho_w * mu_w)**0.1 * (h_0_e - h_w) * sqrt( dUe_dx )
+
+    if axisymmetric:
+        C = 0.763
+    else:
+        C = 0.57
+
+    q_w = C * (rho_e * mu_e)**0.4 * (rho_w * mu_w)**0.1 * (h_0_e - h_w) * sqrt( dUe_dx )
 
 
     return q_w
@@ -519,7 +536,7 @@ def get_recession_mdot(Sim, i, q_conv_no_blowing):
         print('Warning: Negative Recession Rate Calculated')
         sDot = 0
         
-        
+
     # Amount of Recession at Timestep
     delta_recess = -sDot * Sim.t_step
 
