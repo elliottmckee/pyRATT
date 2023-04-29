@@ -10,13 +10,18 @@ import pickle
 sys.path.append(os.path.dirname(os.getcwd()))
 
 try:
-    from pyRATT.src.obj_simulation import Thermal_Sim_1D
-    from pyRATT.src.obj_flightprofile import FlightProfile
-    from pyRATT.src.obj_wallcomponents import WallStack
+    from pyRATT.src.simulate_network import TransientThermalSim
+    from pyRATT.src.thermal_network import  ThermalNetwork
+    from pyRATT.src.tools_aero import ShockTrain
+    from pyRATT.src.loadings_aerothermal import AerothermalLoading
+    from pyRATT.src.loadings_thermal import ExternalRadiationLoading
+    from pyRATT.src.obj_flight import FlightProfile
     from pyRATT.src.materials_gas import AirModel
 except:
     print("\n Run this script from the main pyRATT directory using 'python3 validation_cases/hifire_5.py")
     quit()
+
+
 
 
 '''
@@ -44,6 +49,46 @@ REFERENCES:
 
 
 if __name__ == "__main__":
+
+
+    Shocks                  = ShockTrain(["oblique"], [7.0])
+    Flight                    = FlightProfile( os.path.join(os.getcwd(), "validation_cases", "resources", "hifire_5", "hifire_5_flight_profile.csv") )
+    AeroThermLoading    = AerothermalLoading( 0.2,
+                                                                    Flight, 
+                                                                    Shocks, 
+                                                                    AirModel(), 
+                                                                    aerothermal_model="flat-plate",
+                                                                    boundary_layer_model="transition") 
+    RadiationLoading = ExternalRadiationLoading(Flight=Flight)
+
+
+    TG = ThermalNetwork()
+    TG.addComponent_1D("ALU6061", total_thickness=0.02, n_nodes=26)
+
+    TG.add_thermal_loading(nodeID = 0, ThermLoading = AeroThermLoading)
+    TG.add_thermal_loading(nodeID = 0, ThermLoading = RadiationLoading)
+
+
+
+    Sim = TransientThermalSim( TG, Flight,  281.25,  0.004, t_start = 0.0, t_end = 25.0)
+    
+    start = time.time()
+    Sim.run()
+    end = time.time()
+    print("Elapsed Time: ", end - start)
+
+    plt.figure()
+    plt.plot(Sim.t_vec, Sim.wall_temps[0,:],        color='red') 
+    plt.plot(Sim.t_vec, Sim.wall_temps[-1,:],     color='cyan')  
+
+    plt.legend()
+    plt.xlabel("Time (s)")
+    plt.ylabel("Temeperature, K")
+    plt.title("Temperature vs. Time Trace")
+
+    TG.draw()
+
+
 
 
     # Define Wall

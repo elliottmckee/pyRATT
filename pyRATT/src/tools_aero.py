@@ -18,7 +18,45 @@ from . import constants
 
 
 
-def get_freestream(alt, AirModel, mach=None):
+class ShockTrain:
+    """
+    Object representing the train of shocks that are imparted on the 
+    freestream before the flow reaches the boundary layer edge at the point 
+    being analyzed. 
+
+    For example:
+        shock_list                  = ['oblique', 'oblique', 'normal']
+        deflection_angle_list   = [7.0, 5.0, None]
+    """
+
+    def __init__(self, shock_list = ['oblique'], deflection_angle_list_DEG = [7.0] ):
+
+        
+        deflection_angle_list_RAD = [ang * math.pi / 180.0 for ang in deflection_angle_list_DEG]
+        
+        self.Shocks   = []
+
+        for shock in zip(shock_list, deflection_angle_list_RAD):
+            
+            if shock[0] in ["oblique", "conical"]: 
+                self.Shocks.append( shock )
+            
+            elif shock[0] in ["normal"]:
+                self.Shocks.append( shock )
+                print("Note in ShockTrain: Ignoring any Shocks after the Normal Shock")
+                break
+
+            else:
+              raise ValueError("Error in ShockTrain specification")  
+
+
+
+
+
+
+
+
+def get_freestream(AirModel, alt, mach=None):
     """
     Function for returning the base aero state - atmospheric/
     freestream pressure, temperature, density, and optionally, 
@@ -121,7 +159,8 @@ def get_freestream_complete(Sim, i):
     return p_inf, T_inf, u_inf, m_inf, rho_inf, cp_inf, k_inf, mu_inf, pr_inf, Re_inf
 
 
-def get_edge_state(p_inf, T_inf, m_inf, Sim, shock_override=None):
+def get_edge_state(p_inf, T_inf, m_inf, x_location, GasModel, ShockTrain):
+    
     """ 
     Returns the flow properties at the boundary layer edge.
 
@@ -143,30 +182,26 @@ def get_edge_state(p_inf, T_inf, m_inf, Sim, shock_override=None):
         Re_e
     """
 
-    # Get Post-shock state
-    if shock_override:
-        m_e, p_e, T_e = get_post_shock_state(m_inf, p_inf, T_inf, Sim, shock_override=shock_override) 
-    else:
-        m_e, p_e, T_e = get_post_shock_state(m_inf, p_inf, T_inf, Sim) 
+    m_e, p_e, T_e = get_post_shock_state(m_inf, p_inf, T_inf, GasModel, ShockTrain) 
 
     # Edge Velocity
-    u_e = sqrt(Sim.AirModel.gam * Sim.AirModel.R * T_e) * m_e
+    u_e = sqrt(GasModel.gam * GasModel.R * T_e) * m_e
 
     # Total Temperature at Edge
-    T_te = total_temperature(T_e, m_e, Sim.AirModel.gam)
+    T_te = total_temperature(T_e, m_e, GasModel.gam)
     
     #Complete Aero State at Boundary Layer Edge
     rho_e, cp_e, k_e, mu_e, pr_e, Re_e = complete_aero_state(p_e, 
                                                                 T_e, 
                                                                 u_e, 
-                                                                Sim.x_location,
-                                                                Sim.AirModel)
+                                                                x_location,
+                                                                GasModel)
 
     return p_e, rho_e, T_e, T_te, m_e, u_e, cp_e, k_e, mu_e, pr_e, Re_e
 
 
 
-def get_bl_state(Sim, Re, mach):
+def get_bl_state(Re, mach, bound_layer_model):
     """
     Returns the state of the boundary layer. 
     Turbulent is 1, Laminar is 0. 
@@ -177,13 +212,13 @@ def get_bl_state(Sim, Re, mach):
         mach: Freestream Mach
     """
 
-    if Sim.bound_layer_model == 'turbulent':
+    if bound_layer_model == 'turbulent':
         return 1
     
-    elif Sim.bound_layer_model == 'laminar':
+    elif bound_layer_model == 'laminar':
         return 0
 
-    elif Sim.bound_layer_model == 'transition':
+    elif bound_layer_model == 'transition':
         #Reynolds Number Criterion for Transition from Ulsu
             #Assuming this uses the Free-Stream Values for Re and Mach
         if (log10(Re) <= 5.5 + constants.C_M*mach):
@@ -222,15 +257,18 @@ def total_temperature(T, M, gam):
 ##########################################################################################
 
 
-def get_post_shock_state(m_inf, p_inf, T_inf, Sim, shock_override=None):
+def get_post_shock_state(m1, p1, T1, GasModel, ShockTrain):
     """
     High-level driver function to handle the shock models/implementation
 
+    Given a point upstream of all shocks (most commonly, the freestream), 
+    will impart each of the shocks, as listed in ShockTrain, in order, to determine
+    the local properties at the edge of the boundary layer at the point being analyzed
+
     Inputs:
-        m_inf: Freestream Mach
-        p_inf: Freestream Pressure
-        T_inf: Freestream Temp
-        Sim: Simulation Object
+        m_inf: Upstream Mach
+        p_inf: Upstream Pressure
+        T_inf: Upstream Temp
 
     Outputs:
         m_e: boundary-layer edge mach
@@ -239,41 +277,34 @@ def get_post_shock_state(m_inf, p_inf, T_inf, Sim, shock_override=None):
 
     """
 
-    if Sim.shock_type not in  ["normal", "oblique", "conical"]:
-        raise NotImplementedError()
 
+    for shock in ShockTrain.Shocks:
 
-    if shock_override:
-        print("Overriding Shock")
-        shock = shock_override
-    else:
-        shock = Sim.shock_type
+        # Determine if shock or not
+        if m1 > 1.0:
+            # Yes Shock - Shock Relations for Post-Shock Properties
+            if shock[0] == "normal":
+                m2, p2op1, _, T2oT1, _, _ =  normal_shock( m1, GasModel.gam)
 
+            if shock[0] == "oblique":
+                m2, p2op1, _, T2oT1, _, _, _ =  oblique_shock( m1, GasModel.gam, shock[1])
 
-    # Determine if shock or not
-    if m_inf >  1.0:
-        # Yes Shock - Shock Relations for Post-Shock Properties
-        if shock == "normal":
-            m_e, p2op1, _, T2oT1, _, _ =  normal_shock( m_inf, Sim.AirModel.gam)
+            if shock[0] == "conical":
+                raise Exception("Conical Shocks not implemented yet. Reccomed using Oblique")
+                #_, _, M, p2op1, T2oT1, _, _, _ =  conical_shock( m_inf, Sim.AirModel.gam, Sim.deflection_angle_rad)
 
-        if shock == "oblique":
-            m_e, p2op1, _, T2oT1, _, _, _ =  oblique_shock( m_inf, Sim.AirModel.gam, Sim.deflection_angle_rad)
+            p2 = p2op1 * p1
+            T2 = T2oT1 * T1
+            
+        else:
+            #No Shock, same as freestream
+            m2 = m1; p2 = p1; T2 = T1
 
-        if shock == "conical":
-            raise Exception("Conical Shocks not implemented yet. Reccomed using Oblique")
-            #_, _, M, p2op1, T2oT1, _, _, _ =  conical_shock( m_inf, Sim.AirModel.gam, Sim.deflection_angle_rad)
+        #Set new upstream values for next shock
+        m1 = m2; p1 = p2; T1 = T2
 
-
-        p_e = p2op1 * p_inf
-        T_e = T2oT1 * T_inf
-        
-    else:
-        #No Shock, same as freestream
-        m_e = m_inf
-        p_e = p_inf
-        T_e = T_inf
-
-    return m_e, p_e, T_e
+    #Return values after all shocks
+    return m2, p2, T2
 
 
 
@@ -297,6 +328,7 @@ def normal_shock(M_1, g):
     Sources:
     -Adapted from material from the CU Boulder ASEN 3111 Fundamentals of Aerodynamics course
     """
+
     M2n = math.sqrt((1 + (g - 1) / 2 * M_1 ** 2) / (g * M_1 ** 2 - (g - 1) / 2))
     P2_P1 = 1 + 2 * g / (g + 1) * (M_1 ** 2 - 1)
     rho2_rho1 = (g + 1) * M_1 ** 2 / (2 + (g - 1) * M_1 ** 2)

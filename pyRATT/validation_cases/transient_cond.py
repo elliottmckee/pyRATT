@@ -14,7 +14,7 @@ sys.path.append(os.path.dirname(os.getcwd()))
 
 try:
     from pyRATT.src.materials_solid import MATERIALS_DICT
-    from pyRATT.src.obj_wallcomponents import WallStack
+    from pyRATT.src.thermal_network import WallStack
     from pyRATT.src.tools_conduction import get_new_wall_temps
 except:
     print("\n Run this script from the main pyRATT directory using 'python3 validation_cases/transient_cond.py")

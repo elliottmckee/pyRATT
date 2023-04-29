@@ -14,45 +14,242 @@ from .materials_ablative import ABLATIVE_DICT
 import numpy as np
 import pandas as pd
 import scipy
+import networkx as nx
+import matplotlib.pyplot as plt
+
 from math import isnan
 import copy
 
 
-class LumpedMass:
+class ThermalNode:
+    """
+    The fundamental data structure in this architecture.
 
+    Self-contained structure for maintaining the material/thermal properties:
+        - rho: density
+        - cp: Specific heat
+        - k: thermal conductivity
+        - emis: Black body emissivity
+        - mass: total mass of the node
+    as well the instantaneous state of the node:
+        - T: temperature 
 
-    def __init__(self, material, mass, heating_areas):
+    TODO:
+        - Properties that vary with temperature
+    """
 
+    def  __init__(self, material, mass = None, volume = None, area = 1.0, component_tag="DefaultComponent"):
+
+        # Tags, Identifiers
+        self.type = 'non-ablative'
+        self.component_tag = component_tag
 
         # Pull material properties from Solid Material Database
         self.rho    = MATERIALS_DICT[material]["rho"]
         self.cp     = MATERIALS_DICT[material]["cp"]
-        #self.k      = MATERIALS_DICT[material]["k"]
-        self.emis   = MATERIALS_DICT[material]["emis"]
-
-        self.heating_areas = heating_areas
-
-        self.thickness_unitarea = mass / self.rho
-
-        self.mass = mass
-
-
-        self.elements = [] 
-        self.elements.append( SolidElement(material, self.thickness_unitarea) )
+        self.k      = MATERIALS_DICT[material]["k"]
         
+        try:
+            self.emis   = MATERIALS_DICT[material]["emis"]
+        except KeyError:
+            print(f"No Emissivity Entry found for {material}. Ignoring. ")
 
-    def initialize_temp(self, temp):
-        self.temp = [temp]
+        # Get element mass, allow for specification by mass or volume
+        if mass and volume:
+            raise Exception("Please Specify mass OR volume, not both")
+        elif mass and not volume:
+            self.mass = mass
+        elif volume and not mass:
+            self.mass = volume * self.rho
 
 
-    def update_temps(self, q_net, dt):
+        self.area = area
+        self.dy = self.mass / self.rho / area
+
+
+    def initialize_state(self, inital_temperature):
+        self.T = inital_temperature
+    
+
+
+class AblativeThermalNode(ThermalNode):
+    """
+    Placeholder for definining an Ablative Node that extends the above 
+    """
+    pass
+
+
+
+
+
+
+
+class ThermalNetwork():
+    """
+    Object that contains the Thermal Network
+    graph representation,
+    """
+    def  __init__(self):
+        # Initialize Empty Graph List
+        self.Graph = nx.Graph()
+        #Initialize Component Dictionary Object 
+        self.ComponentDict = {}
+
+
+    def draw(self):
+        # https://networkx.org/documentation/stable/auto_examples/drawing/plot_weighted_graph.html
+        plt.figure()
+
+        # pos = nx.spring_layout(self.Graph, seed=3)
+        pos = nx.spectral_layout(self.Graph)
+
+        # nodes
+        nx.draw_networkx_nodes(self.Graph, pos, node_size=700)
+
+        # edges
+        nx.draw_networkx_edges(self.Graph, pos, width=6)
+
+        # node labels
+        nx.draw_networkx_labels(self.Graph, pos, font_size=20, font_family="DejaVu Sans Mono")
+        # edge weight labels
+        edge_labels = nx.get_edge_attributes(self.Graph, "weight")
+
+        res = dict()
+        for key in edge_labels:
+            res[key] = round(edge_labels[key], 6)
+
+
+        nx.draw_networkx_edge_labels(self.Graph, pos, res, font_family="DejaVu Sans Mono")
+
+        ax = plt.gca()
+        ax.margins(0.08)
+        plt.axis("off")
+        plt.tight_layout()
+        plt.show()
+
+    
+
+    def addNodeToComponentList(self, NodeID, component_tag):
+        # Add Node To Component List
+        # If list exists in dictionary, append
+        # If doesn't, create new dictionary entry
+        if component_tag in self.ComponentDict.keys():
+            self.ComponentDict[component_tag].append(NodeID)
+        else:
+            self.ComponentDict[component_tag] = [NodeID]
+
+
+    def addGraphNode(self, ThermalNode):
+        # Indexing by number currently. 
+        # Since objects are hashable, can use the objects themselves as the nodes 
+        # but this feels more intuitive        
+        nodeID = self.Graph.number_of_nodes() 
+
+        #Initialize Nodes and Attributes
+        self.Graph.add_node( nodeID )
+        self.Graph.nodes[nodeID]['element'] = ThermalNode
+        self.Graph.nodes[nodeID]['thermal_loadings'] = [] 
+
+        self.addNodeToComponentList(nodeID, ThermalNode.component_tag)
+        
+        return nodeID
+
+
+    def addComponent_1D(self, material, total_thickness, n_nodes, surf_area = 1.0, component_tag = "DefaultComponent"):
+        # Get element 
+        # TODO: Assumes unit surface area
+        element_volume = surf_area * total_thickness / n_nodes
+
+        for i in range(n_nodes):
+            
+            # Nodes
+            nodeID = self.addGraphNode( ThermalNode(material, volume = element_volume, component_tag=component_tag) )
+
+            #Edges
+            if i > 0: self.Graph.add_edge(nodeID, nodeID-1)
+
+
+
+    def addComponent_0D(self, material, mass, component_tag="DefaultComponent"):
+        self.addGraphNode( ThermalNode(component_tag, material, mass=mass, component_tag=component_tag) )
+
+
+    def add_thermal_loading(self, nodeID, ThermLoading):
+        self.Graph.nodes[nodeID]["thermal_loadings"].append(ThermLoading)
+
+
+    def initialize_node_temps(self, temperature):
+        for node in self.Graph.nodes():
+            self.Graph.nodes[node]["element"].T = temperature
+
+
+    def get_node_temps(self):
+        temps = []
+        for node in self.Graph.nodes():
+            temps.append(self.Graph.nodes[node]["element"].T) 
+        return temps
+
+
+
+    def updateThermalResistances(self):
+        # Update all the edge weights with the thermal resistance values from conduction
+        for edge in self.Graph.edges:
+            T_resist = 0
+
+            for nodeID in edge:
+                node = self.Graph.nodes[nodeID]['element']
+                T_resist += node.dy/ (2*node.area*node.k)
+
+            self.Graph.edges[edge]['weight'] = T_resist
+
+
+
+    def updateNodeTemps(self, t_idx, t_step):
         """
-        Keeping temp as a list as to not break things later
+        
+        TODO:
+            - Cleanup
+            - Use Dictionary instead of list, for robustness of Node numbers being out of order or non-sequential 
         """
 
-        self.temp = [ self.temp[0] + dt*q_net/self.mass/self.cp ]
+        dT_dt = []
 
-        return self.temp
+        # GET RATE OF CHANGE OF EACH NODE (DONT CHANGE NODE TEMPS WHILE DOING THIS DUMBASS)
+        for nodeID_curr in self.Graph.nodes:
+
+            q_in = 0.0
+            elem_curr = self.Graph.nodes[nodeID_curr]["element"]
+            
+            for nodeID_adj in self.Graph.adj[nodeID_curr]:    
+                elem_adj = self.Graph.nodes[nodeID_adj]["element"]
+                q_in += ( elem_adj.T - elem_curr.T ) / self.Graph.adj[nodeID_curr][nodeID_adj]["weight"]
+
+            for ThermalLoad in self.Graph.nodes[nodeID_curr]["thermal_loadings"]:
+                q_in += ThermalLoad.get_q_in(elem_curr, t_idx)
+
+            # Get rate of change, propagate
+            dT_dt.append(q_in / elem_curr.mass / elem_curr.cp)
+        
+        # Once all rates of change are calculated, then update temps
+        for node in self.Graph.nodes:
+
+            elem = self.Graph.nodes[node]["element"]
+            elem.T = elem.T + dT_dt[node]*t_step
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

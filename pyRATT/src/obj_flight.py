@@ -69,7 +69,6 @@ class FlightProfile:
         #Parse the Trajectory CSV file for Mach, Alt, Time, etc. into a Pandas Dataframe
         df = pd.read_csv(trajectory_filepath, usecols=['Time (sec)', 'Mach Number', 'Altitude (ft)'])
 
-
         # Mach = 0.0 breaks a lot of the math later so just overwriting it here with a small value
         df["Mach Number"].replace(to_replace = 0, value = 0.001, inplace=True)
 
@@ -78,6 +77,13 @@ class FlightProfile:
 
         #Split array into Time, Mach, and Altitude Vectors and Return
         return df[:,0], df[:,1], df[:,2]*constants.FT2M
+
+
+
+    def get_mach_alt(self, time):
+        return self.mach_raw_interp(time), self.alt_raw_interp(time)
+
+
 
 
     def get_sim_time_properties(self, t_sim_vec):
@@ -96,6 +102,8 @@ class FlightProfile:
             print("Warning in class FlightData - get_atmospheric_properties(): Max (or Min) Altitude of Atmosphere Model Exceeded- Clipping to -5004 to 81020 m")
             alt = np.clip(alt, -5004, 81020)
         
+        self.mach_sim_time = mach
+        self.alt_sim_time = alt
 
         return mach, alt
 
