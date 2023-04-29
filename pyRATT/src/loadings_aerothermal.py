@@ -40,13 +40,15 @@ class AerothermalLoading:
         #Constant Config Parameters
         
 
-    def get_q_in(self, elem, time):
+    def get_q_in(self, elem, time, time_step):
     
         mach, alt = self.Flight.get_mach_alt(time)
 
-        return self.flat_plate_heating(elem.T,
-                                                    mach,
-                                                    alt)
+        qDot_conv, h_conv = self.flat_plate_heating(elem.T, mach, alt)
+
+        stability_criterion_check(elem, h_conv, time_step)
+
+        return qDot_conv
 
 
     def fay_riddell_heating(self):
@@ -85,7 +87,7 @@ class AerothermalLoading:
         q_conv_unblown, h_unblown, lambda_fac = flat_plate_heat_transfer(self.x_location, T_wall, T_r, k_ref, Re_ref, pr_ref, bl_state)
 
                                 
-        return q_conv_unblown
+        return q_conv_unblown, h_unblown
 
 
 
@@ -93,7 +95,7 @@ class AerothermalLoading:
 
 
 
-def stability_criterion_check(Sim, i):
+def stability_criterion_check(SurfElem, h, dt):
     """
     Stability criterion for the numerical stability of the solver. Will print warning to console
     if this criterion is not satisfied
@@ -102,7 +104,10 @@ def stability_criterion_check(Sim, i):
     or your element size is too small.  
 
     Notes:
-        TODO: odifications to Stability Criterion Check Needed when Ablative is added
+        TODO: 
+            -Modifications to Stability Criterion Check Needed when Ablative is added
+            - SOURCE
+
     """
 
     """ Carryover code from Matlab, for future work
@@ -120,16 +125,9 @@ def stability_criterion_check(Sim, i):
         k_s = interp1(Abl.kLUTab.Var1,Abl.kLUTab.Var2, Abl.TVec(1,i),'linear', 'extrap');
     """
 
-    #Aliasing
-    SurfE   = Sim.Aerosurface.elements[0]
-    h       = Sim.h_coeff[i] 
-    dt      = Sim.t_step
-
     # Perform Stability Check 
-    F_0 = (SurfE.k * dt) / (SurfE.rho * SurfE.cp * SurfE.dy**2)
-    Bi = (h * SurfE.dy) / SurfE.k
-
-
+    F_0 = (SurfElem.k * dt) / (SurfElem.rho * SurfElem.cp * SurfElem.dy**2)
+    Bi = (h * SurfElem.dy) / SurfElem.k
 
     if ( F_0*(1+Bi) > .5):
         print('~~WARNING~~: Stability Criterion not met. Consider decreasing timestep or number of wall nodes)')

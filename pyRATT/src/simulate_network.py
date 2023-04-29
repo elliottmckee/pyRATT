@@ -11,8 +11,8 @@ from os import path
 
 
 from . import constants
-from ._tools_aerotherm import aerothermal_heatflux, get_net_heat_flux
-from .tools_conduction import get_new_wall_temps, stability_criterion_check
+# from ._tools_aerotherm import aerothermal_heatflux, get_net_heat_flux
+# from .tools_conduction import get_new_wall_temps, stability_criterion_check
 
 # Standard Atmosphere Model/Package (CANT HANDLE HIGH-ALT)
 # https://ambiance.readthedocs.io/en/latest/index.html

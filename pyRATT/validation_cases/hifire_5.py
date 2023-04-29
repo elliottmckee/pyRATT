@@ -18,7 +18,7 @@ try:
     from pyRATT.src.obj_flight import FlightProfile
     from pyRATT.src.materials_gas import AirModel
 except:
-    print("\n Run this script from the main pyRATT directory using 'python3 validation_cases/hifire_5.py")
+    print("\n Error in imports. Run this script from the main pyRATT directory using 'python3 validation_cases/hifire_5.py")
     quit()
 
 

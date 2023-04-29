@@ -246,7 +246,7 @@ class ThermalNetwork():
                 q_in += ( elem_adj.T - elem_curr.T ) / self.Graph.adj[nodeID_curr][nodeID_adj]["weight"]
 
             for ThermalLoad in self.Graph.nodes[nodeID_curr]["thermal_loadings"]:
-                q_in += ThermalLoad.get_q_in(elem_curr, time)
+                q_in += ThermalLoad.get_q_in(elem_curr, time, t_step)
 
             # Get rate of change, propagate
             dT_dt.append(q_in / elem_curr.mass / elem_curr.cp)

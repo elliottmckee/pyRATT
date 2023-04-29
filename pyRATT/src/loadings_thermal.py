@@ -19,7 +19,7 @@ class ConstantQdotLoading:
     def __init__(self, qDot):
         self.qDot = qDot
 
-    def get_q_in(self, elem, time):
+    def get_q_in(self, elem, time, time_step):
         return self.qDot
 
 
@@ -45,7 +45,7 @@ class ExternalRadiationLoading:
         self.Flight             = Flight
         
 
-    def get_q_in(self, elem, time):
+    def get_q_in(self, elem, time, time_step):
     
         if self.Flight:
             _, alt_inf = self.Flight.get_mach_alt(time)
