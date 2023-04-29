@@ -42,9 +42,11 @@ class AerothermalLoading:
 
     def get_q_in(self, elem, time):
     
+        mach, alt = self.Flight.get_mach_alt(time)
+
         return self.flat_plate_heating(elem.T,
-                                                    self.Flight.mach_sim_time[time],
-                                                    self.Flight.alt_sim_time[time])
+                                                    mach,
+                                                    alt)
 
 
     def fay_riddell_heating(self):

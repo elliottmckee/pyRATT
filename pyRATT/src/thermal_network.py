@@ -149,6 +149,7 @@ class ThermalNetwork():
         self.Graph.add_node( nodeID )
         self.Graph.nodes[nodeID]['element'] = ThermalNode
         self.Graph.nodes[nodeID]['thermal_loadings'] = [] 
+        self.Graph.nodes[nodeID]['temp_constraint'] = None
 
         self.addNodeToComponentList(nodeID, ThermalNode.component_tag)
         
@@ -177,10 +178,22 @@ class ThermalNetwork():
     def add_thermal_loading(self, nodeID, ThermLoading):
         self.Graph.nodes[nodeID]["thermal_loadings"].append(ThermLoading)
 
+    def add_temperature_constraint(self, nodeID, temperature):
+        self.Graph.nodes[nodeID]["temp_constraint"] = temperature
+
 
     def initialize_node_temps(self, temperature):
+        """
+        Sets all nodal temps to a constant. 
+        
+        All values with temperature constraints are set to that value.
+        """
         for node in self.Graph.nodes():
-            self.Graph.nodes[node]["element"].T = temperature
+
+            if self.Graph.nodes[node]["temp_constraint"]:
+                 self.Graph.nodes[node]["element"].T = self.Graph.nodes[node]["temp_constraint"]
+            else:
+                self.Graph.nodes[node]["element"].T = temperature
 
 
     def get_node_temps(self):
@@ -204,18 +217,26 @@ class ThermalNetwork():
 
 
 
-    def updateNodeTemps(self, t_idx, t_step):
+    def updateNodeTemps(self, time, t_step):
         """
         
         TODO:
+            - Make the calculation of heat-fluxes non-redundant. Go on edge-by-edge basis, not nodal
             - Cleanup
             - Use Dictionary instead of list, for robustness of Node numbers being out of order or non-sequential 
+            - 
         """
 
         dT_dt = []
 
         # GET RATE OF CHANGE OF EACH NODE (DONT CHANGE NODE TEMPS WHILE DOING THIS DUMBASS)
         for nodeID_curr in self.Graph.nodes:
+
+            # If subject to a temperature constraint, temperature will not change 
+            # throughout simulation
+            if self.Graph.nodes[nodeID_curr]["temp_constraint"]:
+                dT_dt.append(0.0)
+                continue
 
             q_in = 0.0
             elem_curr = self.Graph.nodes[nodeID_curr]["element"]
@@ -225,7 +246,7 @@ class ThermalNetwork():
                 q_in += ( elem_adj.T - elem_curr.T ) / self.Graph.adj[nodeID_curr][nodeID_adj]["weight"]
 
             for ThermalLoad in self.Graph.nodes[nodeID_curr]["thermal_loadings"]:
-                q_in += ThermalLoad.get_q_in(elem_curr, t_idx)
+                q_in += ThermalLoad.get_q_in(elem_curr, time)
 
             # Get rate of change, propagate
             dT_dt.append(q_in / elem_curr.mass / elem_curr.cp)

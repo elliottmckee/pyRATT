@@ -25,6 +25,7 @@ class ConstantQdotLoading:
 
 
 
+
 class ExternalRadiationLoading:
 
     def __init__(self,  Flight=None):
@@ -52,7 +53,7 @@ class ExternalRadiationLoading:
         else:
             T_rad_inf = constants.T_RAD_AMB
 
-        return self.black_body_radiation(self, elem.T, elem.emis, T_rad_inf)
+        return self.black_body_radiation(elem.T, elem.emis, T_rad_inf)
 
 
     def black_body_radiation(self, T_node, emis_node, T_rad_inf):

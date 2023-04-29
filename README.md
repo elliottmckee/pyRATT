@@ -215,7 +215,7 @@ The high-level flow for running a simulation is relatively straightforward, and 
 
 ```python
     # Define Wall Composition
-    AeroSurf = WallStack(materials="ALU6061", thicknesses=0.02, node_counts = 15)
+    AeroSurf = WallStack(materials="ALU6061", thicknesses=0.02, element_counts = 15)
 
     # Point to Trajectory Data .csv
     Flight    = FlightProfile( "path/to/flighttrajectory.csv" )

@@ -183,6 +183,9 @@ if __name__ == "__main__":
     Sim.run()
 
 
+
+
+
     plt.figure()
     plt.plot(Sim.t_vec, Sim.wall_temps[0,:],        color='red') 
     plt.plot(Sim.t_vec, Sim.wall_temps[-1,:],     color='cyan')  

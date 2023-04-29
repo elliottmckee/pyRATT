@@ -11,9 +11,12 @@ sys.path.append(os.path.dirname(os.getcwd()))
 
 
 try:
-    from pyRATT.src.obj_simulation import Thermal_Sim_1D
-    from pyRATT.src.obj_flightprofile import FlightProfile
-    from pyRATT.src.obj_wallcomponents import WallStack
+    from pyRATT.src.simulate_network import TransientThermalSim
+    from pyRATT.src.thermal_network import  ThermalNetwork
+    from pyRATT.src.tools_aero import ShockTrain
+    from pyRATT.src.loadings_aerothermal import AerothermalLoading
+    from pyRATT.src.loadings_thermal import ExternalRadiationLoading
+    from pyRATT.src.obj_flight import FlightProfile
     from pyRATT.src.materials_gas import AirModel
 except:
     print("\n Run this script from the main pyRATT directory using 'python3 validation_cases/hifire_5b.py")
@@ -41,7 +44,6 @@ ABOUT:
     be seen in both the flight data, as well as the simulation results below.
 
 
-
 REFERENCES:
 
     [1] Hypersonic International Flight Research Experimentation-5b Flight Overview 
@@ -55,68 +57,56 @@ REFERENCES:
 if __name__ == "__main__":
 
 
+    ################################# CONFIGURATION INFO ########################################
+    Shocks                  = ShockTrain(["oblique"], [7.0])
+    Flight                    = FlightProfile( os.path.join(os.getcwd(), "validation_cases", "resources", "hifire_5b", "hifire_5b_flight_profile.csv") )
+
+    RadiationLoading = ExternalRadiationLoading(Flight=Flight)
+
+
+    ############################# THERMAL NETWORK DEF'N ########################################
    
-    # Define Wall
-    AeroSurf = WallStack(materials="ALU6061", thicknesses=0.02, element_counts = 26)
+    # 400mm Downstream of Nosecone
+    Net_400 = ThermalNetwork()
+    Net_400.addComponent_1D("ALU6061", total_thickness=0.02, n_nodes=26)
+    
+    AeroThermLoading_400    = AerothermalLoading( 0.400, Flight, Shocks, AirModel(), aerothermal_model="flat-plate", boundary_layer_model="transition") 
+    Net_400.add_thermal_loading(nodeID = 0, ThermLoading = RadiationLoading)
+    Net_400.add_thermal_loading(nodeID = 0, ThermLoading = AeroThermLoading_400)
+    
+    Sim_400 = TransientThermalSim( Net_400,  T_initial=368.15,  t_step=0.001, t_start = 510.0, t_end = 520.0)
 
-    # Point to Flight Trajectory
-    MyFlight    = FlightProfile( os.path.join(os.getcwd(), "validation_cases", "resources", "hifire_5b", "hifire_5b_flight_profile.csv") )
+    # 650mm Downstream of Nosecone
+    Net_650 = ThermalNetwork()   
+    Net_650.addComponent_1D("ALU6061", total_thickness=0.02, n_nodes=26)
+    
+    AeroThermLoading_650    = AerothermalLoading( 0.650, Flight, Shocks, AirModel(), aerothermal_model="flat-plate", boundary_layer_model="transition") 
+    Net_650.add_thermal_loading(nodeID = 0, ThermLoading = RadiationLoading)
+    Net_650.add_thermal_loading(nodeID = 0, ThermLoading = AeroThermLoading_650)
 
-    # Setup 400mm downstream sim
-    Sim_400 = Thermal_Sim_1D(AeroSurf, MyFlight, AirModel(),
-                                x_location = 0.40,
-                                deflection_angle_deg = 7.0, 
-                                t_step = 0.001,
-                                t_start = 510.0,
-                                t_end = 520.0,
-                                initial_temp = 368.15,
-                                boundary_layer_model = 'transition')
+    Sim_650 = TransientThermalSim( Net_650,  T_initial=361.36,  t_step=0.001, t_start = 510.0, t_end = 520.0)
+    
+    # 650mm Downstream of Nosecone
+    Net_800 = ThermalNetwork()   
+    Net_800.addComponent_1D("ALU6061", total_thickness=0.02, n_nodes=26)
+    
+    AeroThermLoading_800    = AerothermalLoading( 0.800, Flight, Shocks, AirModel(), aerothermal_model="flat-plate", boundary_layer_model="transition") 
+    Net_800.add_thermal_loading(nodeID = 0, ThermLoading = RadiationLoading)
+    Net_800.add_thermal_loading(nodeID = 0, ThermLoading = AeroThermLoading_800)
 
-    # Setup 650mm downstream sim
-    Sim_650 = Thermal_Sim_1D(AeroSurf, MyFlight, AirModel(),
-                                x_location = 0.65,
-                                deflection_angle_deg = 7.0, 
-                                t_step = 0.001,
-                                t_start = 510.0,
-                                t_end = 520.0,
-                                initial_temp = 361.36,
-                                boundary_layer_model = 'transition')
-                                
-    # Setup 800mm downstream sim
-    Sim_800 = Thermal_Sim_1D(AeroSurf, MyFlight, AirModel(),
-                                x_location = 0.80, 
-                                deflection_angle_deg = 7.0,
-                                t_step = 0.001,
-                                t_start = 510.0,
-                                t_end = 520.0,
-                                initial_temp = 360.86,
-                                boundary_layer_model = 'transition')
+    Sim_800 = TransientThermalSim( Net_800,  T_initial=360.86,  t_step=0.001, t_start = 510.0, t_end = 520.0)
 
 
-    #Run Simulations
+
+
+    ############################# RUN SIMULATIONS ########################################
+
     start = time.time()
-
     Sim_400.run()
     Sim_650.run()
     Sim_800.run()
-
     end = time.time()
-    print("Elapsed Time for all 3 Sims: ", end - start)
-
-    
-    ### Export
-
-    # CSV's
-    Sim_400.export_data_to_csv(out_filename = 'hifire_5b_400mm_validation.csv')
-    Sim_650.export_data_to_csv(out_filename = 'hifire_5b_650mm_validation.csv')
-    Sim_800.export_data_to_csv(out_filename = 'hifire_5b_800mm_validation.csv')
-
-    # Pickles
-    with open("hifire_5b_400mm_validation.sim", "wb") as f: pickle.dump(Sim_400, f)
-    with open("hifire_5b_650mm_validation.sim", "wb") as f: pickle.dump(Sim_650, f)
-    with open("hifire_5b_800mm_validation.sim", "wb") as f: pickle.dump(Sim_800, f)  
-    
-
+    print("Elapsed Time for all sims: ", end - start)
 
 
 
@@ -159,48 +149,49 @@ if __name__ == "__main__":
     plt.ylabel("Temeperature, K")
     plt.title("HiFire 5B Verification - Temps")
 
+    plt.show()
 
-    # Heat Flux Plot
-    plt.figure()
+    # # Heat Flux Plot
+    # plt.figure()
 
-    # plt.plot(matlab_data["time"], matlab_data["q_hw(W?)"],      label = "Matlab q_net", linestyle="-", color='hotpink')
+    # # plt.plot(matlab_data["time"], matlab_data["q_hw(W?)"],      label = "Matlab q_net", linestyle="-", color='hotpink')
     
-    plt.plot(Sim_400.t_vec, Sim_400.q_conv[:],      label = "Python q_conv", linestyle="--", color='red') 
-    plt.plot(Sim_400.t_vec, Sim_400.q_rad[:],       label = "Python q_rad", linestyle="--", color='blue') 
-    plt.plot(Sim_400.t_vec, Sim_400.q_net[:],       label = "Python q_net", linestyle="-", color='purple') 
+    # plt.plot(Sim_400.t_vec, Sim_400.q_conv[:],      label = "Python q_conv", linestyle="--", color='red') 
+    # plt.plot(Sim_400.t_vec, Sim_400.q_rad[:],       label = "Python q_rad", linestyle="--", color='blue') 
+    # plt.plot(Sim_400.t_vec, Sim_400.q_net[:],       label = "Python q_net", linestyle="-", color='purple') 
 
-    plt.legend()
-    plt.xlabel("Time (s)")
-    plt.ylabel("q_, W")
-    plt.title("HiFire 5 Verification - Heat Flux")
+    # plt.legend()
+    # plt.xlabel("Time (s)")
+    # plt.ylabel("q_, W")
+    # plt.title("HiFire 5 Verification - Heat Flux")
     
 
     #Heat Transfer Coefficient Plot
-    plt.figure()
+    # plt.figure()
 
-    #plt.plot(matlab_data["time"], matlab_data["heat_trans_coeff"],  label = "Matlab h", linestyle="-", color='hotpink')
-    #plt.plot(simsek_h_tRec_data["t_h"], simsek_h_tRec_data["h"],    label = "Simsek h", linestyle="--", color='orchid')
-    plt.plot(Sim_400.t_vec, Sim_400.h_coeff[:],           label = "Python h", linestyle="-", color='purple') 
+    # #plt.plot(matlab_data["time"], matlab_data["heat_trans_coeff"],  label = "Matlab h", linestyle="-", color='hotpink')
+    # #plt.plot(simsek_h_tRec_data["t_h"], simsek_h_tRec_data["h"],    label = "Simsek h", linestyle="--", color='orchid')
+    # plt.plot(Sim_400.t_vec, Sim_400.h_coeff[:],           label = "Python h", linestyle="-", color='purple') 
 
-    plt.legend()
-    plt.xlabel("Time (s)")
-    plt.ylabel("Heat Transfer Coeff, h")
-    plt.title("HiFire 5 Verification - Heat Transfer Coeff")
+    # plt.legend()
+    # plt.xlabel("Time (s)")
+    # plt.ylabel("Heat Transfer Coeff, h")
+    # plt.title("HiFire 5 Verification - Heat Transfer Coeff")
     
 
-    #Recovery Temperature Plot
-    plt.figure()
+    # #Recovery Temperature Plot
+    # plt.figure()
 
-    #plt.plot(matlab_data["time"], matlab_data["T_recover(K)"],      label = "Matlab_Tr", linestyle="-", color='hotpink')
-    #plt.plot(simsek_h_tRec_data["t_Tr"], simsek_h_tRec_data["Tr"],  label = "Simsek_Tr", linestyle="--", color='orchid')
-    plt.plot(Sim_400.t_vec, Sim_400.T_recovery[:],           label = "Python Tr", linestyle="-", color='purple')
+    # #plt.plot(matlab_data["time"], matlab_data["T_recover(K)"],      label = "Matlab_Tr", linestyle="-", color='hotpink')
+    # #plt.plot(simsek_h_tRec_data["t_Tr"], simsek_h_tRec_data["Tr"],  label = "Simsek_Tr", linestyle="--", color='orchid')
+    # plt.plot(Sim_400.t_vec, Sim_400.T_recovery[:],           label = "Python Tr", linestyle="-", color='purple')
 
-    plt.legend()
-    plt.xlabel("Time (s)")
-    plt.ylabel("Recovery Temp, K")
-    plt.title("HiFire 5 Verification - T_recovery")
+    # plt.legend()
+    # plt.xlabel("Time (s)")
+    # plt.ylabel("Recovery Temp, K")
+    # plt.title("HiFire 5 Verification - T_recovery")
 
-    plt.show()
+    # plt.show()
 
 
 

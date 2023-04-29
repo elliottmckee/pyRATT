@@ -22,8 +22,6 @@ except:
     quit()
 
 
-
-
 '''
 
 USAGE:  From the main pyRATT directory run: "python3 validation_cases/hifire_5.py"
@@ -51,6 +49,8 @@ REFERENCES:
 if __name__ == "__main__":
 
 
+
+    ################################# CONFIGURATION INFO ########################################
     Shocks                  = ShockTrain(["oblique"], [7.0])
     Flight                    = FlightProfile( os.path.join(os.getcwd(), "validation_cases", "resources", "hifire_5", "hifire_5_flight_profile.csv") )
     AeroThermLoading    = AerothermalLoading( 0.2,
@@ -61,70 +61,23 @@ if __name__ == "__main__":
                                                                     boundary_layer_model="transition") 
     RadiationLoading = ExternalRadiationLoading(Flight=Flight)
 
+    ############################# THERMAL NETWORK DEF'N ########################################
+    TNetwork = ThermalNetwork()
+    TNetwork.addComponent_1D("ALU6061", total_thickness=0.02, n_nodes=26)
 
-    TG = ThermalNetwork()
-    TG.addComponent_1D("ALU6061", total_thickness=0.02, n_nodes=26)
+    TNetwork.add_thermal_loading(nodeID = 0, ThermLoading = AeroThermLoading)
+    TNetwork.add_thermal_loading(nodeID = 0, ThermLoading = RadiationLoading)
 
-    TG.add_thermal_loading(nodeID = 0, ThermLoading = AeroThermLoading)
-    TG.add_thermal_loading(nodeID = 0, ThermLoading = RadiationLoading)
-
-
-
-    Sim = TransientThermalSim( TG, Flight,  281.25,  0.004, t_start = 0.0, t_end = 25.0)
+    Sim = TransientThermalSim( TNetwork,  T_initial=281.25,  t_step=0.004, t_start = 0.0, t_end = 215.0)
     
+    ############################# RUN SIMULATIONS ########################################
     start = time.time()
     Sim.run()
     end = time.time()
     print("Elapsed Time: ", end - start)
 
-    plt.figure()
-    plt.plot(Sim.t_vec, Sim.wall_temps[0,:],        color='red') 
-    plt.plot(Sim.t_vec, Sim.wall_temps[-1,:],     color='cyan')  
 
-    plt.legend()
-    plt.xlabel("Time (s)")
-    plt.ylabel("Temeperature, K")
-    plt.title("Temperature vs. Time Trace")
-
-    TG.draw()
-
-
-
-
-    # Define Wall
-    AeroSurf = WallStack(materials="ALU6061", thicknesses=0.02, element_counts = 26)
-
-    # Point to Trajectory Data CSV
-    Flight    = FlightProfile( os.path.join(os.getcwd(), "validation_cases", "resources", "hifire_5", "hifire_5_flight_profile.csv") )
     
-    # Define Simulation Object
-    MySimulation= Thermal_Sim_1D(AeroSurf, Flight, AirModel(),
-                                x_location = 0.2, 
-                                deflection_angle_deg = 7.0, 
-                                t_step = 0.0040,
-                                t_end = 215.0,
-                                initial_temp = 281.25,
-                                boundary_layer_model = 'transition'
-                                )
-
-
-    #Run and time Simulation
-    start = time.time()
-    
-    MySimulation.run()
-    
-    end = time.time()
-    print("Elapsed Time: ", end - start)
-
-
-    # Export
-    #csv
-    MySimulation.export_data_to_csv(out_filename = 'hifire_5_validation.csv')
-    #pickle
-    with open ("hifire_5_validation.sim", "wb") as f: pickle.dump(MySimulation, f)
-
-
-
 
     ################################################# PLOTTING ##############################################
 
@@ -154,8 +107,8 @@ if __name__ == "__main__":
     plt.plot(hifire_temp_data["t_hw"], hifire_temp_data["T_hw"],    label = "Flight - Hot Wall", linestyle="-", color='maroon')
     plt.plot(hifire_temp_data["t_cw"], hifire_temp_data["T_cw"],    label = "Flight - Cold Wall", linestyle="-", color='navy')
 
-    plt.plot(MySimulation.t_vec, MySimulation.wall_temps[0,:],      label = "Python - Hot Wall", linestyle="--", color='red') 
-    plt.plot(MySimulation.t_vec, MySimulation.wall_temps[-1,:],     label = "Python - Cold Wall", linestyle="--", color='royalblue')
+    plt.plot(Sim.t_vec, Sim.wall_temps[0,:],      label = "Python - Hot Wall", linestyle="--", color='red') 
+    plt.plot(Sim.t_vec, Sim.wall_temps[-1,:],     label = "Python - Cold Wall", linestyle="--", color='royalblue')
 
     plt.plot(simsek_temp_data["t_hw"], simsek_temp_data["T_hw"],    label = "Simsek - Hot Wall", linestyle=":", color='darkorange')
     plt.plot(simsek_temp_data["t_cw"], simsek_temp_data["T_cw"],    label = "Simsek - Cold Wall", linestyle=":", color='deepskyblue')
@@ -165,48 +118,49 @@ if __name__ == "__main__":
     plt.ylabel("Temeperature, K")
     plt.title("HiFire 5 Verification - Temperature vs. Time")
 
+    plt.show()
 
-    # Heat Flux Plot
-    plt.figure()
+    # # Heat Flux Plot
+    # plt.figure()
 
-    plt.plot(hifire_heatflux_data["t_hw"], hifire_heatflux_data["q_hw"]*1000,    label = "Flight - Hot Wall", linestyle="-", color='maroon')
+    # plt.plot(hifire_heatflux_data["t_hw"], hifire_heatflux_data["q_hw"]*1000,    label = "Flight - Hot Wall", linestyle="-", color='maroon')
 
-    plt.plot(MySimulation.t_vec, MySimulation.q_net[:],       label = "Python q_net", linestyle="--", color='red')
-    #plt.plot(MySimulation.t_vec, MySimulation.q_conv[:],      label = "Python q_conv", linestyle="--", color='purple') 
-    #plt.plot(MySimulation.t_vec, MySimulation.q_rad[:],       label = "Python q_rad", linestyle="--", color='blue') 
+    # plt.plot(MySimulation.t_vec, MySimulation.q_net[:],       label = "Python q_net", linestyle="--", color='red')
+    # #plt.plot(MySimulation.t_vec, MySimulation.q_conv[:],      label = "Python q_conv", linestyle="--", color='purple') 
+    # #plt.plot(MySimulation.t_vec, MySimulation.q_rad[:],       label = "Python q_rad", linestyle="--", color='blue') 
      
 
-    plt.legend()
-    plt.xlabel("Time (s)")
-    plt.ylabel("Heat Flux, q, W")
-    plt.title("HiFire 5 Verification - Heat Flux")
+    # plt.legend()
+    # plt.xlabel("Time (s)")
+    # plt.ylabel("Heat Flux, q, W")
+    # plt.title("HiFire 5 Verification - Heat Flux")
     
 
 
-    #Heat Transfer Coefficient Plot
-    plt.figure()
+    # #Heat Transfer Coefficient Plot
+    # plt.figure()
 
-    plt.plot(simsek_h_tRec_data["t_h"], simsek_h_tRec_data["h"],    label = "Simsek h", linestyle="--", color='orchid')
-    plt.plot(MySimulation.t_vec, MySimulation.h_coeff[:],           label = "Python h", linestyle="-", color='purple') 
+    # plt.plot(simsek_h_tRec_data["t_h"], simsek_h_tRec_data["h"],    label = "Simsek h", linestyle="--", color='orchid')
+    # plt.plot(MySimulation.t_vec, MySimulation.h_coeff[:],           label = "Python h", linestyle="-", color='purple') 
 
-    plt.legend()
-    plt.xlabel("Time (s)")
-    plt.ylabel("Heat Transfer Coeff, h")
-    plt.title("HiFire 5 Verification - Heat Transfer Coeff")
+    # plt.legend()
+    # plt.xlabel("Time (s)")
+    # plt.ylabel("Heat Transfer Coeff, h")
+    # plt.title("HiFire 5 Verification - Heat Transfer Coeff")
     
 
-    #Recovery Temperature Plot
-    plt.figure()
+    # #Recovery Temperature Plot
+    # plt.figure()
 
-    plt.plot(simsek_h_tRec_data["t_Tr"], simsek_h_tRec_data["Tr"],  label = "Simsek_Tr", linestyle="--", color='orchid')
-    plt.plot(MySimulation.t_vec, MySimulation.T_recovery[:],           label = "Python Tr", linestyle="-", color='purple')
+    # plt.plot(simsek_h_tRec_data["t_Tr"], simsek_h_tRec_data["Tr"],  label = "Simsek_Tr", linestyle="--", color='orchid')
+    # plt.plot(MySimulation.t_vec, MySimulation.T_recovery[:],           label = "Python Tr", linestyle="-", color='purple')
 
-    plt.legend()
-    plt.xlabel("Time (s)")
-    plt.ylabel("Recovery Temp, K")
-    plt.title("HiFire 5 Verification - T_recovery")
+    # plt.legend()
+    # plt.xlabel("Time (s)")
+    # plt.ylabel("Recovery Temp, K")
+    # plt.title("HiFire 5 Verification - T_recovery")
 
-    plt.show()
+    # plt.show()
 
 
 

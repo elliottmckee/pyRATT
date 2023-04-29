@@ -90,7 +90,7 @@ class TransientThermalSim:
         self.wall_temps[:,0] = self.ThermalNetwork.get_node_temps()
         
         # Pre-interpolate Mach, Altitude, and Atmospheric Properties to the discrete Sim-time points 
-        self.Flight.get_sim_time_properties(self.t_vec)
+        # self.Flight.get_sim_time_properties(self.t_vec)
 
     
 
@@ -113,7 +113,7 @@ class TransientThermalSim:
             self.ThermalNetwork.updateThermalResistances() 
 
             # Update Nodal Temperatures
-            self.ThermalNetwork.updateNodeTemps(i, self.t_step)
+            self.ThermalNetwork.updateNodeTemps(t, self.t_step)
 
             # Pull out Nodal temperatures 
             self.wall_temps[:,i] = self.ThermalNetwork.get_node_temps()
