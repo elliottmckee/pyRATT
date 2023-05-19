@@ -2,14 +2,12 @@ from typing import Optional
 
 from .materials_solid import MATERIALS_DICT
 from .materials_ablative import ABLATIVE_DICT
-#from . import conversions
-#from . import constants
+
 
 # ---------------------------------------------------------------------------
 # This file contains the object definitions pertaining to any of the wall
 # component representations
 # ---------------------------------------------------------------------------
-
 
 import numpy as np
 import pandas as pd
@@ -18,7 +16,6 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 from math import isnan
-import copy
 
 
 class ThermalNode:
@@ -69,6 +66,8 @@ class ThermalNode:
 
     def initialize_state(self, inital_temperature):
         self.T = inital_temperature
+
+
     
 
 
@@ -77,8 +76,6 @@ class AblativeThermalNode(ThermalNode):
     Placeholder for definining an Ablative Node that extends the above 
     """
     pass
-
-
 
 
 
@@ -95,39 +92,6 @@ class ThermalNetwork():
         #Initialize Component Dictionary Object 
         self.ComponentDict = {}
 
-
-    def draw(self):
-        # https://networkx.org/documentation/stable/auto_examples/drawing/plot_weighted_graph.html
-        plt.figure()
-
-        # pos = nx.spring_layout(self.Graph, seed=3)
-        pos = nx.spectral_layout(self.Graph)
-
-        # nodes
-        nx.draw_networkx_nodes(self.Graph, pos, node_size=700)
-
-        # edges
-        nx.draw_networkx_edges(self.Graph, pos, width=6)
-
-        # node labels
-        nx.draw_networkx_labels(self.Graph, pos, font_size=20, font_family="DejaVu Sans Mono")
-        # edge weight labels
-        edge_labels = nx.get_edge_attributes(self.Graph, "weight")
-
-        res = dict()
-        for key in edge_labels:
-            res[key] = round(edge_labels[key], 6)
-
-
-        nx.draw_networkx_edge_labels(self.Graph, pos, res, font_family="DejaVu Sans Mono")
-
-        ax = plt.gca()
-        ax.margins(0.08)
-        plt.axis("off")
-        plt.tight_layout()
-        plt.show()
-
-    
 
     def addNodeToComponentList(self, NodeID, component_tag):
         # Add Node To Component List
@@ -196,6 +160,9 @@ class ThermalNetwork():
                 self.Graph.nodes[node]["element"].T = temperature
 
 
+        
+
+
     def get_node_temps(self):
         temps = []
         for node in self.Graph.nodes():
@@ -227,35 +194,81 @@ class ThermalNetwork():
             - 
         """
 
-        dT_dt = []
+        # Set all of the nodal heat flux values to zero
+        qDot_arr = np.zeros( [self.Graph.number_of_nodes(),])
+
+        # Calculate Conduction, etc. between nodes
+        for n0, n1, att in self.Graph.edges(data=True):
+
+            node0 = self.Graph.nodes[n0]["element"]
+            node1 = self.Graph.nodes[n1]["element"]
+
+            # Calculate Conduction - Positive INTO first element
+            q_cond = ( node1.T - node0.T ) / att["weight"]
+            qDot_arr[n0] += q_cond
+            qDot_arr[n1] += -q_cond
 
         # GET RATE OF CHANGE OF EACH NODE (DONT CHANGE NODE TEMPS WHILE DOING THIS DUMBASS)
         for nodeID_curr in self.Graph.nodes:
+            elem_curr = self.Graph.nodes[nodeID_curr]["element"]
 
-            # If subject to a temperature constraint, temperature will not change 
-            # throughout simulation
+            # Temperature Constraint
             if self.Graph.nodes[nodeID_curr]["temp_constraint"]:
-                dT_dt.append(0.0)
+                qDot_arr[nodeID_curr] = 0.0
                 continue
 
-            q_in = 0.0
-            elem_curr = self.Graph.nodes[nodeID_curr]["element"]
-            
-            for nodeID_adj in self.Graph.adj[nodeID_curr]:    
-                elem_adj = self.Graph.nodes[nodeID_adj]["element"]
-                q_in += ( elem_adj.T - elem_curr.T ) / self.Graph.adj[nodeID_curr][nodeID_adj]["weight"]
-
+            # Thermal Loading
             for ThermalLoad in self.Graph.nodes[nodeID_curr]["thermal_loadings"]:
-                q_in += ThermalLoad.get_q_in(elem_curr, time, t_step)
+                qDot_arr[nodeID_curr] += ThermalLoad.get_q_in(elem_curr, time, t_step)
 
-            # Get rate of change, propagate
-            dT_dt.append(q_in / elem_curr.mass / elem_curr.cp)
+
+        # Propagate nodal temperatures forward
+        self.updateTemperatures(qDot_arr, t_step)
+
+
+    def updateTemperatures(self, qDot_arr, t_step):
+
+        for nodeID_curr in self.Graph.nodes:
+
+            el = self.Graph.nodes[nodeID_curr]["element"]
+
+            el.T += qDot_arr[nodeID_curr] * t_step / el.mass / el.cp
+
+
+    def draw(self):
+        # https://networkx.org/documentation/stable/auto_examples/drawing/plot_weighted_graph.html
+        plt.figure()
+
+        # pos = nx.spring_layout(self.Graph, seed=3)
+        pos = nx.spectral_layout(self.Graph)
         
-        # Once all rates of change are calculated, then update temps
-        for node in self.Graph.nodes:
+        # nodes
+        nx.draw_networkx_nodes(self.Graph, pos, node_size=700)
 
-            elem = self.Graph.nodes[node]["element"]
-            elem.T = elem.T + dT_dt[node]*t_step
+        # edges
+        nx.draw_networkx_edges(self.Graph, pos, width=6)
+
+        # node labels
+        nx.draw_networkx_labels(self.Graph, pos, font_size=20, font_family="DejaVu Sans Mono")
+        # edge weight labels
+        edge_labels = nx.get_edge_attributes(self.Graph, "weight")
+
+        res = dict()
+        for key in edge_labels:
+            res[key] = round(edge_labels[key], 6)
+
+
+        nx.draw_networkx_edge_labels(self.Graph, pos, res, font_family="DejaVu Sans Mono")
+
+        ax = plt.gca()
+        ax.margins(0.08)
+        plt.axis("off")
+        plt.tight_layout()
+        plt.show()
+
+
+
+
 
 
 

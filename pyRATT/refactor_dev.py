@@ -169,7 +169,7 @@ if __name__ == "__main__":
     # TG.addComponent_0D("SS316", 0.5, component_tag="Lumped")
     # TG.Graph.add_edge(5, 2)
 
-    TG.Graph.add_edge(0, 7)
+    #TG.Graph.add_edge(0, 7)
 
     TG.add_thermal_loading(nodeID = 0, ThermLoading= AeroThermLoading)
 
@@ -179,9 +179,8 @@ if __name__ == "__main__":
     # print(TG.Graph.nodes[0]["thermal_loadings"])
     # TG.get_temperature_rates_of_change()
 
-    Sim = TransientThermalSim( TG, Flight,  290.0,  0.004, t_start = 0.0, t_end = 20.0)
+    Sim = TransientThermalSim( TG,  290.0,  0.004, t_start = 0.0, t_end = 20.0)
     Sim.run()
-
 
 
 

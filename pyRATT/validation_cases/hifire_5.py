@@ -68,7 +68,7 @@ if __name__ == "__main__":
     TNetwork.add_thermal_loading(nodeID = 0, ThermLoading = AeroThermLoading)
     TNetwork.add_thermal_loading(nodeID = 0, ThermLoading = RadiationLoading)
 
-    Sim = TransientThermalSim( TNetwork,  T_initial=281.25,  t_step=0.004, t_start = 0.0, t_end = 215.0)
+    Sim = TransientThermalSim( TNetwork,  T_initial=281.25,  t_step=0.004, t_start = 0.0, t_end = 25.0)
     
     ############################# RUN SIMULATIONS ########################################
     start = time.time()

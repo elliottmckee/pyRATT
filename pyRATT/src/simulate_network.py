@@ -22,11 +22,9 @@ from ambiance import Atmosphere
 
 class TransientThermalSim:
     """
-
     Required Attributes/Objects:
     ----------
     - ThermalNetwork: Thermal Network object to be simulated
-
     
     Parameters, Config Options
     ----------
@@ -35,7 +33,6 @@ class TransientThermalSim:
         - t_start: Start Time for simulation, in Seconds. Useful if your flight sim data or something starts at a weird time
         - t_end: End Time for simulation, in Seconds
 
-    
     Results, Data
     ----------
     -
@@ -65,7 +62,6 @@ class TransientThermalSim:
         self.sim_initialize(T_initial)
 
 
-        
 
 
     def sim_initialize(self, T_initial):
@@ -89,6 +85,7 @@ class TransientThermalSim:
         self.wall_temps = np.zeros((self.ThermalNetwork.Graph.number_of_nodes(), self.t_vec_size), dtype=float)
         self.wall_temps[:,0] = self.ThermalNetwork.get_node_temps()
         
+
         # Pre-interpolate Mach, Altitude, and Atmospheric Properties to the discrete Sim-time points 
         # self.Flight.get_sim_time_properties(self.t_vec)
 
