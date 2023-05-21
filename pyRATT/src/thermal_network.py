@@ -10,10 +10,10 @@ from .materials_ablative import ABLATIVE_DICT
 # ---------------------------------------------------------------------------
 
 import numpy as np
-import pandas as pd
 import scipy
 import networkx as nx
 import matplotlib.pyplot as plt
+from networkx_viewer import Viewer
 
 from math import isnan
 
@@ -93,17 +93,10 @@ class ThermalNetwork():
         self.ComponentDict = {}
 
 
-    def addNodeToComponentList(self, NodeID, component_tag):
-        # Add Node To Component List
-        # If list exists in dictionary, append
-        # If doesn't, create new dictionary entry
-        if component_tag in self.ComponentDict.keys():
-            self.ComponentDict[component_tag].append(NodeID)
-        else:
-            self.ComponentDict[component_tag] = [NodeID]
-
-
     def addGraphNode(self, ThermalNode):
+        """You probably want addComponent_0D, instead of 
+        interacting with this directly"""
+        
         # Indexing by number currently. 
         # Since objects are hashable, can use the objects themselves as the nodes 
         # but this feels more intuitive        
@@ -120,6 +113,20 @@ class ThermalNetwork():
         return nodeID
 
 
+    def addNodeToComponentList(self, NodeID, component_tag):
+        # Add Node To Component List
+        # If list exists in dictionary, append
+        # If doesn't, create new dictionary entry
+        if component_tag in self.ComponentDict.keys():
+            self.ComponentDict[component_tag].append(NodeID)
+        else:
+            self.ComponentDict[component_tag] = [NodeID]
+
+
+    def addComponent_0D(self, material, mass, component_tag="DefaultComponent"):
+        self.addGraphNode( ThermalNode(component_tag, material, mass=mass, component_tag=component_tag) )
+
+
     def addComponent_1D(self, material, total_thickness, n_nodes, surf_area = 1.0, component_tag = "DefaultComponent"):
         # Get element 
         # TODO: Assumes unit surface area
@@ -127,20 +134,16 @@ class ThermalNetwork():
 
         for i in range(n_nodes):
             
-            # Nodes
             nodeID = self.addGraphNode( ThermalNode(material, volume = element_volume, component_tag=component_tag) )
 
-            #Edges
-            if i > 0: self.Graph.add_edge(nodeID, nodeID-1)
+            if i > 0: 
+                self.Graph.add_edge(nodeID, nodeID-1)
 
-
-
-    def addComponent_0D(self, material, mass, component_tag="DefaultComponent"):
-        self.addGraphNode( ThermalNode(component_tag, material, mass=mass, component_tag=component_tag) )
 
 
     def add_thermal_loading(self, nodeID, ThermLoading):
         self.Graph.nodes[nodeID]["thermal_loadings"].append(ThermLoading)
+
 
     def add_temperature_constraint(self, nodeID, temperature):
         self.Graph.nodes[nodeID]["temp_constraint"] = temperature
@@ -160,8 +163,6 @@ class ThermalNetwork():
                 self.Graph.nodes[node]["element"].T = temperature
 
 
-        
-
 
     def get_node_temps(self):
         temps = []
@@ -172,6 +173,9 @@ class ThermalNetwork():
 
 
     def updateThermalResistances(self):
+        """
+        TODO: THIS DOESN'T MAKE SENSE FOR CONNECTIONS W/ RESISTANCES DEFINED MANUALLY
+        """
         # Update all the edge weights with the thermal resistance values from conduction
         for edge in self.Graph.edges:
             T_resist = 0
@@ -188,16 +192,17 @@ class ThermalNetwork():
         """
         
         TODO:
-            - Make the calculation of heat-fluxes non-redundant. Go on edge-by-edge basis, not nodal
+            - Pre-calculate things like Aerothermal flux, return function of (x) so can use across
+            multiple nodes without re-calculating
             - Cleanup
-            - Use Dictionary instead of list, for robustness of Node numbers being out of order or non-sequential 
-            - 
+            - Use Dictionary instead of list, for robustness of Node numbers being out of order or non-sequential? 
+            - Make faster?
         """
 
         # Set all of the nodal heat flux values to zero
         qDot_arr = np.zeros( [self.Graph.number_of_nodes(),])
 
-        # Calculate Conduction, etc. between nodes
+        # LOOP OVER EDGES - CONDUCTION
         for n0, n1, att in self.Graph.edges(data=True):
 
             node0 = self.Graph.nodes[n0]["element"]
@@ -208,7 +213,7 @@ class ThermalNetwork():
             qDot_arr[n0] += q_cond
             qDot_arr[n1] += -q_cond
 
-        # GET RATE OF CHANGE OF EACH NODE (DONT CHANGE NODE TEMPS WHILE DOING THIS DUMBASS)
+        # LOOP OVER NODES - LOADINGS, ETC
         for nodeID_curr in self.Graph.nodes:
             elem_curr = self.Graph.nodes[nodeID_curr]["element"]
 
@@ -219,7 +224,7 @@ class ThermalNetwork():
 
             # Thermal Loading
             for ThermalLoad in self.Graph.nodes[nodeID_curr]["thermal_loadings"]:
-                qDot_arr[nodeID_curr] += ThermalLoad.get_q_in(elem_curr, time, t_step)
+                qDot_arr[nodeID_curr] += ThermalLoad.get_q_in(elem_curr, time=time, t_step=t_step)
 
 
         # Propagate nodal temperatures forward
@@ -233,6 +238,12 @@ class ThermalNetwork():
             el = self.Graph.nodes[nodeID_curr]["element"]
 
             el.T += qDot_arr[nodeID_curr] * t_step / el.mass / el.cp
+
+
+    # def networkx_viewer_draw(self):
+    #     # https://github.com/jsexauer/networkx_viewer
+    #     app = Viewer(self.Graph)
+    #     app.mainloop()
 
 
     def draw(self):

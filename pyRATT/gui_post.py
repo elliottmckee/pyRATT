@@ -2,7 +2,6 @@ import sys
 import os
 import itertools
 import pickle
-import pandas as pd
 import PySimpleGUI as sg
 
 

@@ -1,7 +1,6 @@
 """
 Contains all the tools, models, etc. for the convection and radiation 
 portions of thermal heat transfer. 
-
 """
 
 # Standard Modules
@@ -14,10 +13,9 @@ from . import tools_aero
 
 
 
-
 class AerothermalLoading:
 
-    def __init__(self, x_location, Flight, ShockTrain, GasModel, aerothermal_model, boundary_layer_model):
+    def __init__(self, x_location, Flight, ShockList, GasModel, aerothermal_model, boundary_layer_model):
         #Call to set all of the config parameters 
         # TODO: 
         #   -Add Key-value pair overriding of default parameters
@@ -25,7 +23,7 @@ class AerothermalLoading:
         self.x_location = x_location
         self.Flight     = Flight 
         self.GasModel = GasModel
-        self.ShockTrain = ShockTrain
+        self.ShockList = ShockList
 
         if aerothermal_model in ["flat-plate", "fay_riddell","covingtonArcJet"]:
             self.aerothermal_model = aerothermal_model
@@ -37,16 +35,16 @@ class AerothermalLoading:
 
         
 
-        #Constant Config Parameters
-        
-
-    def get_q_in(self, elem, time, time_step):
+    def get_q_in(self, elem, **kwargs):
     
-        mach, alt = self.Flight.get_mach_alt(time)
+        time = kwargs["time"]
+        time_step = kwargs["t_step"]
+
+        mach, alt = self.Flight.get_mach_alt( time)
 
         qDot_conv, h_conv = self.flat_plate_heating(elem.T, mach, alt)
 
-        stability_criterion_check(elem, h_conv, time_step)
+        self.stability_criterion_check(elem, h_conv, time_step )
 
         return qDot_conv
 
@@ -59,19 +57,17 @@ class AerothermalLoading:
 
 
     def flat_plate_heating(self, T_wall, mach_inf, alt):
-        # alias exposed hot-wall surface temperature
        
         # get freestream gas state
         p_inf, T_inf, _, u_inf                                  = tools_aero.get_freestream(self.GasModel, alt, mach_inf)
         rho_inf, cp_inf, k_inf, mu_inf, pr_inf, Re_inf  = tools_aero.complete_aero_state(p_inf, T_inf, u_inf, self.x_location, self.GasModel)
  
         # calculate gas state at boundary layer edge (post-shock(s))
-        p_e, rho_e, T_e, T_te, m_e, u_e, cp_e, k_e, mu_e, pr_e, Re_e = tools_aero.get_edge_state(p_inf, T_inf, mach_inf, self.x_location,  self.GasModel, self.ShockTrain)
+        p_e, rho_e, T_e, T_te, m_e, u_e, cp_e, k_e, mu_e, pr_e, Re_e = tools_aero.get_edge_state(p_inf, T_inf, mach_inf, self.x_location,  self.GasModel, self.ShockList)
 
         # check boundary layer state (laminar/turbulent)
         bl_state = tools_aero.get_bl_state(Re_inf, mach_inf, self.boundary_layer_model)
         
-
         # calculate recovery factor, temperature
         r   = recovery_factor(bl_state, pr_e)
         T_r = recovery_temperature(T_e, T_te, T_wall, r)
@@ -82,7 +78,6 @@ class AerothermalLoading:
         # Get complete fluid properties evaluated at reference temperature
         rho_ref, cp_ref, k_ref, mu_ref, pr_ref, Re_ref = tools_aero.complete_aero_state( p_e, T_ref, u_e, self.x_location, self.GasModel)
 
-
         # Flat Plate Heating Model WITHOUT BLOWING CORRECTION, properties evaluated at reference temperature
         q_conv_unblown, h_unblown, lambda_fac = flat_plate_heat_transfer(self.x_location, T_wall, T_r, k_ref, Re_ref, pr_ref, bl_state)
 
@@ -91,178 +86,126 @@ class AerothermalLoading:
 
 
 
+    def stability_criterion_check(self, SurfElem, h, dt):
+        """
+        Stability criterion for the numerical stability of the solver. Will print warning to console
+        if this criterion is not satisfied.
 
+        In my past experience this is a pretty accurate marker of when your timestep is too big,
+        or your element size is too small.  
 
-
-
-def stability_criterion_check(SurfElem, h, dt):
-    """
-    Stability criterion for the numerical stability of the solver. Will print warning to console
-    if this criterion is not satisfied
-
-    In my past experience this is a pretty accurate marker of when your timestep is too big,
-    or your element size is too small.  
-
-    Notes:
         TODO: 
             -Modifications to Stability Criterion Check Needed when Ablative is added
             - SOURCE
 
+        ---Carryover code from Matlab, for future work
+        If No Ablative, Structure is exposed
+        dy = SurfE.dy; rho_s = SurfE.rho; Cp_s = SurfE.cp; k_s = SurfE.k
+
+        If Ablative is exposed, more annoying to deal with but yeah
+        else:
+            dy = Abl.deltaVec(i)/(Sim.N - 1); rho_s = Abl.rhoVec_tot(1,i);
+            Cp_s  = interp1(Abl.cpLUTab.Var1,Abl.cpLUTab.Var2, Abl.TVec(1,i), 'linear', 'extrap');
+            k_s = interp1(Abl.kLUTab.Var1,Abl.kLUTab.Var2, Abl.TVec(1,i),'linear', 'extrap');
+        """
+
+        F_0 = (SurfElem.k * dt) / (SurfElem.rho * SurfElem.cp * SurfElem.dy**2)
+        Bi = (h * SurfElem.dy) / SurfElem.k
+
+        if ( F_0*(1+Bi) > .5):
+            print('~~WARNING~~: Stability Criterion not met. Consider decreasing timestep or number of wall nodes)')
+
+
+
+
+def recovery_factor(isTurbulent, pr_e):
+    """ 
+    Returns the recovery factor of a gas
+
+    TODO put a source, and prandtl 
+    limits/checks for the applicability of this
     """
-
-    """ Carryover code from Matlab, for future work
-    If No Ablative, Structure is exposed
-    dy = SurfE.dy
-    rho_s = SurfE.rho
-    Cp_s = SurfE.cp
-    k_s = SurfE.k
-
-    If Ablative is exposed, more annoying to deal with but yeah
+    if isTurbulent:
+        return pow(pr_e, 1.0/3.0)
     else:
-        dy = Abl.deltaVec(i)/(Sim.N - 1);
-        rho_s = Abl.rhoVec_tot(1,i);
-        Cp_s  = interp1(Abl.cpLUTab.Var1,Abl.cpLUTab.Var2, Abl.TVec(1,i), 'linear', 'extrap');
-        k_s = interp1(Abl.kLUTab.Var1,Abl.kLUTab.Var2, Abl.TVec(1,i),'linear', 'extrap');
+        return pow(pr_e, 1.0/2.0)
+
+
+def recovery_temperature(T_e, T_te, T_w, r): 
+    """ 
+    Returns the recovery temperature of a flow.
+    
+    TODO: Prandtl number applicability limits
+    Source: Bertin Hypersonic Aerothermodynamics
+    """
+    return r * (T_te - T_e) + T_e
+    
+
+def eckert_ref_temperature(T_e, T_te, T_w, r):
+    """
+    Calculate Eckert Reference Temperature of a high-speed boundary layer
+
+    Notes:
+    -The Recovery Factor is a function of the local air properties at a given
+    point. However, we cannot calculate Eckert's Reference temperature until
+    we have it. Currently using Free-stream Prandtl for this Calculation.
+    -TODO: Prandtl number applicability limits
+
+    Source:
+    - Bertin, Hypersonic Aerothermodynamics
     """
 
-    # Perform Stability Check 
-    F_0 = (SurfElem.k * dt) / (SurfElem.rho * SurfElem.cp * SurfElem.dy**2)
-    Bi = (h * SurfElem.dy) / SurfElem.k
-
-    if ( F_0*(1+Bi) > .5):
-        print('~~WARNING~~: Stability Criterion not met. Consider decreasing timestep or number of wall nodes)')
+    #Eckert Reference Temperature 
+    return 0.5*(T_e + T_w) + 0.22*r*(T_te - T_e)
 
 
+def flat_plate_heat_transfer(x, T_w, T_r, k_ref, Re_ref, pr_ref, isTurbulent):
+    """ 
+    Flat plate Nusselt-number/heating correlations.
 
-
-
-
-
-
-
-
-
-
-def get_net_heat_flux(Sim, i):
+    Source:
+    -Ill find the root source at some point lol, but these are super common
     """
-    High-level driver for determining the net heat flux to hand into the conduction solver,
-    for a simulation at a given timestep
 
-    Inputs:
-        Sim:    Simulation Object
-        i:      Simulation Timestep
-    Outputs:
+    #Get Heat Transfer Coefficient
+    if isTurbulent:
+        #Turbulent Heat Transfer Coeff
+        h =  (k_ref/x) * 0.02914 * pow(Re_ref, 4.0/5.0) * pow(pr_ref, 1.0/3.0)
+        lambda_fac = .4
+    else:
+        #Laminar Heat Transfer Coeff
+        h = (k_ref/x) * 0.33206 * pow(Re_ref, 1.0/2.0) * pow(pr_ref, 1.0/3.0)
+        lambda_fac = .5
         
-    Updates:
-        Sim.q_rad[i],   float, radiative heatflux in W/m^2. Positive if heat is going into the wall
-        Sim.q_conv[i],  float, convective heatflux in W/m^2. Positive if heat is going into the wall
-        Sim.q_net[i],   float, net heatflux in W/m^2. Positive if heat is going into the wall
+    # Heat Flux
+    q_conv = h*(T_r - T_w)
 
-    TODO:
-        Ideally, make it so all updated variables return up to this funciton. 
-        I kinda want all Sim.value[i] updates to be no more than 1 (2 at max) functions deep, 
-        so we are not setting values silently super deep, in a nested chain of functions
-        but may be a non-issue since you can search all files for where things get written
-
-    """
-
-    # Get Convective Heatflux
-    Sim.q_conv[i] = aerothermal_heatflux(Sim, i)
-
-    # Radiative Heat Flux
-    Sim.q_rad[i] = radiative_heatflux(Sim, i)
-
-    # Net Heat Flux
-    Sim.q_net[i] = Sim.q_conv[i] + Sim.q_rad[i]
-
-
-
-def radiative_heatflux(Sim, i):
-    """
-    High level wrapper for the radiative thermal models that are implmemented/can be used.
-
-    Inputs:
-        Sim:    Simulation Object
-        i:      Simulation Timestep
-    Outputs:
-        q_rad:  float, radiative heatflux in W/m^2. Positive if heat is going into the wall
-    """
-
-    # Just the plain ole black body radiation equation. Nothing fancy here. 
-
-    #Another Workaround here
-    if hasattr(Sim, "LUMPEDMASS"):
-        return constants.SB_CONST * Sim.LumpedMass.elements[0].emis * ((Sim.T_inf[i])**4 - Sim.wall_temps[0,i]**4)
-
-    else:
-        return constants.SB_CONST * Sim.Aerosurface.elements[0].emis * ((Sim.T_inf[i])**4 - Sim.wall_temps[0,i]**4)
+    return q_conv, h, lambda_fac 
 
 
 
 
-def aerothermal_heatflux(Sim, i):
-    '''
-    High level wrapper/driver for the aerothermal convective models that are 
-    implmemented and can be used. 
-
-    Inputs:
-        Sim:    Simulation Object
-        i:      Simulation Timestep
-    Updates:
-        T_e:        float, edge temperature [K]
-        T_te:       float, edge total temperature [K]
-        T_recovery: float, recovery temperature [K]
-        h_coeff:    float, heat transfer coefficient
-    Outputs:
-        q_conv:  float, convective heatflux in [W/m^2]. Positive if heat is going into the wall
-    '''
-
-    # Implemented Aerothermal Models
-    # ------------------------------
-    # 1) default: This is the correlation used in the Ulsu [1] paper. Arnas is who is referenced there,  
-    # but it is not who actually developed these correlations. However, after long while of running into 
-    # paywalls trying to find original source because I am not a student anymore, I give up. Fuck publishers.
-
-    # Dictionary containing all models and their corresponding function calls
-    valid_aerothermal_models     = ["default", "fay_riddell","covingtonArcJet"]
-
-    if Sim.aerothermal_model not in valid_aerothermal_models:
-        raise ValueError("Error in aerothermal_model Specification")
-
-    # aerothermal_model_dict = {  "default": ulsu_simsek_heating(Sim, i),
-    #                             "covingtonArcJet": covington_pyro(Sim, i) }
-
-    # if Sim.aerothermal_model not in aerothermal_model_dict.keys():
-    #     raise ValueError("Error in Aerothermal Model Specification")
-
-    
-    # Implemented Boundary Layer Models
-    # ------------------------------
-    # 1) turbulent: fully turbulent flow
-    # 2) laminar: fully laminar flow
-    # 3) transition: flow transitions using a modified Re correlation described in Ulsu [1], but
-    #                 real source is: 
-    #                 Quinn, R. D., and L. Gong. 2000. A method for calculating transient surface temperatures 
-    #                 and surface heating rates for high-speed aircraft. NASA/TP-2000-209034. Washington, DC: NASA.
-    
-    valid_boundarylayer_models     = ["turbulent","laminar","transition"]
-
-    if Sim.bound_layer_model not in valid_boundarylayer_models:
-        raise ValueError("Error in Boundary Layer/Transition Model Specification")
 
 
-    # Call Aerothermal Model
-    # ------------------------------
-    if Sim.aerothermal_model == "default":
-        q_conv = ulsu_simsek_heating(Sim, i)
 
-    elif Sim.aerothermal_model == "fay_riddell":
-        q_conv =  fay_riddell_stagnation_heating(Sim , i) #aerothermal_model_dict[Sim.aerothermal_model]
 
-    elif Sim.aerothermal_model == "covingtonArcJet":
-        q_conv = covington_pyro(Sim, i) #aerothermal_model_dict[Sim.aerothermal_model]
 
-    return q_conv
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -441,69 +384,6 @@ def ulsu_simsek_heating(Sim, i):
     
 
 
-def recovery_factor(isTurbulent, pr_e):
-    """ 
-    Returns the recovery factor of a gas
-
-    TODO put a source, and prandtl 
-    limits/checks for the applicability of this
-    """
-    if isTurbulent:
-        return pow(pr_e, 1.0/3.0)
-    else:
-        return pow(pr_e, 1.0/2.0)
-
-
-def recovery_temperature(T_e, T_te, T_w, r): 
-    """ 
-    Returns the recovery temperature of a flow.
-    
-    TODO: Prandtl number applicability limits
-    Source: Bertin Hypersonic Aerothermodynamics
-    """
-    return r * (T_te - T_e) + T_e
-    
-
-def eckert_ref_temperature(T_e, T_te, T_w, r):
-    """
-    Calculate Eckert Reference Temperature of a high-speed boundary layer
-
-    Notes:
-    -The Recovery Factor is a function of the local air properties at a given
-    point. However, we cannot calculate Eckert's Reference temperature until
-    we have it. Currently using Free-stream Prandtl for this Calculation.
-    -TODO: Prandtl number applicability limits
-
-    Source:
-    - Bertin, Hypersonic Aerothermodynamics
-    """
-
-    #Eckert Reference Temperature 
-    return 0.5*(T_e + T_w) + 0.22*r*(T_te - T_e)
-
-
-def flat_plate_heat_transfer(x, T_w, T_r, k_ref, Re_ref, pr_ref, isTurbulent):
-    """ 
-    Flat plate Nusselt-number/heating correlations.
-
-    Source:
-    -Ill find the root source at some point lol, but these are super common
-    """
-
-    #Get Heat Transfer Coefficient
-    if isTurbulent:
-        #Turbulent Heat Transfer Coeff
-        h =  (k_ref/x) * 0.02914 * pow(Re_ref, 4.0/5.0) * pow(pr_ref, 1.0/3.0)
-        lambda_fac = .4
-    else:
-        #Laminar Heat Transfer Coeff
-        h = (k_ref/x) * 0.33206 * pow(Re_ref, 1.0/2.0) * pow(pr_ref, 1.0/3.0)
-        lambda_fac = .5
-        
-    # Heat Flux
-    q_conv = h*(T_r - T_w)
-
-    return q_conv, h, lambda_fac 
 
 
 

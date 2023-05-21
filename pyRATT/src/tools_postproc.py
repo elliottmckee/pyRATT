@@ -3,7 +3,7 @@ import sys
 import filecmp
 import time
 import numpy as np
-import pandas as pd
+import 
 import matplotlib.pyplot as plt
 from matplotlib import animation
 
@@ -45,9 +45,6 @@ def plot_results(Sim):
     plot_air_temperatures(Sim)
 
     plt.show()
-
-    
-
 
     
 

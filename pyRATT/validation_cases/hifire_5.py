@@ -12,9 +12,9 @@ sys.path.append(os.path.dirname(os.getcwd()))
 try:
     from pyRATT.src.simulate_network import TransientThermalSim
     from pyRATT.src.thermal_network import  ThermalNetwork
-    from pyRATT.src.tools_aero import ShockTrain
+    from pyRATT.src.tools_aero import ShockList
     from pyRATT.src.loadings_aerothermal import AerothermalLoading
-    from pyRATT.src.loadings_thermal import ExternalRadiationLoading
+    from pyRATT.src.loadings_radiation import ExternalRadiationLoading
     from pyRATT.src.obj_flight import FlightProfile
     from pyRATT.src.materials_gas import AirModel
 except:
@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
 
     ################################# CONFIGURATION INFO ########################################
-    Shocks                  = ShockTrain(["oblique"], [7.0])
+    Shocks                  = ShockList(["oblique"], [7.0])
     Flight                    = FlightProfile( os.path.join(os.getcwd(), "validation_cases", "resources", "hifire_5", "hifire_5_flight_profile.csv") )
     AeroThermLoading    = AerothermalLoading( 0.2,
                                                                     Flight, 

@@ -1,6 +1,6 @@
 import numpy as np
-import scipy
 import pandas as pd
+import scipy
 from pathlib import Path
 from math import pow
 

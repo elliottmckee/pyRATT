@@ -124,7 +124,6 @@ prRATT - Python Rocket AeroThermal Toolbox
 #Standard Libraries
 import os
 import numpy as np
-import pandas as pd
 
 
 import matplotlib
@@ -142,7 +141,7 @@ import networkx as nx
 # #Internal Modules
 from src.simulate_network import TransientThermalSim
 from src.thermal_network import  ThermalNetwork
-from src.tools_aero import ShockTrain
+from src.tools_aero import ShockList
 from src.loadings_aerothermal import AerothermalLoading
 from src.obj_flight import FlightProfile
 from src.materials_gas import AirModel
@@ -152,7 +151,7 @@ from src.materials_gas import AirModel
 
 if __name__ == "__main__":
 
-    Shocks                  = ShockTrain(["oblique"], [7.0])
+    Shocks                  = ShockList(["oblique"], [7.0])
     Flight                    = FlightProfile( os.path.join(os.getcwd(), "example_files", "example_ascent_traj_M2245_to_M1378.csv") )
     GasModel                = AirModel()
     AeroThermLoading    = AerothermalLoading( 0.2,
@@ -169,7 +168,7 @@ if __name__ == "__main__":
     # TG.addComponent_0D("SS316", 0.5, component_tag="Lumped")
     # TG.Graph.add_edge(5, 2)
 
-    #TG.Graph.add_edge(0, 7)
+    TG.Graph.add_edge(0, 7)
 
     TG.add_thermal_loading(nodeID = 0, ThermLoading= AeroThermLoading)
 
@@ -178,6 +177,9 @@ if __name__ == "__main__":
 
     # print(TG.Graph.nodes[0]["thermal_loadings"])
     # TG.get_temperature_rates_of_change()
+
+    # TG.networkx_viewer_draw()
+
 
     Sim = TransientThermalSim( TG,  290.0,  0.004, t_start = 0.0, t_end = 20.0)
     Sim.run()

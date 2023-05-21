@@ -4,7 +4,6 @@ and determination of freestream states/properties
 
 Notes:
 
-
 """
 
 import math
@@ -18,7 +17,7 @@ from . import constants
 
 
 
-class ShockTrain:
+class ShockList:
     """
     Object representing the train of shocks that are imparted on the 
     freestream before the flow reaches the boundary layer edge at the point 
@@ -31,23 +30,21 @@ class ShockTrain:
 
     def __init__(self, shock_list = ['oblique'], deflection_angle_list_DEG = [7.0] ):
 
-        
-        deflection_angle_list_RAD = [ang * math.pi / 180.0 for ang in deflection_angle_list_DEG]
+        deflection_angle_list_RAD = [ang * math.pi/180.0 for ang in deflection_angle_list_DEG]
         
         self.Shocks   = []
-
-        for shock in zip(shock_list, deflection_angle_list_RAD):
+        for att in zip(shock_list, deflection_angle_list_RAD, deflection_angle_list_DEG):
             
-            if shock[0] in ["oblique", "conical"]: 
-                self.Shocks.append( shock )
+            if att[0] in ["oblique", "conical"]: 
+                self.Shocks.append( {"type": att[0], "angle_rad":  att[1], "angle_deg": att[2]} )
             
-            elif shock[0] in ["normal"]:
-                self.Shocks.append( shock )
-                print("Note in ShockTrain: Ignoring any Shocks after the Normal Shock")
+            elif att[0] in ["normal"]:
+                self.Shocks.append( {"type": att[0], "angle_rad":  att[1], "angle_deg": att[2]} )
+                print("Note in ShockList: Ignoring any Shocks after the Normal Shock")
                 break
 
             else:
-              raise ValueError("Error in ShockTrain specification")  
+              raise ValueError("Error in ShockList specification")  
 
 
 
@@ -80,7 +77,6 @@ def get_freestream(AirModel, alt, mach=None):
     #Get atmospheric properties
     atm_inf = Atmosphere(alt)
     
-    #If Mach Specified
     if mach is not None:
         u_inf = sqrt(AirModel.gam * AirModel.R * atm_inf.temperature) * mach
         return atm_inf.pressure, atm_inf.temperature, atm_inf.density, u_inf
@@ -118,51 +114,18 @@ def complete_aero_state(p, T, u, x_loc, AirModel):
     k  = AirModel.thermal_conductivity(T)
     mu = AirModel.dynamic_viscosity(T)
     
-    # Prandtl Number
     pr = cp * mu / k 
-
-    # Reynolds Number
     Re = (rho*u*x_loc)/mu 
 
     return rho, cp, k, mu, pr, Re 
 
 
-def get_freestream_complete(Sim, i):
-    """ 
-    Returns both the "base" and "complete" fluid states at the freestream
-    for a Simulation at timestep i
 
-    Outputs:
-        p_inf, See above definitions. _inf denotes freestream properties
-        T_inf, 
-        u_inf, 
-        m_inf, 
-        rho_inf, 
-        cp_inf, 
-        k_inf, 
-        mu_inf, 
-        pr_inf, 
-        Re_inf
-    """
-    
-    # Get Freestream values
-    m_inf = Sim.mach[i]
-    p_inf, T_inf, _, u_inf = get_freestream(Sim.alt[i], Sim.AirModel, mach=m_inf)
-
-    # Get "complete" Freestream Aero State
-    rho_inf, cp_inf, k_inf, mu_inf, pr_inf, Re_inf = complete_aero_state(p_inf, 
-                                                                            T_inf, 
-                                                                            u_inf, 
-                                                                            Sim.x_location,
-                                                                            Sim.AirModel)
-
-    return p_inf, T_inf, u_inf, m_inf, rho_inf, cp_inf, k_inf, mu_inf, pr_inf, Re_inf
-
-
-def get_edge_state(p_inf, T_inf, m_inf, x_location, GasModel, ShockTrain):
+def get_edge_state(p_inf, T_inf, m_inf, x_location, GasModel, ShockList):
     
     """ 
-    Returns the flow properties at the boundary layer edge.
+    Given freestream inputs, passes flow through all shocks in ShockList to 
+    determine the boundary edge properties.
 
     Inputs:
         Sim:    Simulation Object
@@ -182,7 +145,7 @@ def get_edge_state(p_inf, T_inf, m_inf, x_location, GasModel, ShockTrain):
         Re_e
     """
 
-    m_e, p_e, T_e = get_post_shock_state(m_inf, p_inf, T_inf, GasModel, ShockTrain) 
+    m_e, p_e, T_e = get_post_shock_state(m_inf, p_inf, T_inf, GasModel, ShockList) 
 
     # Edge Velocity
     u_e = sqrt(GasModel.gam * GasModel.R * T_e) * m_e
@@ -257,12 +220,12 @@ def total_temperature(T, M, gam):
 ##########################################################################################
 
 
-def get_post_shock_state(m1, p1, T1, GasModel, ShockTrain):
+def get_post_shock_state(m1, p1, T1, GasModel, ShockList):
     """
     High-level driver function to handle the shock models/implementation
 
     Given a point upstream of all shocks (most commonly, the freestream), 
-    will impart each of the shocks, as listed in ShockTrain, in order, to determine
+    will impart each of the shocks, as listed in ShockList, in order, to determine
     the local properties at the edge of the boundary layer at the point being analyzed
 
     Inputs:
@@ -278,19 +241,19 @@ def get_post_shock_state(m1, p1, T1, GasModel, ShockTrain):
     """
 
 
-    for shock in ShockTrain.Shocks:
+    for shock in ShockList.Shocks:
 
-        # Determine if shock or not
+        # if upstream is supersonic
         if m1 > 1.0:
-            # Yes Shock - Shock Relations for Post-Shock Properties
-            if shock[0] == "normal":
+
+            if shock["type"] == "normal":
                 m2, p2op1, _, T2oT1, _, _ =  normal_shock( m1, GasModel.gam)
 
-            if shock[0] == "oblique":
-                m2, p2op1, _, T2oT1, _, _, _ =  oblique_shock( m1, GasModel.gam, shock[1])
+            if shock["type"] == "oblique":
+                m2, p2op1, _, T2oT1, _, _, _ =  oblique_shock( m1, GasModel.gam, shock["angle_rad"])
 
-            if shock[0] == "conical":
-                raise Exception("Conical Shocks not implemented yet. Reccomed using Oblique")
+            if shock["type"] == "conical":
+                raise Exception("Conical Shocks not implemented yet. Reccomend using Oblique")
                 #_, _, M, p2op1, T2oT1, _, _, _ =  conical_shock( m_inf, Sim.AirModel.gam, Sim.deflection_angle_rad)
 
             p2 = p2op1 * p1

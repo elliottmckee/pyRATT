@@ -1,5 +1,6 @@
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 import scipy
 
 from math import sqrt
@@ -58,9 +59,34 @@ class FlightProfile:
         #Create time, mach, and alt numpy arrays
         self.time_raw, self.mach_raw, self.alt_raw = self.RAS_traj_CSV_Parse(trajectory_file)
 
+        # Clipping altitude values so it doesn't break the Atmosphere model
+        if max(self.alt_raw) > 81020:
+            print("Warning in class FlightData: Max (or Min) Altitude of Atmosphere Model Exceeded- Clipping to -5004 to 81020 m")
+            self.alt_raw = np.clip(self.alt_raw, -5004, 81020)
+
         #Create interpolation functions for both Mach and Alt, so we don't have to create these every time we want to interpolate (which we do a lot)
         self.mach_raw_interp = scipy.interpolate.interp1d(self.time_raw, self.mach_raw, kind='linear')
         self.alt_raw_interp  = scipy.interpolate.interp1d(self.time_raw, self.alt_raw, kind='linear')
+
+
+    def get_mach_alt(self, time):
+        return self.mach_raw_interp(time), self.alt_raw_interp(time)
+
+
+    def get_sim_time_properties(self, t_sim_vec):
+        """
+        Performs the interpolation and atmospheric property lookup to change the "raw" values, which are currently
+        in the arbitrary RASAero or Flight Trajectory CSV time, and aligns them with the Simulation time step and time vector
+        """
+        #Interpolate Mach and altitude to Sim-time
+        mach = self.mach_raw_interp(t_sim_vec)
+        alt = self.alt_raw_interp(t_sim_vec)
+
+        self.mach_sim_time = mach
+        self.alt_sim_time = alt
+
+        return mach, alt
+
 
 
     def RAS_traj_CSV_Parse(self, trajectory_filepath):
@@ -80,38 +106,6 @@ class FlightProfile:
 
 
 
-    def get_mach_alt(self, time):
-        return self.mach_raw_interp(time), self.alt_raw_interp(time)
-
-
-
-
-    def get_sim_time_properties(self, t_sim_vec):
-        """
-        Performs the interpolation and atmospheric property lookup to change the "raw" values, which are currently
-        in the arbitrary RASAero or Flight Trajectory CSV time, and aligns them with the Simulation time step and time vector
-        """
-
-        #Interpolate Mach and altitude to Sim-time
-        mach = self.mach_raw_interp(t_sim_vec)
-        alt = self.alt_raw_interp(t_sim_vec)
-
-        # Check if Clipping is needed, then Clip alt vector
-        # Ambience can only handle values from [-5004 81020] m. 
-        if max(alt) > 81020:
-            print("Warning in class FlightData - get_atmospheric_properties(): Max (or Min) Altitude of Atmosphere Model Exceeded- Clipping to -5004 to 81020 m")
-            alt = np.clip(alt, -5004, 81020)
-        
-        self.mach_sim_time = mach
-        self.alt_sim_time = alt
-
-        return mach, alt
-
-
-    def get_current_state(self, curr_time):
-        """Interpolate Mach and Alt to whatver the current time is, return this Mach, Alt state"""
-
-        return self.mach_interp(curr_time), self.alt_interp(curr_time)
 
 
 
