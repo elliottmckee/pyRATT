@@ -6,150 +6,242 @@ import customtkinter
 customtkinter.set_appearance_mode("System")  # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
+customtkinter.set_default_color_theme("gui_dev/theme.json")
+
+
+### FONT FILE: "https://tobiasjung.name/profont/" , the TTF one
+
+### HEX TOOL: https://htmlcolorcodes.com/color-picker/
+
+
+
+### Sidebar Frame
+class SideBarFrame(customtkinter.CTkFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+
+        # Define Master Grid
+        self.grid(row=1, column=1, rowspan=8, padx = (5, 20), pady=(5,5), sticky="nsew")
+        self.grid_rowconfigure(1, weight=0)
+        self.grid_rowconfigure(2, weight=1)
+        self.grid_rowconfigure(3, weight=0)
+   
+        # Title
+        self.logo_label = customtkinter.CTkLabel(self, text="PyRATT - Rocket GUI", font=customtkinter.CTkFont(size=27, weight="bold"), text_color="#ff3544")
+        self.logo_label.grid(row=1, column=1, padx=30, pady=(25, 20), sticky="nsew")
+
+        # Instructions
+        self.InsFrame = customtkinter.CTkFrame(self, corner_radius=0)
+        self.InsFrame.grid(row=2, column=1, sticky="nsew")
+        self.InsFrame.grid_rowconfigure(1, weight=0)
+        self.InsFrame.grid_rowconfigure(2, weight=1)
+        self.InsFrame.grid_columnconfigure(1, weight=1)
+
+        self.instruct_label = customtkinter.CTkLabel(self.InsFrame, text="Instructions", font=customtkinter.CTkFont(size=22, weight="bold"), text_color="#ff8000")
+        self.instruct_label.grid(row=1, column=1, padx=20, pady=(20,0), sticky="w")
+
+        self.instructions_block = customtkinter.CTkTextbox(self.InsFrame)
+        self.instructions_block.grid(row=2, column=1, padx=17, pady=(0, 5), sticky="nsew")
+        self.instructions_block.insert("0.0", "Your balls will explode on the  34th day of the 7th month of the thirdy-first year of the 21rd Epoch...")
+        self.instructions_block.configure(state="disabled")
+
+        # Contact
+        self.ContFrame = customtkinter.CTkFrame(self, corner_radius=0)
+        self.ContFrame.grid(row=3, column=1, sticky="sew")
+        self.ContFrame.grid_rowconfigure(1, weight=0)
+        self.ContFrame.grid_rowconfigure(2, weight=0)
+        self.ContFrame.grid_columnconfigure(1, weight=1)
+
+        self.cont_label = customtkinter.CTkLabel(self.ContFrame, text="Contact", font=customtkinter.CTkFont(size=22, weight="bold"), text_color="#01d1fe")
+        self.cont_label.grid(row=1, column=1, padx=20, pady=(13,0), sticky="nw")
+
+        self.cont_block = customtkinter.CTkTextbox(self.ContFrame, height=50)
+        self.cont_block.grid(row=2, column=1, padx=17, pady=(0, 7), sticky="sew")
+        
+        self.cont_block.insert("0.0", "github: elliottmckee \nemail:  elliott.mckee@proton.me")
+        self.cont_block.configure(state="disabled")
+
+
+
+
+### RASAero Frame
+class RASAeroFrame(customtkinter.CTkFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+
+        # Define Master Grid
+        self.grid(row=1, column=2, rowspan=1, columnspan=2, padx = (0, 5), pady=(5,0), sticky="nsew")
+        self.grid_rowconfigure((1,2), weight=1)
+        
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=0)
+
+        # Header
+        self.ras_label = customtkinter.CTkLabel(self, text="RASAero Trajectory Input", font=customtkinter.CTkFont(size=22, weight="bold"))
+        self.ras_label.grid(row=1, column=1, padx=13, pady=(5, 5), sticky="nw")
+
+        # File Entry
+        self.ras_entry = customtkinter.CTkEntry(self, placeholder_text="Path to RASAero .csv output", corner_radius=0, text_color="#ff3544")
+        self.ras_entry.grid(row=2, column=1, columnspan=1, padx=(13, 0), pady=(0, 13), sticky="sew")
+
+        self.ras_entry_browse = customtkinter.CTkButton(self, text="Browse...",  width = 230/2, border_width=1, fg_color="#9f212b", text_color=("gray10", "#FFFFFF"), corner_radius=0)
+        self.ras_entry_browse.grid(row=2, column=2, padx=(13, 13), pady=(0, 13), sticky="se")
+
+
+
+### Aerosurface Frame
+
+class AeroSurfaceFrame(customtkinter.CTkFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+
+        # Define Master Grid
+        self.grid(row=2, column=2, rowspan=1, columnspan=2, padx = (0, 5), pady=0, sticky="nsew")
+        self.grid_rowconfigure((1,2), weight=1)
+        self.grid_rowconfigure((3,4,5), weight=0)
+        self.grid_columnconfigure((1,2), weight=1)
+
+        # Header 
+        self.aerosurf_label = customtkinter.CTkLabel(self, text="Aerosurface Specification", font=customtkinter.CTkFont(size=22, weight="bold"))
+        self.aerosurf_label.grid(row=1, column=1, padx=14, pady=(5, 5), sticky="nw")
+
+        # Geometry Tab Selector
+        self.geom_type = customtkinter.CTkSegmentedButton(self, corner_radius=0, border_width=1 ,font=customtkinter.CTkFont(size=16))
+        self.geom_type.grid(row=2, column=2, padx=15, pady=0,sticky="ne")
+        self.geom_type.configure(values=["Nosecone Wall", "Fin Wall", "Nosecone Tip"], state = "enabled")
+        self.geom_type.set("Nosecone Wall")
+
+        # X_Location 
+        self.x_len_lab = customtkinter.CTkLabel(self, text="Distance from LE (m): ")
+        self.x_len_lab.grid(row=3, column=1, padx=13, sticky="w")
+        self.x_len = customtkinter.CTkEntry(self, placeholder_text="0.1", text_color="#ff8000", corner_radius=0, width = 230)
+        self.x_len.grid(row=3, column=2, columnspan=1, padx=13, pady=5, sticky="e")
+
+        # Wall Thickness
+        self.wall_thick_lab = customtkinter.CTkLabel(self, text="Wall Thick (m): ")
+        self.wall_thick_lab.grid(row=4, column=1, padx=(13,0), sticky="w")
+        self.wall_thick = customtkinter.CTkEntry(self, placeholder_text="0.025", text_color="#ff8000", corner_radius=0, width = 230)
+        self.wall_thick.grid(row=4, column=2, columnspan=1, padx=13, pady=0, sticky="e")
+
+        # Material Select
+        self.mat_combo_lab = customtkinter.CTkLabel(self, text="Wall Material: ")
+        self.mat_combo_lab.grid(row=5, column=1, padx=13, sticky="w")
+        self.mat_combo = customtkinter.CTkComboBox(self, values=["ALU-342", "Balls", "Value Long..."], corner_radius=0, width = 230)
+        self.mat_combo.grid(row=5, column=2, padx=13, pady=(5,13), sticky="e")
+        self.mat_combo.set("")
+
+
+
+### Sim Configuration Tab
+class ConfigurationFrame(customtkinter.CTkFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+
+
+        # Define Master Grid
+        self.grid(row=3, column=2, rowspan=1, columnspan=2, padx = (0, 5), pady=0, sticky="nsew")
+        self.grid_rowconfigure((1), weight=1)
+        self.grid_rowconfigure((2,3,4), weight=0)
+        self.grid_columnconfigure((1,2), weight=1)
+
+
+        # Label
+        self.sim_in_label = customtkinter.CTkLabel(self, text="Simulation Configuration", font=customtkinter.CTkFont(size=22, weight="bold"))
+        self.sim_in_label.grid(row=1, column=1, padx=13, pady=(5,5), sticky="w")
+        
+
+        # Wall Nodes
+        self.wall_nodes_lab = customtkinter.CTkLabel(self, text="Wall Nodes: ")
+        self.wall_nodes_lab.grid(row=2, column=1, padx=13, pady=0, sticky="w")
+        self.wall_nodes = customtkinter.CTkEntry(self, placeholder_text="15", text_color="#01d1fe", corner_radius=0, width = 230)
+        self.wall_nodes.grid(row=2, column=2, columnspan=1, padx=13, pady=5, sticky="e")
+
+        # Time Step
+        self.time_step_lab = customtkinter.CTkLabel(self, text="Timestep (s): ")
+        self.time_step_lab.grid(row=3, column=1, padx=13, pady=0, sticky="w")
+        self.time_step = customtkinter.CTkEntry(self, placeholder_text="0.005", text_color="#01d1fe", corner_radius=0, width = 230)
+        self.time_step.grid(row=3, column=2, columnspan=1, padx=13, pady=0, sticky="e")
+
+        # Time End
+        self.time_end_lab = customtkinter.CTkLabel(self, text="Sim End Time (s): ")
+        self.time_end_lab.grid(row=4, column=1, padx=13, pady=0, sticky="w")
+        self.t_end = customtkinter.CTkEntry(self, placeholder_text="optional", text_color="#01d1fe", corner_radius=0, width = 230)
+        self.t_end.grid(row=4, column=2, columnspan=1, padx=13, pady=(5,13), sticky="e")
+
+
+
+### Actions Tab
+class ActionsFrame(customtkinter.CTkFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+
+        # Define Grid
+        self.grid(row=4, column=2, rowspan=1, columnspan=2, padx = (0, 5), pady=(0,5), sticky="nsew")
+        self.grid_rowconfigure((1), weight=1)
+        self.grid_columnconfigure((1,2,3), weight=1)
+
+        #Actions Label
+        self.actions_lab = customtkinter.CTkLabel(self, text="Actions", font=customtkinter.CTkFont(size=22, weight="bold"))
+        self.actions_lab.grid(row=1, column=1, padx=13, pady=(5,5), sticky="w")
+
+        # Run Button
+        self.run_button = customtkinter.CTkButton(self, text="Run", corner_radius=0, height=100, fg_color="#ff3544", border_color="#FFFFFF")#command=self.sidebar_button_event)
+        self.run_button.grid(row=2, column=1, padx=(13,5), pady=(5,13), sticky='nesw')
+
+        # View Button
+        self.run_button = customtkinter.CTkButton(self, text="View Results", corner_radius=0, fg_color="#ff8000", border_color="#FFFFFF")#command=self.sidebar_button_event)
+        self.run_button.grid(row=2, column=2, padx=5, pady=(5,13), sticky='nesw')
+
+        # Save Button
+        self.run_button = customtkinter.CTkButton(self, text="Save Results", corner_radius=0, fg_color="#01d1fe", border_color="#FFFFFF")#command=self.sidebar_button_event)
+        self.run_button.grid(row=2, column=3, padx=(5,13), pady=(5,13), sticky='nesw')
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
 
         # configure window
-        self.title("CustomTkinter complex_example.py")
-        self.geometry(f"{1100}x{1100}")
+        self.title("PyRATT - Rocket GUI")
+        self.geometry(f"{1000}x{575}")
 
-        # configure grid layout (4x4)
+        self.grid_rowconfigure((1,2,3,4,5,6,7,8,9), weight=1)
         self.grid_columnconfigure(1, weight=0)
         self.grid_columnconfigure(2, weight=1)
         self.grid_columnconfigure(3, weight=1)
-        #self.grid_columnconfigure((2, 3), weight=0)
-        
-        #self.grid_rowconfigure((0, 1, 2), weight=1)
+
 
 
 
         ### -------------------- create sidebar frame with widgets ------------------
-        self.sidebar_frame = customtkinter.CTkFrame(self, width=300, corner_radius=0)
-        self.sidebar_frame.grid(row=1, column=0, rowspan=4, sticky="nsew")
-        self.sidebar_frame.grid_rowconfigure(4, weight=1)
-   
-        self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="PyRatt Rocket GUI", font=customtkinter.CTkFont(size=25, weight="bold"))
-        self.logo_label.grid(row=1, column=0, padx=20, pady=(20, 10))
+        self.SideBar = SideBarFrame(self)
 
-        self.instructions_label = customtkinter.CTkTextbox(self.sidebar_frame, width=250)
-        self.instructions_label.grid(row=2, column=0, padx=(20, 20), pady=(20, 20), sticky="nsew")
-        self.instructions_label.insert("0.0", "Instructions")
-        self.instructions_label.configure(state="disabled")
+        self.RasFrame = RASAeroFrame(self)
 
-        self.instructions_block = customtkinter.CTkTextbox(self.sidebar_frame, width=250)
-        self.instructions_block.grid(row=2, column=0, padx=(20, 20), pady=(20, 20), sticky="nsew")
-        self.instructions_block.insert("0.0", "CTkTextbox\n\n" + "Lorem ipsum dolor sit amet")
-        self.instructions_block.configure(state="disabled")
+        self.AeroFrame = AeroSurfaceFrame(self) 
 
-        self.contact = customtkinter.CTkTextbox(self.sidebar_frame, width=250)
-        self.contact.grid(row=3, column=0, padx=(20, 20), pady=(20, 20), sticky="s")
-        self.contact.insert("0.0", "Bother me if need info")
-        self.contact.configure(state="disabled")
-
-
-        ### -------------------- Main Column frame with widgets ------------------
-
-        #-----
-
-        self.ras_label = customtkinter.CTkLabel(self, text="RAS Trajectory Input", font=customtkinter.CTkFont(size=15, weight="bold"))
-        self.ras_label.grid(row=1, column=1, padx=20, pady=(20, 10), sticky="nw")
-
-        self.ras_entry = customtkinter.CTkEntry(self, placeholder_text="RASAero File Input")
-        self.ras_entry.grid(row=2, column=1, columnspan=1, padx=(20, 0), pady=(20, 20), sticky="nsew")
-
-        self.ras_entry_browse = customtkinter.CTkButton(master=self, fg_color="transparent", border_width=2, text_color=("gray10", "#DCE4EE"))
-        self.ras_entry_browse.grid(row=2, column=2, padx=(0, 0), pady=(20, 20), sticky="nsew")
-
-        #-----
-
-        self.aerosurf_label = customtkinter.CTkLabel(self, text="Aerosurface Inputs", font=customtkinter.CTkFont(size=15, weight="bold"))
-        self.aerosurf_label.grid(row=3, column=1, padx=20, pady=(0, 0), sticky="nw")
-
-        self.geom_type = customtkinter.CTkSegmentedButton(self)
-        self.geom_type.grid(row=3, column=2, padx=(20, 10), pady=(10, 10), sticky="n")
-        self.geom_type.configure(values=["Nosecone Wall", "Fin Wall", "Nosecone Tip"])
-        self.geom_type.set("Nosecone Wall")
-
-        # Fin Input Frame
-        self.fin_frame = customtkinter.CTkFrame(self, width=300, corner_radius=5)
-        self.fin_frame.grid(row=4, column=1, rowspan=1, columnspan=1, sticky="nsew")
-        self.fin_frame.grid_rowconfigure((1,2,3), weight=1)
-        self.fin_frame.grid_columnconfigure((1,2), weight=1)
-
-
-        self.x_len_lab = customtkinter.CTkLabel(self.fin_frame, text="Distance from LE: ", font=customtkinter.CTkFont(size=12, weight="bold"))
-        self.x_len_lab.grid(row=1, column=1, padx=20, pady=(5, 5), sticky="w")
-
-        self.x_len = customtkinter.CTkTextbox(self.fin_frame, width=250, height=12)
-        self.x_len.grid(row=1, column=2, padx=(20, 20), pady=(5, 5), sticky="nsew")
-        self.x_len.insert("0.0", "Number")
-
-
-        self.wall_thick_lab = customtkinter.CTkLabel(self.fin_frame, text="Wall Thick: ", font=customtkinter.CTkFont(size=12, weight="bold"))
-        self.wall_thick_lab.grid(row=3, column=1, padx=20, pady=(5, 5), sticky="w")
-
-        self.wall_thick = customtkinter.CTkTextbox(self.fin_frame, width=250, height=12)
-        self.wall_thick.grid(row=3, column=2, padx=(20, 20), pady=(5, 5), sticky="nsew")
-        self.wall_thick.insert("0.0", "Number")
-
-
-        self.mat_combo_lab = customtkinter.CTkLabel(self.fin_frame, text="Wall Material: ", font=customtkinter.CTkFont(size=12, weight="bold"))
-        self.mat_combo_lab.grid(row=4, column=1, padx=20, pady=(5, 5), sticky="w")
-
-        self.mat_combo = customtkinter.CTkComboBox(self.fin_frame, values=["ALU-342", "Balls", "Value Long..."])
-        self.mat_combo.grid(row=4, column=2, padx=20, pady=(5, 5))
-        self.mat_combo.set("ALU-342")
-
-
-        #-----
-        self.sim_in_label = customtkinter.CTkLabel(self, text="Simulation Config", font=customtkinter.CTkFont(size=15, weight="bold"))
-        self.sim_in_label.grid(row=5, column=1, padx=20, pady=(20, 10), sticky="nw")
-        # Sim Input Frame
-
-        self.sim_frame = customtkinter.CTkFrame(self, width=300, corner_radius=5)
-        self.sim_frame.grid(row=6, column=1, rowspan=1, columnspan=1, sticky="nsew")
-        self.sim_frame.grid_rowconfigure((1,2,3,4), weight=1)
-        self.sim_frame.grid_columnconfigure((1,2), weight=1)
-
-
-        self.wall_node_lab = customtkinter.CTkLabel(self.sim_frame, text="Wall Nodes: ", font=customtkinter.CTkFont(size=12, weight="bold"))
-        self.wall_node_lab.grid(row=1, column=1, padx=20, pady=(5, 5), sticky="w")
-
-        self.wall_node = customtkinter.CTkTextbox(self.sim_frame, width=250, height=12)
-        self.wall_node.grid(row=1, column=2, padx=(20, 20), pady=(5, 5), sticky="nsew")
-        self.wall_node.insert("0.0", "Number")
-
-
-        self.t_step_lab = customtkinter.CTkLabel(self.sim_frame, text="Timestep (s): ", font=customtkinter.CTkFont(size=12, weight="bold"))
-        self.t_step_lab.grid(row=2, column=1, padx=20, pady=(5, 5), sticky="w")
-
-        self.t_step = customtkinter.CTkTextbox(self.sim_frame, width=250, height=12)
-        self.t_step.grid(row=2, column=2, padx=(20, 20), pady=(5, 5), sticky="nsew")
-        self.t_step.insert("0.0", "Number")
-
-
-        self.time_vec_lab = customtkinter.CTkLabel(self.sim_frame, text="Sim End Time(s): ", font=customtkinter.CTkFont(size=12, weight="bold"))
-        self.time_vec_lab.grid(row=3, column=1, padx=20, pady=(5, 5), sticky="w")
-
-        self.time_vec = customtkinter.CTkTextbox(self.sim_frame, width=250, height=12)
-        self.time_vec.grid(row=3, column=2, padx=(20, 20), pady=(5, 5), sticky="nsew")
-        self.time_vec.insert("0.0", "Number")
-
-
-        #-----
-        self.run_lab = customtkinter.CTkLabel(self, text="Run", font=customtkinter.CTkFont(size=15, weight="bold"))
-        self.run_lab.grid(row=7, column=1, padx=20, pady=(20, 10), sticky="nw")
-
-        self.run_button = customtkinter.CTkButton(self, text="Run")#command=self.sidebar_button_event)
-        self.run_button.grid(row=8, column=1, padx=20, pady=10)
+        self.ConfigFrame = ConfigurationFrame(self)
+        
+        self.ActionFrame = ActionsFrame(self)
 
 
 
 
-        # self.main_button_1 = customtkinter.CTkButton(master=self, fg_color="transparent", border_width=2, text_color=("gray10", "#DCE4EE"))
-        # self.main_button_1.grid(row=3, column=3, padx=(20, 20), pady=(20, 20), sticky="nsew")
+        
+
+
 
 
 
