@@ -33,6 +33,12 @@ Instructions to export this .csv from RASAeroII:
 """
 
 
+ANGLE = "\
+For Nosecones, this should be the Nosecone half angle.\
+\n\n\
+For Fins, this should be the fin chamfer angle.\
+"
+
 X_LOCATION = \
 "Ideally, this should be the boundary layer running length from the leading edge of interest \
 (think of putting a string along the nosecone/fin, starting at the stagnation point and ending \
@@ -80,12 +86,21 @@ The optimal timestep depends on wall thickness, node count, etc. I would reccome
 default value and then adjusting as needed. \
 "
 
+
+INIT_TEMP = "\
+Initial wall temperature at the beginning of the simulation.\
+\n\n\
+TODO: make this just use the STDATM S.L. value, or RADEQ if left un-specified? \
+"
+
 TIME_END = "\
-By default, PyRATT will simulate the entire RASAero trajectory given. \
+By default, PyRATT will simulate 60.0 seconds. \
 \n\n\
-However, most of the time you definitely don't care about the really long descent portion. \
+However, the peak aeroheating likely occurs in the first few seconds of flight, so simulating this long may be unnessecary. \
 \n\n\
-If you want to cut the simulation short (i.e. just simulate ascent), you can specify the end time here"
+If you want to cut the simulation short (i.e. just simulate ascent), you can specify the end time here. \
+\n\n\
+TODO: Make it so the default behavior is to run entire RASAero Sim, or just ascent or something"
 
 
 

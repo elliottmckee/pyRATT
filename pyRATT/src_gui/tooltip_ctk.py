@@ -15,7 +15,7 @@ import customtkinter as CTk
 
 CTk.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
 #customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
-CTk.set_default_color_theme("gui_dev/theme.json")
+CTk.set_default_color_theme("src_gui/theme.json")
 
 class CreateToolTip(object):
     """

@@ -119,6 +119,8 @@ class TransientThermalSim:
                 print(time_progress_marker, " seconds...")
                 time_progress_marker += 5.0 
 
+        return 0
+
                 
     
 
