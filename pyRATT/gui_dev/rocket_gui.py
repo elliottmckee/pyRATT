@@ -3,16 +3,17 @@ import tkinter
 import tkinter.messagebox
 import customtkinter
 
-customtkinter.set_appearance_mode("System")  # Modes: "System" (standard), "Dark", "Light"
-customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
-
+customtkinter.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
+#customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
 customtkinter.set_default_color_theme("gui_dev/theme.json")
 
+from tooltip_ctk import CreateToolTip
+
+import gui_text
 
 ### FONT FILE: "https://tobiasjung.name/profont/" , the TTF one
 
 ### HEX TOOL: https://htmlcolorcodes.com/color-picker/
-
 
 
 ### Sidebar Frame
@@ -21,7 +22,7 @@ class SideBarFrame(customtkinter.CTkFrame):
         super().__init__(master, **kwargs)
 
         # Define Master Grid
-        self.grid(row=1, column=1, rowspan=8, padx = (5, 20), pady=(5,5), sticky="nsew")
+        self.grid(row=1, column=1, rowspan=4, padx = (5, 20), pady=(5,5), sticky="nsew")
         self.grid_rowconfigure(1, weight=0)
         self.grid_rowconfigure(2, weight=1)
         self.grid_rowconfigure(3, weight=0)
@@ -40,9 +41,9 @@ class SideBarFrame(customtkinter.CTkFrame):
         self.instruct_label = customtkinter.CTkLabel(self.InsFrame, text="Instructions", font=customtkinter.CTkFont(size=22, weight="bold"), text_color="#ff8000")
         self.instruct_label.grid(row=1, column=1, padx=20, pady=(20,0), sticky="w")
 
-        self.instructions_block = customtkinter.CTkTextbox(self.InsFrame)
+        self.instructions_block = customtkinter.CTkTextbox(self.InsFrame, wrap="word")
         self.instructions_block.grid(row=2, column=1, padx=17, pady=(0, 5), sticky="nsew")
-        self.instructions_block.insert("0.0", "Your balls will explode on the  34th day of the 7th month of the thirdy-first year of the 21rd Epoch...")
+        self.instructions_block.insert("0.0", gui_text.INSTRUCTIONS)
         self.instructions_block.configure(state="disabled")
 
         # Contact
@@ -83,6 +84,7 @@ class RASAeroFrame(customtkinter.CTkFrame):
         # File Entry
         self.ras_entry = customtkinter.CTkEntry(self, placeholder_text="Path to RASAero .csv output", corner_radius=0, text_color="#ff3544")
         self.ras_entry.grid(row=2, column=1, columnspan=1, padx=(13, 0), pady=(0, 13), sticky="sew")
+        self.ras_entry_tip = CreateToolTip(self.ras_entry, gui_text.RAS_FILE_INPUT, width=477, height=320)
 
         self.ras_entry_browse = customtkinter.CTkButton(self, text="Browse...",  width = 230/2, border_width=1, fg_color="#9f212b", text_color=("gray10", "#FFFFFF"), corner_radius=0)
         self.ras_entry_browse.grid(row=2, column=2, padx=(13, 13), pady=(0, 13), sticky="se")
@@ -116,12 +118,15 @@ class AeroSurfaceFrame(customtkinter.CTkFrame):
         self.x_len_lab.grid(row=3, column=1, padx=13, sticky="w")
         self.x_len = customtkinter.CTkEntry(self, placeholder_text="0.1", text_color="#ff8000", corner_radius=0, width = 230)
         self.x_len.grid(row=3, column=2, columnspan=1, padx=13, pady=5, sticky="e")
+        self.x_len_tip = CreateToolTip(self.x_len, gui_text.X_LOCATION, width= 400, height=400)
 
         # Wall Thickness
         self.wall_thick_lab = customtkinter.CTkLabel(self, text="Wall Thick (m): ")
         self.wall_thick_lab.grid(row=4, column=1, padx=(13,0), sticky="w")
         self.wall_thick = customtkinter.CTkEntry(self, placeholder_text="0.025", text_color="#ff8000", corner_radius=0, width = 230)
         self.wall_thick.grid(row=4, column=2, columnspan=1, padx=13, pady=0, sticky="e")
+        self.wall_thick_tip = CreateToolTip(self.wall_thick, gui_text.WALL_THICK, width= 400, height=50)
+
 
         # Material Select
         self.mat_combo_lab = customtkinter.CTkLabel(self, text="Wall Material: ")
@@ -129,6 +134,7 @@ class AeroSurfaceFrame(customtkinter.CTkFrame):
         self.mat_combo = customtkinter.CTkComboBox(self, values=["ALU-342", "Balls", "Value Long..."], corner_radius=0, width = 230)
         self.mat_combo.grid(row=5, column=2, padx=13, pady=(5,13), sticky="e")
         self.mat_combo.set("")
+        self.mat_combo_tip = CreateToolTip(self.mat_combo, gui_text.WALL_MAT, width= 400, height=200)
 
 
 
@@ -155,19 +161,21 @@ class ConfigurationFrame(customtkinter.CTkFrame):
         self.wall_nodes_lab.grid(row=2, column=1, padx=13, pady=0, sticky="w")
         self.wall_nodes = customtkinter.CTkEntry(self, placeholder_text="15", text_color="#01d1fe", corner_radius=0, width = 230)
         self.wall_nodes.grid(row=2, column=2, columnspan=1, padx=13, pady=5, sticky="e")
+        self.wall_nodes_tip = CreateToolTip(self.wall_nodes, gui_text.WALL_NODES, width= 400, height=300)
 
         # Time Step
         self.time_step_lab = customtkinter.CTkLabel(self, text="Timestep (s): ")
         self.time_step_lab.grid(row=3, column=1, padx=13, pady=0, sticky="w")
         self.time_step = customtkinter.CTkEntry(self, placeholder_text="0.005", text_color="#01d1fe", corner_radius=0, width = 230)
         self.time_step.grid(row=3, column=2, columnspan=1, padx=13, pady=0, sticky="e")
+        self.time_step_tip = CreateToolTip(self.time_step, gui_text.TIME_STEP, width= 400, height=300)
 
         # Time End
         self.time_end_lab = customtkinter.CTkLabel(self, text="Sim End Time (s): ")
         self.time_end_lab.grid(row=4, column=1, padx=13, pady=0, sticky="w")
         self.t_end = customtkinter.CTkEntry(self, placeholder_text="optional", text_color="#01d1fe", corner_radius=0, width = 230)
         self.t_end.grid(row=4, column=2, columnspan=1, padx=13, pady=(5,13), sticky="e")
-
+        self.t_end_tip = CreateToolTip(self.t_end, gui_text.TIME_END, width= 400, height=300)
 
 
 ### Actions Tab
@@ -185,15 +193,15 @@ class ActionsFrame(customtkinter.CTkFrame):
         self.actions_lab.grid(row=1, column=1, padx=13, pady=(5,5), sticky="w")
 
         # Run Button
-        self.run_button = customtkinter.CTkButton(self, text="Run", corner_radius=0, height=100, fg_color="#ff3544", border_color="#FFFFFF")#command=self.sidebar_button_event)
+        self.run_button = customtkinter.CTkButton(self, text="Run", corner_radius=0, height=100, fg_color="#9f212b", hover_color="#ff3544", border_color="#FFFFFF")#command=self.sidebar_button_event)
         self.run_button.grid(row=2, column=1, padx=(13,5), pady=(5,13), sticky='nesw')
 
         # View Button
-        self.run_button = customtkinter.CTkButton(self, text="View Results", corner_radius=0, fg_color="#ff8000", border_color="#FFFFFF")#command=self.sidebar_button_event)
+        self.run_button = customtkinter.CTkButton(self, text="View Results", corner_radius=0, fg_color="#9f5000", hover_color = "#ff8000", border_color="#FFFFFF")#command=self.sidebar_button_event)
         self.run_button.grid(row=2, column=2, padx=5, pady=(5,13), sticky='nesw')
 
         # Save Button
-        self.run_button = customtkinter.CTkButton(self, text="Save Results", corner_radius=0, fg_color="#01d1fe", border_color="#FFFFFF")#command=self.sidebar_button_event)
+        self.run_button = customtkinter.CTkButton(self, text="Save Results", corner_radius=0, fg_color="#01839f", border_color="#FFFFFF")#command=self.sidebar_button_event)
         self.run_button.grid(row=2, column=3, padx=(5,13), pady=(5,13), sticky='nesw')
 
 
@@ -215,14 +223,12 @@ class App(customtkinter.CTk):
 
         # configure window
         self.title("PyRATT - Rocket GUI")
-        self.geometry(f"{1000}x{575}")
+        self.geometry(f"{1000}x{700}")
 
-        self.grid_rowconfigure((1,2,3,4,5,6,7,8,9), weight=1)
+        self.grid_rowconfigure((1,2,3,4), weight=1)
         self.grid_columnconfigure(1, weight=0)
         self.grid_columnconfigure(2, weight=1)
         self.grid_columnconfigure(3, weight=1)
-
-
 
 
         ### -------------------- create sidebar frame with widgets ------------------
