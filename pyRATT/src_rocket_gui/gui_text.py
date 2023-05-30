@@ -1,10 +1,9 @@
 """
-I am just thwomping all of my large text files here to keep them from clogging up the gui scripts
-
+I am just thwomping all of my large strings here to keep them from clogging up the gui scripts
 """
 
 
-INSTRUCTIONS = "This GUI showcases a few of the many possible applications of PyRATT. \
+INSTRUCTIONS = "This GUI showcases a few applications of PyRATT. \
 \n\n\
 You point it to a exported RASAero .csv trajectory, tell it a bit about the rocket geometry you're looking to analyze, \
 and add a few additional simulation parameters and it should tell you how hot your thing (nosecone wall, fin, etc.) is going to get.\

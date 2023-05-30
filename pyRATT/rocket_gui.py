@@ -5,11 +5,8 @@ import customtkinter
 
 customtkinter.set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
 #customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
-customtkinter.set_default_color_theme("src_gui/theme.json")
+customtkinter.set_default_color_theme("src_rocket_gui/theme.json")
 
-from src_gui.tooltip_ctk import CreateToolTip
-
-import src_gui.gui_text as gui_text
 
 # #Internal Modules
 from src.simulate_network import TransientThermalSim
@@ -19,6 +16,9 @@ from src.loadings_aerothermal import AerothermalLoading
 from src.obj_flight import FlightProfile
 from src.materials_gas import AirModel
 from src.materials_solid import MATERIALS_DICT
+
+from src_rocket_gui.tooltip_ctk import CreateToolTip
+import src_rocket_gui.gui_text as gui_text
 
 ### FONT FILE: "https://tobiasjung.name/profont/" , the TTF one
 
@@ -108,9 +108,9 @@ class RASAeroFrame(customtkinter.CTkFrame):
 
         
     def browse_window(self):
-        file = tkinter.filedialog.askopenfile(mode='r', filetypes=[('RASAeroII Exports', '*.csv')])
+        file = tkinter.filedialog.askopenfilename(filetypes=[('RASAeroII Exports', '*.csv')])
 
-        self.ras_entry.insert(0, file.name)
+        self.ras_entry.insert(0, file)
 
         self.ras_entry.xview(tkinter.END)
 
@@ -292,8 +292,6 @@ class ActionsFrame(customtkinter.CTkFrame):
 
 
 
-
-
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
@@ -356,26 +354,31 @@ class App(customtkinter.CTk):
         TG.add_thermal_loading(nodeID = 0, ThermLoading= AeroThermLoading)
 
         # Run Simulation
-        self.Sim = TransientThermalSim( TG,  float(inputs["initial_temp"]),  float(inputs["time_step"]), t_start = 0.0, t_end = float(inputs["time_end"]))
+        self.Sim = TransientThermalSim( TG,  float(inputs["initial_temp"]),  float(inputs["time_step"]), t_start = 0.0, t_end = float(inputs["time_end"]), Flight=Flight)
         self.Sim_Status = self.Sim.run()
 
 
 
     def plot_results(self):
         if self.Sim:
-            print("Plotting things beep boop")
+            self.Sim.plot_temp_trace_results()
         else:
             print("No Simulation Found. Need to Run Simulation First")
 
 
     def save_results(self):
         if self.Sim:
-            print("Saving things beep boop")
+            outfile = tkinter.filedialog.asksaveasfilename(defaultextension='.csv', filetypes=[('PyRATT Output', '*.csv')])
+
+            print(outfile)
+
+            if outfile:
+                self.Sim.export_data_to_csv(outfile)
+            else:
+                print("No output file specified- cancelling")
+
         else:
             print("No Simulation Found. Need to Run Simulation First")
-
-
-
 
 
 
