@@ -27,6 +27,9 @@ The best places to check for information are:
 
 <br/>
 
+#  Notices
+- Make more modular, to handle different heat flu, BC specifications (specified heatflux, specified HTC. ect.), not just flight profiles.  
+
 # Demos
 
 Some examples of the results of the flight-thermal-simulation functionality of the code are shown below. 
