@@ -27,8 +27,8 @@ The best places to check for information are:
 
 <br/>
 
-#  Notices
-- Make more modular, to handle different heat flu, BC specifications (specified heatflux, specified HTC. ect.), not just flight profiles.  
+#  TODO
+- Make more modular, to handle different heat flux, BC specifications (specified heatflux, specified HTC. ect.), not just flight profiles.  
 
 # Demos
 
